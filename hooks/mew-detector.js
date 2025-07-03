@@ -42,43 +42,43 @@ process.stdin.on('end', async () => {
       
       const claude = spawn('claude', ['-p', prompt, '--output-format', 'json'], {
         env: process.env,
-        shell: false
+        shell: true
       });
       
       let claudeOutput = '';
       let claudeError = '';
-      
+
       claude.stdout.on('data', (data) => {
         claudeOutput += data.toString();
       });
-      
+
       claude.stderr.on('data', (data) => {
         claudeError += data.toString();
       });
-      
+
       claude.on('close', (code) => {
         // Define log file paths
         const logsDir = path.join(__dirname, '..', 'logs');
         const logFile = path.join(logsDir, 'cat-events.log');
         const modelLogFile = path.join(logsDir, 'model-events.log');
-        
+
         // Ensure logs directory exists
         if (!fs.existsSync(logsDir)) {
           fs.mkdirSync(logsDir, { recursive: true });
         }
-        
+
         // Log prompt and response to model-events.log
         const timestamp = new Date().toISOString();
         const modelLogEntry = `[${timestamp}] PROMPT:\n${prompt}\n\n[${timestamp}] RESPONSE:\n${claudeOutput}\n[${timestamp}] ERROR (if any):\n${claudeError}\n[${timestamp}] EXIT CODE: ${code}\n---\n`;
         fs.appendFileSync(modelLogFile, modelLogEntry);
-        
+
         // Parse Claude's response
         let logMessage;
         try {
           // Try to parse JSON response
           const jsonResponse = JSON.parse(claudeOutput);
           const responseText = jsonResponse.content || jsonResponse.response || claudeOutput;
-          
+
           if (responseText.toLowerCase().includes('yes')) {
             logMessage = `[${timestamp}] cat detected\n`;
           } else {
