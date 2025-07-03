@@ -16,6 +16,10 @@
           {
             "type": "command",
             "command": "node hooks/content-logger.js"
+          },
+          {
+            "type": "command",
+            "command": "node hooks/mew-detector.js"
           }
         ]
       }
