@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from 'vitest'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
-import { HookEvents } from './HookEvents'
+import { HookEvents, type HookData } from './HookEvents'
 
 describe('HookEvents', () => {
   const testContent = 'test content'
@@ -11,6 +11,26 @@ describe('HookEvents', () => {
   let sut: Awaited<ReturnType<typeof setupHookEvents>>
   let tempDir: string
   let logFilePath: string
+
+  // Test data factory
+  const createTodoWriteData = (
+    todos: Array<{
+      content: string
+      status?: string
+      priority?: string
+      id?: string
+    }>
+  ) => ({
+    tool_name: 'TodoWrite',
+    tool_input: {
+      todos: todos.map((todo, index) => ({
+        content: todo.content,
+        status: todo.status || 'pending',
+        priority: todo.priority || 'medium',
+        id: todo.id || String(index + 1),
+      })),
+    },
+  })
 
   beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'hook-events-test-'))
@@ -65,6 +85,33 @@ describe('HookEvents', () => {
       test('separates entries with newline', async () => {
         expect(logContent).toContain('\n')
       })
+    })
+  })
+
+  describe('when logging TodoWrite data', () => {
+    test('logs todos content from TodoWrite tool', async () => {
+      const todoData = createTodoWriteData([
+        {
+          content: 'Check existing Husky and commitlint configuration files',
+          status: 'pending',
+          priority: 'high',
+        },
+        {
+          content: 'Install necessary dependencies for Husky and commitlint',
+          status: 'pending',
+          priority: 'high',
+        },
+      ])
+
+      await sut.logHookData(todoData)
+
+      const logContent = await sut.readLogContent()
+      expect(logContent).toContain(
+        'Check existing Husky and commitlint configuration files'
+      )
+      expect(logContent).toContain(
+        'Install necessary dependencies for Husky and commitlint'
+      )
     })
   })
 
@@ -129,6 +176,7 @@ describe('HookEvents', () => {
       logWithContent,
       logEmpty,
       logWithEmptyToolInput,
+      logHookData: (data: HookData) => hookEvents.logHookData(data),
     }
   }
 })

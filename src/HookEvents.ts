@@ -1,10 +1,17 @@
 import fs from 'fs/promises'
 import path from 'path'
 
-interface HookData {
+export interface HookData {
+  tool_name?: string
   tool_input?: {
     new_string?: string
     content?: string
+    todos?: Array<{
+      content: string
+      status?: string
+      priority?: string
+      id?: string
+    }>
   }
 }
 
@@ -25,6 +32,11 @@ export class HookEvents {
         content = hookData.tool_input.new_string
       } else if (hookData.tool_input.content !== undefined) {
         content = hookData.tool_input.content
+      } else if (hookData.tool_input.todos) {
+        // Extract content from todos array
+        content = hookData.tool_input.todos
+          .map((todo) => todo.content)
+          .join('\n')
       }
     }
 
