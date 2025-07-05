@@ -60,13 +60,41 @@ describe('ClaudeModelClient', () => {
     expect(sut.result).toBe(result);
   });
 
+  describe('handles special characters', () => {
+    const questionWithQuote = "What's the TDD pattern?";
+    const contextWithQuote = "test('it should work', () => {})";
+    
+    let sut: ReturnType<typeof setupModelClient>;
+    
+    beforeEach(() => {
+      sut = setupModelClient({ 
+        question: questionWithQuote, 
+        context: contextWithQuote 
+      });
+    });
+
+    test('escapes single quotes in question', () => {
+      sut.assertCommandContains("What'\\''s the TDD pattern?");
+    });
+
+    test('escapes single quotes in context', () => {
+      sut.assertCommandContains("test('\\''it should work'\\''");
+    });
+  });
+
   // Test helper
-  function setupModelClient() {
+  function setupModelClient(testData?: { question?: string; context?: string; result?: string }) {
+    const { 
+      question: q = question, 
+      context: c = context, 
+      result: r = result 
+    } = testData || {};
+    
     const mockExecSync = vi.mocked(execSync);
-    mockExecSync.mockReturnValue(JSON.stringify({ result }));
+    mockExecSync.mockReturnValue(JSON.stringify({ result: r }));
 
     const client = new ClaudeModelClient();
-    const actualResult = client.ask(question, context);
+    const actualResult = client.ask(q, c);
     
     const assertCommandContains = (content: string) => {
       expect(mockExecSync).toHaveBeenCalledWith(

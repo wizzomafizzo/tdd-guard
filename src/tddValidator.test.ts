@@ -17,4 +17,16 @@ describe('tddValidator', () => {
     
     expect(result).toBe('violation');
   });
+
+  test('returns empty string when content contains one test', () => {
+    const content = `
+      test('single test', () => {
+        expect(true).toBe(true);
+      });
+    `;
+    
+    const result = tddValidator(content);
+    
+    expect(result).toBe('');
+  });
 });
