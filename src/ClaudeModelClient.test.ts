@@ -10,7 +10,7 @@ describe('ClaudeModelClient', () => {
   const result = 'This code follows TDD principles';
   const format = '--output-format json';
   const maxTurnsFlag = '--max-turns 1';
-  const printFlag = '-p';
+  const printFlag = '--print';
   const encoding = 'utf-8';
   const command = 'claude';
   
@@ -42,6 +42,14 @@ describe('ClaudeModelClient', () => {
 
   test('uses print mode flag', () => {
     sut.assertCommandContains(printFlag);
+  });
+
+  test('includes line break after question', () => {
+    sut.assertCommandContains(question + '\n');
+  });
+
+  test('wraps context in context tags', () => {
+    sut.assertCommandContains(`<context>${context}</context>`);
   });
 
   test('uses utf-8 encoding', () => {
