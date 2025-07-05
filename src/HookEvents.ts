@@ -1,19 +1,8 @@
 import fs from 'fs/promises'
 import path from 'path'
+import { HookDataSchema, type HookData } from './schemas/hookData'
 
-export interface HookData {
-  tool_name?: string
-  tool_input?: {
-    new_string?: string
-    content?: string
-    todos?: Array<{
-      content: string
-      status?: string
-      priority?: string
-      id?: string
-    }>
-  }
-}
+export type { HookData }
 
 export class HookEvents {
   constructor(private logFilePath: string) {}
@@ -24,18 +13,32 @@ export class HookEvents {
     await fs.writeFile(this.logFilePath, '', { flag: 'a' })
   }
 
-  async logHookData(hookData: HookData): Promise<void> {
+  async logHookData(rawData: unknown): Promise<void> {
+    const parseResult = HookDataSchema.safeParse(rawData)
+
+    if (!parseResult.success) {
+      return
+    }
+
+    const hookData = parseResult.data
     let content: string | null = null
 
-    if (hookData.tool_input) {
-      if (hookData.tool_input.new_string !== undefined) {
-        content = hookData.tool_input.new_string
-      } else if (hookData.tool_input.content !== undefined) {
-        content = hookData.tool_input.content
-      } else if (hookData.tool_input.todos) {
-        // Extract content from todos array
-        content = hookData.tool_input.todos
-          .map((todo) => todo.content)
+    // Extract tool_input based on format
+    const toolInput =
+      'data' in hookData ? hookData.data.tool_input : hookData.tool_input
+
+    if (toolInput) {
+      if (toolInput.new_string !== undefined) {
+        content = toolInput.new_string
+      } else if (toolInput.content !== undefined) {
+        content = toolInput.content
+      } else if (toolInput.todos) {
+        // Extract content from todos array with status prefix
+        content = toolInput.todos
+          .map((todo) => {
+            const status = todo.status || 'pending'
+            return `${status}: ${todo.content}`
+          })
           .join('\n')
       }
     }

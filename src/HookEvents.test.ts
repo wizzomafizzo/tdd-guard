@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from 'vitest'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
-import { HookEvents, type HookData } from './HookEvents'
+import { HookEvents } from './HookEvents'
 
 describe('HookEvents', () => {
   const testContent = 'test content'
@@ -89,7 +89,7 @@ describe('HookEvents', () => {
   })
 
   describe('when logging TodoWrite data', () => {
-    test('logs todos content from TodoWrite tool', async () => {
+    test('logs todos with status prefix', async () => {
       const todoData = createTodoWriteData([
         {
           content: 'Check existing Husky and commitlint configuration files',
@@ -98,7 +98,7 @@ describe('HookEvents', () => {
         },
         {
           content: 'Install necessary dependencies for Husky and commitlint',
-          status: 'pending',
+          status: 'in_progress',
           priority: 'high',
         },
       ])
@@ -107,10 +107,41 @@ describe('HookEvents', () => {
 
       const logContent = await sut.readLogContent()
       expect(logContent).toContain(
-        'Check existing Husky and commitlint configuration files'
+        'pending: Check existing Husky and commitlint configuration files'
       )
       expect(logContent).toContain(
-        'Install necessary dependencies for Husky and commitlint'
+        'in_progress: Install necessary dependencies for Husky and commitlint'
+      )
+    })
+
+    test('handles full hook event structure with nested data', async () => {
+      const fullHookData = {
+        timestamp: '2025-07-05T11:24:53.241Z',
+        tool: 'N/A',
+        data: {
+          session_id: '947d9a0b-108e-47db-a376-b4eb1d2d7533',
+          transcript_path:
+            '/Users/name/.claude/projects/-Users-name-projects-TDDetective/947d9a0b-108e-47db-a376-b4eb1d2d7533.jsonl',
+          hook_event_name: 'PreToolUse',
+          tool_name: 'TodoWrite',
+          tool_input: {
+            todos: [
+              {
+                content: 'Check existing Husky configuration',
+                status: 'in_progress',
+                priority: 'high',
+                id: '1',
+              },
+            ],
+          },
+        },
+      }
+
+      await sut.logHookData(fullHookData)
+
+      const logContent = await sut.readLogContent()
+      expect(logContent).toContain(
+        'in_progress: Check existing Husky configuration'
       )
     })
   })
@@ -176,7 +207,7 @@ describe('HookEvents', () => {
       logWithContent,
       logEmpty,
       logWithEmptyToolInput,
-      logHookData: (data: HookData) => hookEvents.logHookData(data),
+      logHookData: (data: unknown) => hookEvents.logHookData(data),
     }
   }
 })
