@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { tddValidator } from './tddValidator';
 
 describe('tddValidator', () => {
@@ -18,7 +18,7 @@ describe('tddValidator', () => {
     expect(result).toBe('violation');
   });
 
-  test('returns empty string when content contains one test', () => {
+  test('returns ok when content contains one test', () => {
     const content = `
       test('single test', () => {
         expect(true).toBe(true);
@@ -27,6 +27,6 @@ describe('tddValidator', () => {
     
     const result = tddValidator(content);
     
-    expect(result).toBe('');
+    expect(result).toBe('ok');
   });
 });
