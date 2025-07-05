@@ -160,6 +160,35 @@ describe('HookEvents', () => {
     })
   })
 
+  describe('edge cases for content extraction', () => {
+    test('handles Write tool with content', async () => {
+      await sut.logHookData({
+        tool_name: 'Write',
+        tool_input: {
+          file_path: '/some/path',
+          content: 'file content to write',
+        },
+      })
+
+      const logContent = await sut.readLogContent()
+      expect(logContent).toBe('file content to write\n')
+    })
+
+    test('handles Edit tool with new_string', async () => {
+      await sut.logHookData({
+        tool_name: 'Edit',
+        tool_input: {
+          file_path: '/some/path',
+          old_string: 'old',
+          new_string: 'new edit content',
+        },
+      })
+
+      const logContent = await sut.readLogContent()
+      expect(logContent).toBe('new edit content\n')
+    })
+  })
+
   // Test helper
   async function setupHookEvents(logFilePath: string) {
     const hookEvents = new HookEvents(logFilePath)
