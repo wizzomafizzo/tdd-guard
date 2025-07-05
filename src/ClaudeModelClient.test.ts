@@ -12,6 +12,7 @@ describe('ClaudeModelClient', () => {
   const maxTurnsFlag = '--max-turns 1'
   const printFlag = '--print'
   const command = 'claude'
+  const modelFlag = '--model sonnet'
   const encodingOption = { encoding: 'utf-8' }
   const timeoutOption = { timeout: 10000 }
 
@@ -43,6 +44,10 @@ describe('ClaudeModelClient', () => {
 
   test('uses print mode flag', () => {
     sut.assertCommandContains(printFlag)
+  })
+
+  test('uses sonnet model flag', () => {
+    sut.assertCommandContains(modelFlag)
   })
 
   test('includes line break after question', () => {
