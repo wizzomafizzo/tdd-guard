@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from 'vitest'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
+import { z } from 'zod'
 import { HookEvents } from './HookEvents'
 import { SimpleHookDataSchema, FullHookEventSchema } from './schemas/hookData'
 
@@ -12,38 +13,6 @@ describe('HookEvents', () => {
   let sut: Awaited<ReturnType<typeof setupHookEvents>>
   let tempDir: string
   let logFilePath: string
-
-  // Test data factories using Zod schemas
-  const createSimpleHookData = {
-    withNewString: (content: string) =>
-      SimpleHookDataSchema.parse({
-        tool_name: 'Edit',
-        tool_input: { new_string: content },
-      }),
-
-    withContent: (content: string) =>
-      SimpleHookDataSchema.parse({
-        tool_name: 'Write',
-        tool_input: { content },
-      }),
-
-    withTodos: (todos: Array<{ content: string; status?: string }>) =>
-      SimpleHookDataSchema.parse({
-        tool_name: 'TodoWrite',
-        tool_input: {
-          todos: todos.map((todo, index) => ({
-            content: todo.content,
-            status: todo.status || 'pending',
-            priority: 'medium',
-            id: String(index + 1),
-          })),
-        },
-      }),
-
-    empty: () => SimpleHookDataSchema.parse({}),
-
-    withEmptyToolInput: () => SimpleHookDataSchema.parse({ tool_input: {} }),
-  }
 
   beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'hook-events-test-'))
@@ -57,8 +26,12 @@ describe('HookEvents', () => {
 
   describe('with logged content', () => {
     beforeEach(async () => {
-      await sut.logWithNewString(testNewString)
-      await sut.logWithContent(testContent)
+      await sut.logHookData(
+        testDataFactory.editEvent({ content: testNewString })
+      )
+      await sut.logHookData(
+        testDataFactory.writeEvent({ content: testContent })
+      )
     })
 
     test('creates the specified log file', async () => {
@@ -103,47 +76,15 @@ describe('HookEvents', () => {
 
   describe('when logging TodoWrite data', () => {
     test('logs todos with status prefix', async () => {
-      await sut.logWithTodos([
-        {
-          content: 'Check existing Husky and commitlint configuration files',
-          status: 'pending',
-        },
-        {
-          content: 'Install necessary dependencies for Husky and commitlint',
-          status: 'in_progress',
-        },
-      ])
+      await sut.logHookData(testDataFactory.todosEvent())
 
       const logContent = await sut.readLogContent()
-      expect(logContent).toContain(
-        'pending: Check existing Husky and commitlint configuration files'
-      )
-      expect(logContent).toContain(
-        'in_progress: Install necessary dependencies for Husky and commitlint'
-      )
+      expect(logContent).toContain('pending: First default task')
+      expect(logContent).toContain('in_progress: Second default task')
     })
 
     test('handles full hook event structure with nested data', async () => {
-      const fullHookData = FullHookEventSchema.parse({
-        timestamp: '2025-07-05T11:24:53.241Z',
-        tool: 'N/A',
-        data: {
-          session_id: '947d9a0b-108e-47db-a376-b4eb1d2d7533',
-          transcript_path: '/Users/name/.claude/projects/test.jsonl',
-          hook_event_name: 'PreToolUse',
-          tool_name: 'TodoWrite',
-          tool_input: {
-            todos: [
-              {
-                content: 'Check existing Husky configuration',
-                status: 'in_progress',
-                priority: 'high',
-                id: '1',
-              },
-            ],
-          },
-        },
-      })
+      const fullHookData = testDataFactory.fullTodoEvent()
 
       await sut.logHookData(fullHookData)
 
@@ -153,28 +94,25 @@ describe('HookEvents', () => {
       )
     })
 
-    test('uses pending as default status when not specified', async () => {
-      await sut.logWithTodos([
-        { content: 'Task without status' },
-        { content: 'Another task without status' },
-      ])
+    test('logs single todo with default status', async () => {
+      const todoData = testDataFactory.todoEvent()
+
+      await sut.logHookData(todoData)
 
       const logContent = await sut.readLogContent()
-      expect(logContent).toBe(
-        'pending: Task without status\npending: Another task without status\n'
-      )
+      expect(logContent).toBe('pending: Default todo task\n')
     })
   })
 
   describe('when hook data has no content', () => {
     test('does not create file when tool_input is missing', async () => {
-      await sut.logEmpty()
+      await sut.logHookData(testDataFactory.emptyEvent())
 
       expect(await sut.fileExists()).toBe(false)
     })
 
     test('does not create file when tool_input is empty', async () => {
-      await sut.logWithEmptyToolInput()
+      await sut.logHookData(testDataFactory.emptyToolInputEvent())
 
       expect(await sut.fileExists()).toBe(false)
     })
@@ -182,34 +120,21 @@ describe('HookEvents', () => {
 
   describe('edge cases for content extraction', () => {
     test('handles Write tool with content', async () => {
-      const writeData = SimpleHookDataSchema.parse({
-        tool_name: 'Write',
-        tool_input: {
-          file_path: '/some/path',
-          content: 'file content to write',
-        },
-      })
+      const writeData = testDataFactory.writeEvent()
 
       await sut.logHookData(writeData)
 
       const logContent = await sut.readLogContent()
-      expect(logContent).toBe('file content to write\n')
+      expect(logContent).toBe('default write content\n')
     })
 
     test('handles Edit tool with new_string', async () => {
-      const editData = SimpleHookDataSchema.parse({
-        tool_name: 'Edit',
-        tool_input: {
-          file_path: '/some/path',
-          old_string: 'old',
-          new_string: 'new edit content',
-        },
-      })
+      const editData = testDataFactory.editEvent()
 
       await sut.logHookData(editData)
 
       const logContent = await sut.readLogContent()
-      expect(logContent).toBe('new edit content\n')
+      expect(logContent).toBe('default edit content\n')
     })
 
     test('ignores invalid data structures', async () => {
@@ -242,38 +167,108 @@ describe('HookEvents', () => {
       return fs.readFile(logFilePath, 'utf-8')
     }
 
-    const logWithNewString = async (content: string) => {
-      await hookEvents.logHookData(createSimpleHookData.withNewString(content))
-    }
-
-    const logWithContent = async (content: string) => {
-      await hookEvents.logHookData(createSimpleHookData.withContent(content))
-    }
-
-    const logWithTodos = async (
-      todos: Array<{ content: string; status?: string }>
-    ) => {
-      await hookEvents.logHookData(createSimpleHookData.withTodos(todos))
-    }
-
-    const logEmpty = async () => {
-      await hookEvents.logHookData(createSimpleHookData.empty())
-    }
-
-    const logWithEmptyToolInput = async () => {
-      await hookEvents.logHookData(createSimpleHookData.withEmptyToolInput())
-    }
-
     return {
       cleanup,
       fileExists,
       readLogContent,
-      logWithNewString,
-      logWithContent,
-      logWithTodos,
-      logEmpty,
-      logWithEmptyToolInput,
       logHookData: (data: unknown) => hookEvents.logHookData(data),
     }
+  }
+
+  // Test data factories with sensible defaults
+  const testDataFactory = {
+    // Simple hook data events with defaults
+    editEvent: (overrides?: { content?: string }) => {
+      const content = overrides?.content || 'default edit content'
+      return SimpleHookDataSchema.parse({
+        tool_name: 'Edit',
+        tool_input: {
+          new_string: content,
+        },
+      })
+    },
+
+    writeEvent: (overrides?: { content?: string }) => {
+      const content = overrides?.content || 'default write content'
+      return SimpleHookDataSchema.parse({
+        tool_name: 'Write',
+        tool_input: {
+          content,
+        },
+      })
+    },
+
+    todoEvent: (overrides?: { content?: string; status?: string }) => {
+      return SimpleHookDataSchema.parse({
+        tool_name: 'TodoWrite',
+        tool_input: {
+          todos: [
+            {
+              content: overrides?.content || 'Default todo task',
+              status: overrides?.status || 'pending',
+              priority: 'medium',
+              id: '1',
+            },
+          ],
+        },
+      })
+    },
+
+    todosEvent: (todos?: Array<{ content: string; status?: string }>) => {
+      const items = todos || [
+        { content: 'First default task', status: 'pending' },
+        { content: 'Second default task', status: 'in_progress' },
+      ]
+
+      return SimpleHookDataSchema.parse({
+        tool_name: 'TodoWrite',
+        tool_input: {
+          todos: items.map((item, index) => ({
+            content: item.content,
+            status: item.status || 'pending',
+            priority: 'medium',
+            id: String(index + 1),
+          })),
+        },
+      })
+    },
+
+    // Full hook event with TodoWrite defaults
+    fullTodoEvent: (overrides?: {
+      content?: string
+      status?: string
+      timestamp?: string
+    }) => {
+      return FullHookEventSchema.parse({
+        timestamp: overrides?.timestamp || '2025-07-05T11:24:53.241Z',
+        tool: 'N/A',
+        data: {
+          session_id: '947d9a0b-108e-47db-a376-b4eb1d2d7533',
+          transcript_path: '/Users/test/.claude/projects/test.jsonl',
+          hook_event_name: 'PreToolUse',
+          tool_name: 'TodoWrite',
+          tool_input: {
+            todos: [
+              {
+                content:
+                  overrides?.content || 'Check existing Husky configuration',
+                status: overrides?.status || 'in_progress',
+                priority: 'high',
+                id: '1',
+              },
+            ],
+          },
+        },
+      })
+    },
+
+    emptyEvent: () => SimpleHookDataSchema.parse({}),
+
+    emptyToolInputEvent: () => SimpleHookDataSchema.parse({ tool_input: {} }),
+
+    // Generic factory for custom cases
+    customEvent: (data: z.infer<typeof SimpleHookDataSchema>) => {
+      return SimpleHookDataSchema.parse(data)
+    },
   }
 })
