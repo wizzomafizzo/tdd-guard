@@ -11,8 +11,9 @@ describe('ClaudeModelClient', () => {
   const format = '--output-format json';
   const maxTurnsFlag = '--max-turns 1';
   const printFlag = '--print';
-  const encoding = 'utf-8';
   const command = 'claude';
+  const encodingOption = { encoding: 'utf-8' };
+  const timeoutOption = { timeout: 10000 };
   
   let sut: ReturnType<typeof setupModelClient>;
   
@@ -53,7 +54,11 @@ describe('ClaudeModelClient', () => {
   });
 
   test('uses utf-8 encoding', () => {
-    sut.assertCalledWithOptions({ encoding: encoding });
+    sut.assertCalledWithOptions(encodingOption);
+  });
+
+  test('sets timeout to 10 seconds', () => {
+    sut.assertCalledWithOptions(timeoutOption);
   });
 
   test('returns parsed result from response', () => {
@@ -103,8 +108,11 @@ describe('ClaudeModelClient', () => {
       );
     };
     
-    const assertCalledWithOptions = (options: object) => {
-      expect(mockExecSync).toHaveBeenCalledWith(expect.any(String), options);
+    const assertCalledWithOptions = (expectedOptions: object) => {
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.any(String), 
+        expect.objectContaining(expectedOptions)
+      );
     };
     
     return {
