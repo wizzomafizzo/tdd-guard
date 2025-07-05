@@ -61,6 +61,10 @@ describe('HookEvents', () => {
 
         expect(firstIndex).toBeLessThan(secondIndex)
       })
+
+      test('separates entries with newline', async () => {
+        expect(logContent).toContain('\n')
+      })
     })
   })
 
