@@ -1,5 +1,5 @@
-import { describe, test, expect, vi } from 'vitest';
-import { tddValidator } from './tddValidator';
+import { describe, test, expect } from 'vitest'
+import { tddValidator } from './tddValidator'
 
 describe('tddValidator', () => {
   test('returns violation when content contains two tests', () => {
@@ -11,22 +11,22 @@ describe('tddValidator', () => {
       test('second test', () => {
         expect(false).toBe(false);
       });
-    `;
-    
-    const result = tddValidator(content);
-    
-    expect(result).toBe('violation');
-  });
+    `
+
+    const result = tddValidator(content)
+
+    expect(result).toBe('violation')
+  })
 
   test('returns ok when content contains one test', () => {
     const content = `
       test('single test', () => {
         expect(true).toBe(true);
       });
-    `;
-    
-    const result = tddValidator(content);
-    
-    expect(result).toBe('ok');
-  });
-});
+    `
+
+    const result = tddValidator(content)
+
+    expect(result).toBe('ok')
+  })
+})

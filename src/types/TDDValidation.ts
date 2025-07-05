@@ -1,1 +1,1 @@
-export type TDDValidationResult = 'ok' | 'violation';
+export type TDDValidationResult = 'ok' | 'violation'
