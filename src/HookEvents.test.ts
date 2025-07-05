@@ -3,6 +3,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
 import { HookEvents } from './HookEvents'
+import { SimpleHookDataSchema, FullHookEventSchema } from './schemas/hookData'
 
 describe('HookEvents', () => {
   const testContent = 'test content'
@@ -12,25 +13,37 @@ describe('HookEvents', () => {
   let tempDir: string
   let logFilePath: string
 
-  // Test data factory
-  const createTodoWriteData = (
-    todos: Array<{
-      content: string
-      status?: string
-      priority?: string
-      id?: string
-    }>
-  ) => ({
-    tool_name: 'TodoWrite',
-    tool_input: {
-      todos: todos.map((todo, index) => ({
-        content: todo.content,
-        status: todo.status || 'pending',
-        priority: todo.priority || 'medium',
-        id: todo.id || String(index + 1),
-      })),
-    },
-  })
+  // Test data factories using Zod schemas
+  const createSimpleHookData = {
+    withNewString: (content: string) =>
+      SimpleHookDataSchema.parse({
+        tool_name: 'Edit',
+        tool_input: { new_string: content },
+      }),
+
+    withContent: (content: string) =>
+      SimpleHookDataSchema.parse({
+        tool_name: 'Write',
+        tool_input: { content },
+      }),
+
+    withTodos: (todos: Array<{ content: string; status?: string }>) =>
+      SimpleHookDataSchema.parse({
+        tool_name: 'TodoWrite',
+        tool_input: {
+          todos: todos.map((todo, index) => ({
+            content: todo.content,
+            status: todo.status || 'pending',
+            priority: 'medium',
+            id: String(index + 1),
+          })),
+        },
+      }),
+
+    empty: () => SimpleHookDataSchema.parse({}),
+
+    withEmptyToolInput: () => SimpleHookDataSchema.parse({ tool_input: {} }),
+  }
 
   beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'hook-events-test-'))
@@ -90,20 +103,16 @@ describe('HookEvents', () => {
 
   describe('when logging TodoWrite data', () => {
     test('logs todos with status prefix', async () => {
-      const todoData = createTodoWriteData([
+      await sut.logWithTodos([
         {
           content: 'Check existing Husky and commitlint configuration files',
           status: 'pending',
-          priority: 'high',
         },
         {
           content: 'Install necessary dependencies for Husky and commitlint',
           status: 'in_progress',
-          priority: 'high',
         },
       ])
-
-      await sut.logHookData(todoData)
 
       const logContent = await sut.readLogContent()
       expect(logContent).toContain(
@@ -115,13 +124,12 @@ describe('HookEvents', () => {
     })
 
     test('handles full hook event structure with nested data', async () => {
-      const fullHookData = {
+      const fullHookData = FullHookEventSchema.parse({
         timestamp: '2025-07-05T11:24:53.241Z',
         tool: 'N/A',
         data: {
           session_id: '947d9a0b-108e-47db-a376-b4eb1d2d7533',
-          transcript_path:
-            '/Users/name/.claude/projects/-Users-name-projects-TDDetective/947d9a0b-108e-47db-a376-b4eb1d2d7533.jsonl',
+          transcript_path: '/Users/name/.claude/projects/test.jsonl',
           hook_event_name: 'PreToolUse',
           tool_name: 'TodoWrite',
           tool_input: {
@@ -135,13 +143,25 @@ describe('HookEvents', () => {
             ],
           },
         },
-      }
+      })
 
       await sut.logHookData(fullHookData)
 
       const logContent = await sut.readLogContent()
       expect(logContent).toContain(
         'in_progress: Check existing Husky configuration'
+      )
+    })
+
+    test('uses pending as default status when not specified', async () => {
+      await sut.logWithTodos([
+        { content: 'Task without status' },
+        { content: 'Another task without status' },
+      ])
+
+      const logContent = await sut.readLogContent()
+      expect(logContent).toBe(
+        'pending: Task without status\npending: Another task without status\n'
       )
     })
   })
@@ -162,7 +182,7 @@ describe('HookEvents', () => {
 
   describe('edge cases for content extraction', () => {
     test('handles Write tool with content', async () => {
-      await sut.logHookData({
+      const writeData = SimpleHookDataSchema.parse({
         tool_name: 'Write',
         tool_input: {
           file_path: '/some/path',
@@ -170,12 +190,14 @@ describe('HookEvents', () => {
         },
       })
 
+      await sut.logHookData(writeData)
+
       const logContent = await sut.readLogContent()
       expect(logContent).toBe('file content to write\n')
     })
 
     test('handles Edit tool with new_string', async () => {
-      await sut.logHookData({
+      const editData = SimpleHookDataSchema.parse({
         tool_name: 'Edit',
         tool_input: {
           file_path: '/some/path',
@@ -184,8 +206,20 @@ describe('HookEvents', () => {
         },
       })
 
+      await sut.logHookData(editData)
+
       const logContent = await sut.readLogContent()
       expect(logContent).toBe('new edit content\n')
+    })
+
+    test('ignores invalid data structures', async () => {
+      await sut.logHookData({ invalid: 'structure' })
+      expect(await sut.fileExists()).toBe(false)
+    })
+
+    test('ignores non-object data', async () => {
+      await sut.logHookData('not an object')
+      expect(await sut.fileExists()).toBe(false)
     })
   })
 
@@ -209,23 +243,25 @@ describe('HookEvents', () => {
     }
 
     const logWithNewString = async (content: string) => {
-      await hookEvents.logHookData({
-        tool_input: { new_string: content },
-      })
+      await hookEvents.logHookData(createSimpleHookData.withNewString(content))
     }
 
     const logWithContent = async (content: string) => {
-      await hookEvents.logHookData({
-        tool_input: { content },
-      })
+      await hookEvents.logHookData(createSimpleHookData.withContent(content))
+    }
+
+    const logWithTodos = async (
+      todos: Array<{ content: string; status?: string }>
+    ) => {
+      await hookEvents.logHookData(createSimpleHookData.withTodos(todos))
     }
 
     const logEmpty = async () => {
-      await hookEvents.logHookData({})
+      await hookEvents.logHookData(createSimpleHookData.empty())
     }
 
     const logWithEmptyToolInput = async () => {
-      await hookEvents.logHookData({ tool_input: {} })
+      await hookEvents.logHookData(createSimpleHookData.withEmptyToolInput())
     }
 
     return {
@@ -234,6 +270,7 @@ describe('HookEvents', () => {
       readLogContent,
       logWithNewString,
       logWithContent,
+      logWithTodos,
       logEmpty,
       logWithEmptyToolInput,
       logHookData: (data: unknown) => hookEvents.logHookData(data),
