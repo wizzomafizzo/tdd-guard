@@ -1,12 +1,13 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { ClaudeModelClient } from './ClaudeModelClient'
 import { execSync } from 'child_process'
+import { Context } from './types/Context'
 
 vi.mock('child_process')
 
 describe('ClaudeModelClient', () => {
   const question = 'Does this follow TDD?'
-  const context = 'test code here'
+  const context = { todo: 'todo list content', edit: 'edit content' }
   const result = 'This code follows TDD principles'
   const format = '--output-format json'
   const maxTurnsFlag = '--max-turns 1'
@@ -26,8 +27,12 @@ describe('ClaudeModelClient', () => {
     sut.assertCommandContains(question)
   })
 
-  test('includes context in prompt', () => {
-    sut.assertCommandContains(context)
+  test('includes todo context in prompt', () => {
+    sut.assertCommandContains('<todo>todo list content</todo>')
+  })
+
+  test('includes edit context in prompt', () => {
+    sut.assertCommandContains('<edit>edit content</edit>')
   })
 
   test('uses json output format', () => {
@@ -54,8 +59,35 @@ describe('ClaudeModelClient', () => {
     sut.assertCommandContains(question + '\n')
   })
 
-  test('wraps context in context tags', () => {
-    sut.assertCommandContains(`<context>${context}</context>`)
+  test('includes context explanation', () => {
+    sut.assertCommandContains('The following context is provided:')
+  })
+
+  test('explains edit section', () => {
+    sut.assertCommandContains('Edit: The code changes being made by the agent')
+  })
+
+  test('explains todo section when present', () => {
+    sut.assertCommandContains(
+      "Todo: Current state of the agent'\\''s task list"
+    )
+  })
+
+  test('handles context with only edit field', () => {
+    const contextWithOnlyEdit = { edit: 'only edit content' }
+    const sutWithPartialContext = setupModelClient({
+      context: contextWithOnlyEdit,
+    })
+    sutWithPartialContext.assertCommandContains(
+      '<edit>only edit content</edit>'
+    )
+    // Should still explain edit section
+    sutWithPartialContext.assertCommandContains(
+      'Edit: The code changes being made by the agent'
+    )
+    // Should not include todo section or tags when todo is not present
+    sutWithPartialContext.assertCommandDoesNotContain('Todo:')
+    sutWithPartialContext.assertCommandDoesNotContain('<todo>')
   })
 
   test('uses utf-8 encoding', () => {
@@ -72,7 +104,7 @@ describe('ClaudeModelClient', () => {
 
   describe('handles special characters', () => {
     const questionWithQuote = "What's the TDD pattern?"
-    const contextWithQuote = "test('it should work', () => {})"
+    const contextWithQuote = { edit: "test('it should work', () => {})" }
 
     let sut: ReturnType<typeof setupModelClient>
 
@@ -95,7 +127,7 @@ describe('ClaudeModelClient', () => {
   // Test helper
   function setupModelClient(testData?: {
     question?: string
-    context?: string
+    context?: Context
     result?: string
   }) {
     const {
@@ -117,6 +149,13 @@ describe('ClaudeModelClient', () => {
       )
     }
 
+    const assertCommandDoesNotContain = (content: string) => {
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.not.stringContaining(content),
+        expect.any(Object)
+      )
+    }
+
     const assertCalledWithOptions = (expectedOptions: object) => {
       expect(mockExecSync).toHaveBeenCalledWith(
         expect.any(String),
@@ -127,6 +166,7 @@ describe('ClaudeModelClient', () => {
     return {
       result: actualResult,
       assertCommandContains,
+      assertCommandDoesNotContain,
       assertCalledWithOptions,
     }
   }
