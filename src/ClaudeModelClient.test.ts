@@ -7,7 +7,11 @@ vi.mock('child_process')
 
 describe('ClaudeModelClient', () => {
   const question = 'Does this follow TDD?'
-  const context = { todo: 'todo list content', edit: 'edit content' }
+  const context = {
+    todo: 'todo list content',
+    edit: 'edit content',
+    test: 'test output content',
+  }
   const result = 'This code follows TDD principles'
   const format = '--output-format json'
   const maxTurnsFlag = '--max-turns 1'
@@ -33,6 +37,10 @@ describe('ClaudeModelClient', () => {
 
   test('includes edit context in prompt', () => {
     sut.assertCommandContains('<edit>edit content</edit>')
+  })
+
+  test('includes test context in prompt', () => {
+    sut.assertCommandContains('<test>test output content</test>')
   })
 
   test('uses json output format', () => {
@@ -73,6 +81,10 @@ describe('ClaudeModelClient', () => {
     )
   })
 
+  test('explains test section when present', () => {
+    sut.assertCommandContains('Test: The test output from running the tests')
+  })
+
   test('handles context with only edit field', () => {
     const contextWithOnlyEdit = { edit: 'only edit content' }
     const sutWithPartialContext = setupModelClient({
@@ -88,6 +100,9 @@ describe('ClaudeModelClient', () => {
     // Should not include todo section or tags when todo is not present
     sutWithPartialContext.assertCommandDoesNotContain('Todo:')
     sutWithPartialContext.assertCommandDoesNotContain('<todo>')
+    // Should not include test section or tags when test is not present
+    sutWithPartialContext.assertCommandDoesNotContain('Test:')
+    sutWithPartialContext.assertCommandDoesNotContain('<test>')
   })
 
   test('uses utf-8 encoding', () => {

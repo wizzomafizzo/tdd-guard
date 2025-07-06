@@ -14,6 +14,11 @@ export class ClaudeModelClient implements IModelClient {
       contextString += `<todo>${context.todo}</todo>`
     }
 
+    if (context.test) {
+      contextExplanation += 'Test: The test output from running the tests\n'
+      contextString += `<test>${context.test}</test>`
+    }
+
     const prompt = `${question}${contextExplanation}${contextString}`
     const escapedPrompt = prompt.replace(/'/g, "'\\''")
     const command = `claude --print '${escapedPrompt}' --output-format json --max-turns 1 --model sonnet`
