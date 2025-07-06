@@ -11,15 +11,11 @@
         ]
       },
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Write|Edit|MultiEdit|TodoWrite",
         "hooks": [
           {
             "type": "command",
-            "command": "node hooks/content-logger.js"
-          },
-          {
-            "type": "command",
-            "command": "node hooks/mew-detector.js"
+            "command": "node dist/cli/hook-logger.js"
           }
         ]
       }
