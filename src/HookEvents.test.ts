@@ -12,12 +12,10 @@ describe('HookEvents', () => {
 
   let sut: Awaited<ReturnType<typeof setupHookEvents>>
   let tempDir: string
-  let logFilePath: string
 
   beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'hook-events-test-'))
-    logFilePath = path.join(tempDir, 'test.log')
-    sut = await setupHookEvents(logFilePath)
+    sut = await setupHookEvents(tempDir)
   })
 
   afterEach(async () => {
@@ -154,14 +152,15 @@ describe('HookEvents', () => {
   })
 
   // Test helper
-  async function setupHookEvents(logFilePath: string) {
-    const hookEvents = new HookEvents(logFilePath)
+  async function setupHookEvents(logDir: string) {
+    const hookEvents = new HookEvents(logDir)
 
     const cleanup = async () => {
-      await fs.rm(tempDir, { recursive: true, force: true })
+      await fs.rm(logDir, { recursive: true, force: true })
     }
 
     const fileExists = async () => {
+      const logFilePath = path.join(logDir, 'edit.txt')
       return fs
         .access(logFilePath)
         .then(() => true)
@@ -169,6 +168,7 @@ describe('HookEvents', () => {
     }
 
     const readLogContent = async () => {
+      const logFilePath = path.join(logDir, 'edit.txt')
       return fs.readFile(logFilePath, 'utf-8')
     }
 

@@ -3,9 +3,7 @@
 import { HookEvents } from '../HookEvents'
 import path from 'path'
 
-const logPath =
-  process.env.HOOK_LOG_PATH ||
-  path.join(process.cwd(), 'logs', 'content-events.log')
+const logPath = process.env.HOOK_LOG_PATH || path.join(process.cwd(), 'logs')
 
 let inputData = ''
 process.stdin.setEncoding('utf8')

@@ -9,12 +9,12 @@ import {
 export type { HookData }
 
 export class HookEvents {
-  constructor(private logFilePath: string) {}
+  constructor(private logDirPath: string) {}
 
   async ensureLogFile(): Promise<void> {
-    const dir = path.dirname(this.logFilePath)
-    await fs.mkdir(dir, { recursive: true })
-    await fs.writeFile(this.logFilePath, '', { flag: 'a' })
+    await fs.mkdir(this.logDirPath, { recursive: true })
+    const logFilePath = path.join(this.logDirPath, 'edit.txt')
+    await fs.writeFile(logFilePath, '', { flag: 'a' })
   }
 
   async logHookData(rawData: unknown): Promise<void> {
@@ -32,7 +32,8 @@ export class HookEvents {
 
     if (content !== null) {
       await this.ensureLogFile()
-      await fs.appendFile(this.logFilePath, content + '\n---\n')
+      const logFilePath = path.join(this.logDirPath, 'edit.txt')
+      await fs.appendFile(logFilePath, content + '\n---\n')
     }
   }
 

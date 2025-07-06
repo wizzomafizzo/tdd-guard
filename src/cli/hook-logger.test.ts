@@ -6,13 +6,11 @@ import os from 'os'
 
 describe('hook-logger CLI', () => {
   let tempDir: string
-  let logFilePath: string
   const cliPath = path.join(__dirname, 'hook-logger.ts')
 
   beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'hook-logger-test-'))
-    logFilePath = path.join(tempDir, 'test.log')
-    vi.stubEnv('HOOK_LOG_PATH', logFilePath)
+    vi.stubEnv('HOOK_LOG_PATH', tempDir)
   })
 
   test('has shebang for direct execution', async () => {
@@ -45,6 +43,7 @@ describe('hook-logger CLI', () => {
 
     await runCli(JSON.stringify(hookData))
 
+    const logFilePath = path.join(tempDir, 'edit.txt')
     const logContent = await fs.readFile(logFilePath, 'utf-8')
     expect(logContent).toContain('test content from CLI')
   })
