@@ -1,18 +1,17 @@
-import fs from 'fs/promises'
-import path from 'path'
 import {
   HookDataSchema,
   type HookData,
   type ToolInput,
 } from './schemas/hookData'
+import { FileStorage } from './storage/FileStorage'
 
 export type { HookData }
 
 export class HookEvents {
-  constructor(private logDirPath: string) {}
+  private storage: FileStorage
 
-  async ensureLogDirectory(): Promise<void> {
-    await fs.mkdir(this.logDirPath, { recursive: true })
+  constructor(private logDirPath: string) {
+    this.storage = new FileStorage(logDirPath)
   }
 
   async logHookData(rawData: unknown): Promise<void> {
@@ -31,10 +30,11 @@ export class HookEvents {
     const content = this.extractContent(toolInput)
 
     if (content !== null) {
-      const fileName = toolName === 'TodoWrite' ? 'todo.txt' : 'edit.txt'
-      await this.ensureLogDirectory()
-      const logFilePath = path.join(this.logDirPath, fileName)
-      await fs.writeFile(logFilePath, content)
+      if (toolName === 'TodoWrite') {
+        await this.storage.saveTodo(content)
+      } else {
+        await this.storage.saveEdit(content)
+      }
     }
   }
 
