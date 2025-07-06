@@ -5,7 +5,8 @@ import { execSync } from 'child_process'
 export class ClaudeModelClient implements IModelClient {
   ask(question: string, context: Context): string {
     let contextExplanation = '\n\nThe following context is provided:\n'
-    contextExplanation += 'Edit: The code changes being made by the agent\n'
+    contextExplanation +=
+      'Edit: This section shows the changes that the agent wants to make\n'
 
     let contextString = `<edit>${context.edit}</edit>`
 

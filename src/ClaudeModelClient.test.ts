@@ -72,7 +72,9 @@ describe('ClaudeModelClient', () => {
   })
 
   test('explains edit section', () => {
-    sut.assertCommandContains('Edit: The code changes being made by the agent')
+    sut.assertCommandContains(
+      'Edit: This section shows the changes that the agent wants to make'
+    )
   })
 
   test('explains todo section when present', () => {
@@ -95,7 +97,7 @@ describe('ClaudeModelClient', () => {
     )
     // Should still explain edit section
     sutWithPartialContext.assertCommandContains(
-      'Edit: The code changes being made by the agent'
+      'Edit: This section shows the changes that the agent wants to make'
     )
     // Should not include todo section or tags when todo is not present
     sutWithPartialContext.assertCommandDoesNotContain('Todo:')

@@ -1,16 +1,15 @@
 import { ClaudeModelClient } from './ClaudeModelClient'
 import { IModelClient } from './types/ModelClient'
 import { TDDValidationResult } from './types/TDDValidation'
+import { Context } from './types/Context'
+import { SYSTEM_PROMPT } from './system-prompt'
 
 export function tddValidator(
-  content: string,
+  context: Context,
   modelClient: IModelClient = new ClaudeModelClient()
 ): TDDValidationResult {
-  const question =
-    'Count the number of test() calls in the `<edit>` section. If there are 2 or more tests, respond with exactly the word "violation". If there is 1 or 0 tests, respond with exactly the word "ok".'
-
   try {
-    const response = modelClient.ask(question, { edit: content })
+    const response = modelClient.ask(SYSTEM_PROMPT, context)
 
     // The model should return either 'violation' or 'ok'
     if (!response) return 'ok'
