@@ -71,6 +71,11 @@ describe('HookEvents', () => {
       test('separates entries with newline', async () => {
         expect(logContent).toContain('\n')
       })
+
+      test('separates entries with --- divider', async () => {
+        expect(logContent).toContain('---')
+        expect(logContent).toBe(`${testNewString}\n---\n${testContent}\n---\n`)
+      })
     })
   })
 
@@ -100,7 +105,7 @@ describe('HookEvents', () => {
       await sut.logHookData(todoData)
 
       const logContent = await sut.readLogContent()
-      expect(logContent).toBe('pending: Default todo task\n')
+      expect(logContent).toContain('pending: Default todo task')
     })
   })
 
@@ -125,7 +130,7 @@ describe('HookEvents', () => {
       await sut.logHookData(writeData)
 
       const logContent = await sut.readLogContent()
-      expect(logContent).toBe('default write content\n')
+      expect(logContent).toContain('default write content')
     })
 
     test('handles Edit tool with new_string', async () => {
@@ -134,7 +139,7 @@ describe('HookEvents', () => {
       await sut.logHookData(editData)
 
       const logContent = await sut.readLogContent()
-      expect(logContent).toBe('default edit content\n')
+      expect(logContent).toContain('default edit content')
     })
 
     test('ignores invalid data structures', async () => {

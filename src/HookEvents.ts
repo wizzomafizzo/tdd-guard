@@ -32,7 +32,7 @@ export class HookEvents {
 
     if (content !== null) {
       await this.ensureLogFile()
-      await fs.appendFile(this.logFilePath, content + '\n')
+      await fs.appendFile(this.logFilePath, content + '\n---\n')
     }
   }
 
