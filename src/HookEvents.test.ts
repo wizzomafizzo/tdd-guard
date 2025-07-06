@@ -25,9 +25,6 @@ describe('HookEvents', () => {
   describe('with logged content', () => {
     beforeEach(async () => {
       await sut.logHookData(
-        testDataFactory.editEvent({ content: testNewString })
-      )
-      await sut.logHookData(
         testDataFactory.writeEvent({ content: testContent })
       )
     })
@@ -36,44 +33,18 @@ describe('HookEvents', () => {
       expect(await sut.editsExist()).toBe(true)
     })
 
-    test('logs content from hook data with new_string property', async () => {
-      expect(await sut.readEdits()).toContain(testNewString)
+    test('logs content from Write tool', async () => {
+      expect(await sut.readEdits()).toBe(testContent)
     })
+  })
 
-    test('logs content from hook data with content property', async () => {
-      expect(await sut.readEdits()).toContain(testContent)
-    })
+  describe('with Edit tool', () => {
+    test('logs content from new_string property', async () => {
+      await sut.logHookData(
+        testDataFactory.editEvent({ content: testNewString })
+      )
 
-    describe('when reading the log content', () => {
-      let logContent: string
-
-      beforeEach(async () => {
-        logContent = await sut.readEdits()
-      })
-
-      test('contains the first entry', async () => {
-        expect(logContent).toContain(testNewString)
-      })
-
-      test('contains the second entry', async () => {
-        expect(logContent).toContain(testContent)
-      })
-
-      test('preserves order of entries', async () => {
-        const firstIndex = logContent.indexOf(testNewString)
-        const secondIndex = logContent.indexOf(testContent)
-
-        expect(firstIndex).toBeLessThan(secondIndex)
-      })
-
-      test('separates entries with newline', async () => {
-        expect(logContent).toContain('\n')
-      })
-
-      test('separates entries with --- divider', async () => {
-        expect(logContent).toContain('---')
-        expect(logContent).toBe(`${testNewString}\n---\n${testContent}\n---\n`)
-      })
+      expect(await sut.readEdits()).toBe(testNewString)
     })
   })
 
@@ -130,6 +101,24 @@ describe('HookEvents', () => {
       await sut.logHookData(testDataFactory.emptyToolInputEvent())
 
       expect(await sut.editsExist()).toBe(false)
+    })
+  })
+
+  describe('overwrite behavior', () => {
+    test('overwrites previous content instead of appending', async () => {
+      // First write
+      await sut.logHookData(
+        testDataFactory.writeEvent({ content: 'first content' })
+      )
+
+      // Second write should overwrite
+      await sut.logHookData(
+        testDataFactory.writeEvent({ content: 'second content' })
+      )
+
+      const logContent = await sut.readEdits()
+      expect(logContent).toBe('second content')
+      expect(logContent).not.toContain('first content')
     })
   })
 
