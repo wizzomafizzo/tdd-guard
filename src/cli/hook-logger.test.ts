@@ -58,23 +58,57 @@ describe('hook-logger CLI', () => {
 
   async function runCli(
     input: string
-  ): Promise<{ exitCode: number; stderr: string }> {
+  ): Promise<{ exitCode: number; stderr: string; stdout: string }> {
     return new Promise((resolve) => {
       const proc = spawn('npx', ['tsx', cliPath], {
         env: { ...process.env },
       })
 
       let stderr = ''
+      let stdout = ''
       proc.stderr.on('data', (data) => {
         stderr += data.toString()
+      })
+      proc.stdout.on('data', (data) => {
+        stdout += data.toString()
       })
 
       proc.stdin.write(input)
       proc.stdin.end()
 
       proc.on('close', (code) => {
-        resolve({ exitCode: code ?? 1, stderr })
+        resolve({ exitCode: code ?? 1, stderr, stdout })
       })
     })
   }
+
+  test('returns block decision when TDD validator detects violation', async () => {
+    const hookData = {
+      hook_name: 'PreToolUse',
+      tool_name: 'Edit',
+      tool_input: {
+        new_string: 'implementation without test',
+      },
+    }
+
+    const { stdout } = await runCli(JSON.stringify(hookData))
+    const output = JSON.parse(stdout)
+
+    expect(output.decision).toBe('block')
+    expect(output.reason).toBe('TDD violation detected')
+  })
+
+  test('returns nothing when TDD validator returns ok', async () => {
+    const hookData = {
+      hook_name: 'PreToolUse',
+      tool_name: 'Edit',
+      tool_input: {
+        new_string: 'test("should work", () => { expect(true).toBe(true) })',
+      },
+    }
+
+    const { stdout } = await runCli(JSON.stringify(hookData))
+
+    expect(stdout).toBe('')
+  })
 })
