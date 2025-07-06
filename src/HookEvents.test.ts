@@ -33,22 +33,22 @@ describe('HookEvents', () => {
     })
 
     test('creates the specified log file', async () => {
-      expect(await sut.fileExists()).toBe(true)
+      expect(await sut.editsExist()).toBe(true)
     })
 
     test('logs content from hook data with new_string property', async () => {
-      expect(await sut.readLogContent()).toContain(testNewString)
+      expect(await sut.readEdits()).toContain(testNewString)
     })
 
     test('logs content from hook data with content property', async () => {
-      expect(await sut.readLogContent()).toContain(testContent)
+      expect(await sut.readEdits()).toContain(testContent)
     })
 
     describe('when reading the log content', () => {
       let logContent: string
 
       beforeEach(async () => {
-        logContent = await sut.readLogContent()
+        logContent = await sut.readEdits()
       })
 
       test('contains the first entry', async () => {
@@ -78,10 +78,22 @@ describe('HookEvents', () => {
   })
 
   describe('when logging TodoWrite data', () => {
+    test('creates todo.txt file', async () => {
+      await sut.logHookData(testDataFactory.todosEvent())
+
+      expect(await sut.todosExist()).toBe(true)
+    })
+
+    test('does not create edit.txt file', async () => {
+      await sut.logHookData(testDataFactory.todosEvent())
+
+      expect(await sut.editsExist()).toBe(false)
+    })
+
     test('logs todos with status prefix', async () => {
       await sut.logHookData(testDataFactory.todosEvent())
 
-      const logContent = await sut.readLogContent()
+      const logContent = await sut.readTodos()
       expect(logContent).toContain('pending: First default task')
       expect(logContent).toContain('in_progress: Second default task')
     })
@@ -91,7 +103,7 @@ describe('HookEvents', () => {
 
       await sut.logHookData(fullHookData)
 
-      const logContent = await sut.readLogContent()
+      const logContent = await sut.readTodos()
       expect(logContent).toContain(
         'in_progress: Check existing Husky configuration'
       )
@@ -102,7 +114,7 @@ describe('HookEvents', () => {
 
       await sut.logHookData(todoData)
 
-      const logContent = await sut.readLogContent()
+      const logContent = await sut.readTodos()
       expect(logContent).toContain('pending: Default todo task')
     })
   })
@@ -111,13 +123,13 @@ describe('HookEvents', () => {
     test('does not create file when tool_input is missing', async () => {
       await sut.logHookData(testDataFactory.emptyEvent())
 
-      expect(await sut.fileExists()).toBe(false)
+      expect(await sut.editsExist()).toBe(false)
     })
 
     test('does not create file when tool_input is empty', async () => {
       await sut.logHookData(testDataFactory.emptyToolInputEvent())
 
-      expect(await sut.fileExists()).toBe(false)
+      expect(await sut.editsExist()).toBe(false)
     })
   })
 
@@ -127,7 +139,7 @@ describe('HookEvents', () => {
 
       await sut.logHookData(writeData)
 
-      const logContent = await sut.readLogContent()
+      const logContent = await sut.readEdits()
       expect(logContent).toContain('default write content')
     })
 
@@ -136,46 +148,61 @@ describe('HookEvents', () => {
 
       await sut.logHookData(editData)
 
-      const logContent = await sut.readLogContent()
+      const logContent = await sut.readEdits()
       expect(logContent).toContain('default edit content')
     })
 
     test('ignores invalid data structures', async () => {
       await sut.logHookData({ invalid: 'structure' })
-      expect(await sut.fileExists()).toBe(false)
+      expect(await sut.editsExist()).toBe(false)
+      expect(await sut.todosExist()).toBe(false)
     })
 
     test('ignores non-object data', async () => {
       await sut.logHookData('not an object')
-      expect(await sut.fileExists()).toBe(false)
+      expect(await sut.editsExist()).toBe(false)
+      expect(await sut.todosExist()).toBe(false)
     })
   })
 
   // Test helper
   async function setupHookEvents(logDir: string) {
     const hookEvents = new HookEvents(logDir)
+    const editPath = path.join(logDir, 'edit.txt')
+    const todoPath = path.join(logDir, 'todo.txt')
 
     const cleanup = async () => {
       await fs.rm(logDir, { recursive: true, force: true })
     }
 
-    const fileExists = async () => {
-      const logFilePath = path.join(logDir, 'edit.txt')
+    const editsExist = async () => {
       return fs
-        .access(logFilePath)
+        .access(editPath)
         .then(() => true)
         .catch(() => false)
     }
 
-    const readLogContent = async () => {
-      const logFilePath = path.join(logDir, 'edit.txt')
-      return fs.readFile(logFilePath, 'utf-8')
+    const todosExist = async () => {
+      return fs
+        .access(todoPath)
+        .then(() => true)
+        .catch(() => false)
+    }
+
+    const readEdits = async () => {
+      return fs.readFile(editPath, 'utf-8')
+    }
+
+    const readTodos = async () => {
+      return fs.readFile(todoPath, 'utf-8')
     }
 
     return {
       cleanup,
-      fileExists,
-      readLogContent,
+      editsExist,
+      todosExist,
+      readEdits,
+      readTodos,
       logHookData: (data: unknown) => hookEvents.logHookData(data),
     }
   }

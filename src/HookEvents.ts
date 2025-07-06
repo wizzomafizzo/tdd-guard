@@ -11,9 +11,9 @@ export type { HookData }
 export class HookEvents {
   constructor(private logDirPath: string) {}
 
-  async ensureLogFile(): Promise<void> {
+  async ensureLogFile(fileName: string): Promise<void> {
     await fs.mkdir(this.logDirPath, { recursive: true })
-    const logFilePath = path.join(this.logDirPath, 'edit.txt')
+    const logFilePath = path.join(this.logDirPath, fileName)
     await fs.writeFile(logFilePath, '', { flag: 'a' })
   }
 
@@ -25,14 +25,17 @@ export class HookEvents {
     }
 
     const hookData = parseResult.data
+    const toolName =
+      'data' in hookData ? hookData.data.tool_name : hookData.tool_name
     const toolInput =
       'data' in hookData ? hookData.data.tool_input : hookData.tool_input
 
     const content = this.extractContent(toolInput)
 
     if (content !== null) {
-      await this.ensureLogFile()
-      const logFilePath = path.join(this.logDirPath, 'edit.txt')
+      const fileName = toolName === 'TodoWrite' ? 'todo.txt' : 'edit.txt'
+      await this.ensureLogFile(fileName)
+      const logFilePath = path.join(this.logDirPath, fileName)
       await fs.appendFile(logFilePath, content + '\n---\n')
     }
   }
