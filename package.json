@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "tsc",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run | npx tsx src/cli/test-logger.ts",
     "test:ui": "vitest --ui",
     "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage",
