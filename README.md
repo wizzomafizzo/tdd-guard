@@ -53,7 +53,7 @@ This captures test output for the TDD validation context. Reporters for other te
 
 ## Security Notice
 
-Hooks execute shell commands with your full user permissions without confirmation. You are responsible for ensuring your hooks are safe and secure. Review the [Claude Code Hooks documentation](https://docs.anthropic.com/en/docs/claude-code/hooks) for security considerations.
+> ⚠️ **Important**: Hooks execute shell commands with your full user permissions without confirmation. You are responsible for ensuring your hooks are safe and secure. Review the [Claude Code Hooks documentation](https://docs.anthropic.com/en/docs/claude-code/hooks) for security considerations.
 
 TDD Guard runs with your user permissions and has access to your file system. We provide no warranties or guarantees. Use at your own risk and review the source code if you have security concerns.
 
@@ -66,6 +66,15 @@ TDD Guard intercepts Claude Code operations through hooks and validates them aga
 3. **Context Building**: Aggregates recent edits, todos, and test output into a validation context
 4. **AI Validation**: Sends context to Claude CLI with TDD Detective prompt to check for violations
 5. **Decision**: Returns `approve`, `block` (with reason), or `null` (insufficient data)
+
+## Customizing the System Prompt
+
+To modify TDD validation rules or adjust the AI's behavior, edit the system prompt at [`src/validation/system-prompt.ts`](https://github.com/nizos/tdd-guard/blob/main/src/validation/system-prompt.ts). After making changes:
+
+1. Rebuild the project: `npm run build`
+2. Restart your Claude Code session to ensure changes take effect
+
+**Tip**: Use `/resume` if you want to continue your previous session after restarting.
 
 ## Behaviors Flagged
 
