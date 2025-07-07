@@ -2,64 +2,11 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node hooks/timestamp-logger.js"
-          }
-        ]
-      },
-      {
         "matcher": "Write|Edit|MultiEdit|TodoWrite",
         "hooks": [
           {
             "type": "command",
-            "command": "node dist/cli/hook-logger.js"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node hooks/timestamp-logger.js"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node hooks/timestamp-logger.js"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node hooks/timestamp-logger.js"
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node hooks/timestamp-logger.js"
+            "command": "node dist/cli/tdd-guard.js"
           }
         ]
       }

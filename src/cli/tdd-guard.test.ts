@@ -5,13 +5,13 @@ import fs from 'fs/promises'
 import os from 'os'
 import { FileStorage } from '../storage/FileStorage'
 
-describe('hook-logger CLI', () => {
+describe('tdd-guard CLI', () => {
   let tempDir: string
   let storage: FileStorage
-  const cliPath = path.join(__dirname, 'hook-logger.ts')
+  const cliPath = path.join(__dirname, 'tdd-guard.ts')
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'hook-logger-test-'))
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tdd-guard-test-'))
     vi.stubEnv('HOOK_LOG_PATH', tempDir)
     storage = new FileStorage(tempDir)
   })
