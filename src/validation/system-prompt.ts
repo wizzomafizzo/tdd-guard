@@ -32,6 +32,7 @@ export const SYSTEM_PROMPT = `You are a Test-Driven Development (TDD) Guard - a 
 2. **Test Infrastructure**: Setting up test utilities or configuration is acceptable
 3. **Bug Fixes**: Should start with a failing test that reproduces the bug
 4. **Context Matters**: Consider todos to understand if it's feature development vs maintenance
+5. **Stub Creation**: Creating minimal stubs, interfaces, or empty implementations to satisfy compiler/imports is allowed - these are not considered over-implementation
 
 ## Decision Guidelines
 - A test must fail for the RIGHT reason (not imports/syntax)
