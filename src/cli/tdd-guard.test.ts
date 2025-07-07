@@ -4,6 +4,7 @@ import path from 'path'
 import fs from 'fs/promises'
 import os from 'os'
 import { FileStorage } from '../storage/FileStorage'
+import { hookDataFactory } from '../test'
 
 describe('tdd-guard CLI', () => {
   let tempDir: string
@@ -37,43 +38,27 @@ describe('tdd-guard CLI', () => {
   })
 
   test('saves Edit content to storage', async () => {
-    const hookData = {
-      tool_name: 'Edit',
-      tool_input: {
-        new_string: 'test content from CLI',
-      },
-    }
+    const hookData = hookDataFactory.edit()
 
     await runCli(JSON.stringify(hookData))
 
     const savedEdit = await storage.getEdit()
-    expect(savedEdit).toBe('test content from CLI')
+    const parsedEdit = JSON.parse(savedEdit!)
+    expect(parsedEdit).toEqual(hookData.tool_input)
   })
 
   test('saves Write content to storage', async () => {
-    const hookData = {
-      tool_name: 'Write',
-      tool_input: {
-        content: 'file content to write',
-      },
-    }
+    const hookData = hookDataFactory.write()
 
     await runCli(JSON.stringify(hookData))
 
     const savedEdit = await storage.getEdit()
-    expect(savedEdit).toBe('file content to write')
+    const parsedEdit = JSON.parse(savedEdit!)
+    expect(parsedEdit).toEqual(hookData.tool_input)
   })
 
   test('saves Todo content to storage', async () => {
-    const hookData = {
-      tool_name: 'TodoWrite',
-      tool_input: {
-        todos: [
-          { content: 'Write tests', status: 'in_progress' },
-          { content: 'Implement feature', status: 'pending' },
-        ],
-      },
-    }
+    const hookData = hookDataFactory.todoWrite()
 
     await runCli(JSON.stringify(hookData))
 
