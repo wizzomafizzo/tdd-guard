@@ -27,9 +27,7 @@ describe.each(getStorageImplementations())('%s', (name, setupStorage) => {
       const content = 'test content'
 
       await storage.saveTest(content)
-      const retrieved = await storage.getTest()
-
-      expect(retrieved).toBe(content)
+      expect(await storage.getTest()).toBe(content)
     })
   })
 
@@ -38,9 +36,7 @@ describe.each(getStorageImplementations())('%s', (name, setupStorage) => {
       const content = 'todo content'
 
       await storage.saveTodo(content)
-      const retrieved = await storage.getTodo()
-
-      expect(retrieved).toBe(content)
+      expect(await storage.getTodo()).toBe(content)
     })
   })
 
@@ -49,52 +45,44 @@ describe.each(getStorageImplementations())('%s', (name, setupStorage) => {
       const content = 'edit content'
 
       await storage.saveEdit(content)
-      const retrieved = await storage.getEdit()
-
-      expect(retrieved).toBe(content)
+      expect(await storage.getEdit()).toBe(content)
     })
   })
 
   describe('get methods when no data exists', () => {
     it('should return null when no test data exists', async () => {
-      const retrieved = await storage.getTest()
-      expect(retrieved).toBeNull()
+      expect(await storage.getTest()).toBeNull()
     })
 
     it('should return null when no todo data exists', async () => {
-      const retrieved = await storage.getTodo()
-      expect(retrieved).toBeNull()
+      expect(await storage.getTodo()).toBeNull()
     })
 
     it('should return null when no edit data exists', async () => {
-      const retrieved = await storage.getEdit()
-      expect(retrieved).toBeNull()
+      expect(await storage.getEdit()).toBeNull()
     })
   })
 
   describe('save methods overwrite existing content', () => {
-    it('should overwrite existing test content', async () => {
+    beforeEach(async () => {
       await storage.saveTest('first content')
+      await storage.saveTodo('first content')
+      await storage.saveEdit('first content')
       await storage.saveTest('second content')
-      const retrieved = await storage.getTest()
+      await storage.saveTodo('second content')
+      await storage.saveEdit('second content')
+    })
 
-      expect(retrieved).toBe('second content')
+    it('should overwrite existing test content', async () => {
+      expect(await storage.getTest()).toBe('second content')
     })
 
     it('should overwrite existing todo content', async () => {
-      await storage.saveTodo('first content')
-      await storage.saveTodo('second content')
-      const retrieved = await storage.getTodo()
-
-      expect(retrieved).toBe('second content')
+      expect(await storage.getTodo()).toBe('second content')
     })
 
     it('should overwrite existing edit content', async () => {
-      await storage.saveEdit('first content')
-      await storage.saveEdit('second content')
-      const retrieved = await storage.getEdit()
-
-      expect(retrieved).toBe('second content')
+      expect(await storage.getEdit()).toBe('second content')
     })
   })
 })
