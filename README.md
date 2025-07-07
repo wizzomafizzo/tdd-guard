@@ -93,6 +93,7 @@ Agent corrects its behavior and implements minimal implementation
 
 ## Roadmap
 
+- Use/set global log/data path for persistent storage across projects
 - Simplify installation and project setup
 - Add support for other testing frameworks (Jest, Mocha, etc.)
 - Improve handling of concurrent subagents
