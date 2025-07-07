@@ -25,6 +25,18 @@ export const TodoWriteSchema = z.object({
   todos: z.array(TodoSchema),
 })
 
+// Schema for individual edit in MultiEdit
+export const EditEntrySchema = z.object({
+  old_string: z.string(),
+  new_string: z.string(),
+  replace_all: z.boolean().optional(),
+})
+
+export const MultiEditSchema = z.object({
+  file_path: z.string(),
+  edits: z.array(EditEntrySchema),
+})
+
 // Discriminated union for tool operations
 export const ToolOperationSchema = z.discriminatedUnion('tool_name', [
   z.object({
@@ -39,10 +51,18 @@ export const ToolOperationSchema = z.discriminatedUnion('tool_name', [
     tool_name: z.literal('TodoWrite'),
     tool_input: TodoWriteSchema,
   }),
+  z.object({
+    tool_name: z.literal('MultiEdit'),
+    tool_input: MultiEditSchema,
+  }),
 ])
 
 // Union of modification types
-export const ModificationSchema = z.union([EditSchema, WriteSchema])
+export const ModificationSchema = z.union([
+  EditSchema,
+  WriteSchema,
+  MultiEditSchema,
+])
 
 // Type guards
 export const isEditOperation = (
@@ -67,9 +87,20 @@ export const parseStoredContent = (
 
 // Helper to create modification JSON from validated data
 export const createModificationJson = (
-  data: z.infer<typeof EditSchema> | z.infer<typeof WriteSchema>
+  data:
+    | z.infer<typeof EditSchema>
+    | z.infer<typeof WriteSchema>
+    | z.infer<typeof MultiEditSchema>
 ): string => {
-  if ('new_string' in data) {
+  if ('edits' in data) {
+    // It's a multi-edit operation - exclude replace_all from storage
+    const { file_path, edits } = data
+    const cleanedEdits = edits.map(({ old_string, new_string }) => ({
+      old_string,
+      new_string,
+    }))
+    return JSON.stringify({ file_path, edits: cleanedEdits })
+  } else if ('new_string' in data) {
     // It's an edit operation - exclude replace_all from storage
     const { file_path, old_string, new_string } = data
     return JSON.stringify({ file_path, old_string, new_string })

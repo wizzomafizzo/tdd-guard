@@ -88,6 +88,53 @@ describe('hookDataFactory', () => {
     })
   })
 
+  describe('multiEdit', () => {
+    test('creates MultiEdit hook data with defaults', () => {
+      const result = hookDataFactory.multiEdit()
+
+      expect(result).toEqual({
+        tool_name: 'MultiEdit',
+        tool_input: {
+          file_path: '/test/file.ts',
+          edits: [
+            {
+              old_string: 'first old content',
+              new_string: 'first new content',
+              replace_all: false,
+            },
+            {
+              old_string: 'second old content',
+              new_string: 'second new content',
+              replace_all: false,
+            },
+          ],
+        },
+      })
+    })
+
+    test('allows overriding file path', () => {
+      const result = hookDataFactory.multiEdit({
+        filePath: '/custom/multi.ts',
+      })
+
+      expect(result.tool_input.file_path).toBe('/custom/multi.ts')
+    })
+
+    test('allows overriding edits', () => {
+      const customEdits = [
+        {
+          old_string: 'custom old',
+          new_string: 'custom new',
+          replace_all: true,
+        },
+      ]
+
+      const result = hookDataFactory.multiEdit({ edits: customEdits })
+
+      expect(result.tool_input.edits).toEqual(customEdits)
+    })
+  })
+
   describe('invalid data factories', () => {
     test('editWithWrongFields creates Edit with content field', () => {
       const result = hookDataFactory.editWithWrongFields()

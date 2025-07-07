@@ -92,13 +92,22 @@ describe('processHookData', () => {
 
     const result = await sut.process(EDIT_HOOK_DATA)
 
-    const expectedEditJson = JSON.stringify(EDIT_HOOK_DATA.tool_input)
-
-    expect(sut.validatorHasBeenCalledWith({
-      edit: expectedEditJson,
+    const actualContext = sut.getValidatorCallArgs()
+    const expectedEdit = {
+      file_path: EDIT_HOOK_DATA.tool_input.file_path,
+      old_string: EDIT_HOOK_DATA.tool_input.old_string,
+      new_string: EDIT_HOOK_DATA.tool_input.new_string,
+    }
+    
+    // Verify the context, parsing JSON to handle formatting differences
+    expect({
+      ...actualContext,
+      edit: JSON.parse(actualContext.edit),
+    }).toEqual({
+      edit: expectedEdit,
       test: 'existing test',
       todo: 'existing todo',
-    })).toBe(true)
+    })
     expect(result).toEqual(BLOCK_RESULT)
   })
 
@@ -163,11 +172,7 @@ function createTestProcessor() {
     
     // Validator checks
     validatorHasBeenCalled: () => mockValidator.mock.calls.length > 0,
-    validatorHasBeenCalledWith: (context: Record<string, unknown>) => {
-      return mockValidator.mock.calls.some(call => 
-        JSON.stringify(call[0]) === JSON.stringify(context)
-      )
-    },
+    getValidatorCallArgs: () => mockValidator.mock.calls[0]?.[0] || null,
   }
 }
 

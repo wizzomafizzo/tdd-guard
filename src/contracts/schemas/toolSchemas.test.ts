@@ -4,9 +4,11 @@ import {
   WriteSchema,
   TodoWriteSchema,
   TodoSchema,
+  MultiEditSchema,
   ToolOperationSchema,
   isEditOperation,
   parseStoredContent,
+  createModificationJson,
 } from './toolSchemas'
 import { hookDataFactory } from '../../test'
 
@@ -141,6 +143,21 @@ describe('Tool-specific schemas', () => {
       expect(result.success).toBe(true)
     })
   })
+
+  describe('MultiEditSchema', () => {
+    test('validates correct multi-edit input', () => {
+      const multiEditData = hookDataFactory.multiEdit()
+      const validInput = multiEditData.tool_input
+
+      const result = MultiEditSchema.safeParse(validInput)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.file_path).toBe('/test/file.ts')
+        expect(result.data.edits).toHaveLength(2)
+      }
+    })
+  })
 })
 
 describe('Discriminated union schemas', () => {
@@ -163,6 +180,17 @@ describe('Discriminated union schemas', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.tool_name).toBe('Write')
+    }
+  })
+
+  test('validates MultiEdit operation', () => {
+    const multiEditOperation = hookDataFactory.multiEdit()
+
+    const result = ToolOperationSchema.safeParse(multiEditOperation)
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.tool_name).toBe('MultiEdit')
     }
   })
 
@@ -239,5 +267,15 @@ describe('Parsing helpers', () => {
     const result = parseStoredContent(editJson)
 
     expect(result).toEqual(editData.tool_input)
+  })
+
+  test('createModificationJson handles MultiEdit data', () => {
+    const multiEditData = hookDataFactory.multiEdit()
+    const json = createModificationJson(multiEditData.tool_input)
+    const parsed = JSON.parse(json)
+
+    expect(parsed.file_path).toBe('/test/file.ts')
+    expect(parsed.edits).toHaveLength(2)
+    expect(parsed.edits[0]).not.toHaveProperty('replace_all')
   })
 })

@@ -1,12 +1,5 @@
 import { z } from 'zod'
-
-// Schema for todos in TodoWrite tool
-const TodoSchema = z.object({
-  content: z.string(),
-  status: z.string().optional(),
-  priority: z.string().optional(),
-  id: z.string().optional(),
-})
+import { EditEntrySchema, TodoSchema } from './toolSchemas'
 
 // Schema for tool_input variations
 const ToolInputSchema = z.object({
@@ -15,6 +8,7 @@ const ToolInputSchema = z.object({
   file_path: z.string().optional(),
   content: z.string().optional(),
   todos: z.array(TodoSchema).optional(),
+  edits: z.array(EditEntrySchema).optional(),
 })
 
 // Simple hook data schema (backward compatibility)

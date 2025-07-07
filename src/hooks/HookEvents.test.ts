@@ -44,6 +44,18 @@ describe('HookEvents', () => {
     })
   })
 
+  describe('with MultiEdit tool', () => {
+    test('logs content from edits array', async () => {
+      await sut.logHookData(hookDataFactory.multiEdit())
+
+      const logContent = await sut.readEdits()
+      const parsed = JSON.parse(logContent)
+      expect(parsed.file_path).toBe('/test/file.ts')
+      expect(parsed.edits).toHaveLength(2)
+      expect(parsed.edits[0].old_string).toBe('first old content')
+    })
+  })
+
   describe('when logging TodoWrite data', () => {
     test('saves todo content to storage', async () => {
       await sut.logHookData(hookDataFactory.todoWrite())

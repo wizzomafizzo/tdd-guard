@@ -54,6 +54,36 @@ export const hookDataFactory = {
     },
   }),
 
+  /**
+   * Creates a MultiEdit hook data object
+   * @param overrides - Optional overrides for default values
+   */
+  multiEdit: (overrides?: {
+    filePath?: string
+    edits?: Array<{
+      old_string: string
+      new_string: string
+      replace_all?: boolean
+    }>
+  }) => ({
+    tool_name: 'MultiEdit',
+    tool_input: {
+      file_path: overrides?.filePath ?? '/test/file.ts',
+      edits: overrides?.edits ?? [
+        {
+          old_string: 'first old content',
+          new_string: 'first new content',
+          replace_all: false,
+        },
+        {
+          old_string: 'second old content',
+          new_string: 'second new content',
+          replace_all: false,
+        },
+      ],
+    },
+  }),
+
   // Invalid data factories for testing error cases
 
   /**

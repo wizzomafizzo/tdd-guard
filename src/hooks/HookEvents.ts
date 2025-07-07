@@ -3,7 +3,7 @@ import {
   type HookData,
   type ToolInput,
 } from '../contracts/schemas/hookData'
-import { EditSchema, WriteSchema, TodoWriteSchema, createModificationJson } from '../contracts/schemas/toolSchemas'
+import { EditSchema, WriteSchema, TodoWriteSchema, MultiEditSchema, createModificationJson } from '../contracts/schemas/toolSchemas'
 
 import { Storage } from '../storage/Storage'
 
@@ -61,6 +61,14 @@ export class HookEvents {
         const result = TodoWriteSchema.safeParse(toolInput)
         if (result.success) {
           return this.extractTodosContent(result.data.todos)
+        }
+        break
+      }
+      
+      case 'MultiEdit': {
+        const result = MultiEditSchema.safeParse(toolInput)
+        if (result.success) {
+          return createModificationJson(result.data)
         }
         break
       }

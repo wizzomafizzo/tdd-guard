@@ -59,11 +59,26 @@ describe('tddValidator', () => {
     })
   })
 
-  test('does not block when old_string contains one of the tests in new_string', () => {
+  test('does not block when old_string contains one of two tests in new_string', () => {
     const context: Context = {
       edit: TestDataFactory.editWithExistingTest(),
       todo: TestDataFactory.addDivideMethodTodo(),
       test: TestDataFactory.passingTests(),
+    }
+
+    const result = tddValidator(context)
+
+    expect(result).toEqual({
+      decision: undefined,
+      reason: expect.any(String),
+    })
+  })
+
+  test('does not block refactoring tests with MultiEdit', () => {
+    const context: Context = {
+      edit: TestDataFactory.batchEditFormat(),
+      todo: TestDataFactory.refactoringTodo(),
+      test: TestDataFactory.allTestsPassing(),
     }
 
     const result = tddValidator(context)
@@ -78,21 +93,33 @@ describe('tddValidator', () => {
 // Test Data Factory
 class TestDataFactory {
   static singleTestEdit(): string {
-    return `  test('should divide two numbers correctly', () => {
+    // This represents a Write operation with a single test
+    return JSON.stringify({
+      file_path: '/src/Calculator.test.ts',
+      content: `describe('Calculator', () => {
+  test('should divide two numbers correctly', () => {
     const result = calculator.divide(4, 2)
     expect(result).toBe(2)
-  })`
+  })
+})`,
+    })
   }
 
   static multipleTestEdits(): string {
-    return `  test('should divide two numbers correctly', () => {
+    // This represents a Write operation with multiple tests
+    return JSON.stringify({
+      file_path: '/src/Calculator.test.ts',
+      content: `describe('Calculator', () => {
+  test('should divide two numbers correctly', () => {
     const result = calculator.divide(4, 2)
     expect(result).toBe(2)
   })
   
   test('should handle division by zero', () => {
     expect(() => calculator.divide(4, 0)).toThrow('Cannot divide by zero')
-  })`
+  })
+})`,
+    })
   }
 
   static excessiveEdit(): string {
@@ -178,7 +205,7 @@ Test Files  1 failed (1)
   }
 
   static addDivideMethodTodo(): string {
-    return 'pending: Add divide method to Calculator class'
+    return 'completed: Create add method for Calculator class\nin_progress: Create divide method for Calculator class'
   }
 
   static passingTests(): string {
@@ -187,6 +214,45 @@ Test Files  1 failed (1)
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
+   Start at  14:23:45
+   Duration  215ms`
+  }
+
+  static batchEditFormat(): string {
+    return JSON.stringify({
+      file_path: '/test/Clock.test.ts',
+      edits: [
+        {
+          old_string:
+            '    const clock = new Clock()\n    clock.setTime(14, 30, 45)',
+          new_string: '    const clock = createClockWithTime(14, 30, 45)',
+        },
+        {
+          old_string:
+            '    const clock = new Clock()\n    clock.setTime(23, 59, 59)',
+          new_string: '    const clock = createClockWithTime(23, 59, 59)',
+        },
+        {
+          old_string:
+            '    const clock = new Clock()\n    clock.setTime(0, 0, 0)',
+          new_string: '    const clock = createClockWithTime(0, 0, 0)',
+        },
+      ],
+    })
+  }
+
+  static refactoringTodo(): string {
+    return 'completed: Implement Clock class with setTime method\ncompleted: Add display method to Clock\nin_progress: Refactor test setup to use helper function'
+  }
+
+  static allTestsPassing(): string {
+    return ` PASS  test/Clock.test.ts
+  ✓ Clock > should display time in HH:MM:SS format (2ms)
+  ✓ Clock > should handle edge case at midnight (1ms)
+  ✓ Clock > should handle edge case before midnight (1ms)
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
    Start at  14:23:45
    Duration  215ms`
   }
