@@ -34,10 +34,11 @@ describe('buildContext', () => {
   })
 
   it('should parse edit JSON data when valid JSON is stored', async () => {
-    const editJson = JSON.stringify({
+    const editData = {
       file_path: '/src/example.ts',
       content: 'new file content',
-    })
+    }
+    const editJson = JSON.stringify(editData)
     await storage.saveEdit(editJson)
     await storage.saveTest('test code')
     await storage.saveTodo('pending: implement feature')
@@ -45,9 +46,25 @@ describe('buildContext', () => {
     const context = await buildContext(storage)
 
     expect(context).toEqual({
-      edit: editJson,
+      edit: JSON.stringify(editData, null, 2),
       test: 'test code',
       todo: 'pending: implement feature',
     })
+  })
+
+  it('should pretty-print edit JSON for better readability', async () => {
+    const editData = {
+      file_path: '/src/Calculator.test.ts',
+      old_string:
+        "describe('Calculator', () => {\n  test('should add two numbers correctly', () => {\n    const result = calculator.add(2, 3)\n    expect(result).toBe(5)\n  })\n})",
+      new_string:
+        "describe('Calculator', () => {\n  test('should add two numbers correctly', () => {\n    const result = calculator.add(2, 3)\n    expect(result).toBe(5)\n  })\n  \n  test('should divide two numbers correctly', () => {\n    const result = calculator.divide(4, 2)\n    expect(result).toBe(2)\n  })\n})",
+    }
+    await storage.saveEdit(JSON.stringify(editData))
+
+    const context = await buildContext(storage)
+
+    // Should be pretty-printed, not a compact JSON string
+    expect(context.edit).toBe(JSON.stringify(editData, null, 2))
   })
 })
