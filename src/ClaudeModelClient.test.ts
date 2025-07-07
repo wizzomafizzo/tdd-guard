@@ -19,7 +19,7 @@ describe('ClaudeModelClient', () => {
   const command = 'claude'
   const modelFlag = '--model sonnet'
   const encodingOption = { encoding: 'utf-8' }
-  const timeoutOption = { timeout: 10000 }
+  const timeoutOption = { timeout: 20000 }
 
   let sut: ReturnType<typeof setupModelClient>
 
@@ -111,7 +111,7 @@ describe('ClaudeModelClient', () => {
     sut.assertCalledWithOptions(encodingOption)
   })
 
-  test('sets timeout to 10 seconds', () => {
+  test('sets timeout to 20 seconds', () => {
     sut.assertCalledWithOptions(timeoutOption)
   })
 
