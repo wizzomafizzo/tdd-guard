@@ -3,48 +3,58 @@ import fs from 'fs/promises'
 import path from 'path'
 
 export class FileStorage implements Storage {
+  private readonly files = {
+    test: 'test.txt',
+    todo: 'todo.txt',
+    edit: 'edit.json',
+  } as const
+
   constructor(private basePath: string) {}
 
   private async ensureDirectory(): Promise<void> {
     await fs.mkdir(this.basePath, { recursive: true })
   }
 
-  async saveTest(content: string): Promise<void> {
+  private async save(
+    type: keyof typeof this.files,
+    content: string
+  ): Promise<void> {
     await this.ensureDirectory()
-    await fs.writeFile(path.join(this.basePath, 'test.txt'), content)
+    await fs.writeFile(path.join(this.basePath, this.files[type]), content)
+  }
+
+  private async get(type: keyof typeof this.files): Promise<string | null> {
+    try {
+      return await fs.readFile(
+        path.join(this.basePath, this.files[type]),
+        'utf-8'
+      )
+    } catch {
+      return null
+    }
+  }
+
+  async saveTest(content: string): Promise<void> {
+    await this.save('test', content)
   }
 
   async saveTodo(content: string): Promise<void> {
-    await this.ensureDirectory()
-    await fs.writeFile(path.join(this.basePath, 'todo.txt'), content)
+    await this.save('todo', content)
   }
 
   async saveEdit(content: string): Promise<void> {
-    await this.ensureDirectory()
-    await fs.writeFile(path.join(this.basePath, 'edit.json'), content)
+    await this.save('edit', content)
   }
 
   async getTest(): Promise<string | null> {
-    try {
-      return await fs.readFile(path.join(this.basePath, 'test.txt'), 'utf-8')
-    } catch {
-      return null
-    }
+    return this.get('test')
   }
 
   async getTodo(): Promise<string | null> {
-    try {
-      return await fs.readFile(path.join(this.basePath, 'todo.txt'), 'utf-8')
-    } catch {
-      return null
-    }
+    return this.get('todo')
   }
 
   async getEdit(): Promise<string | null> {
-    try {
-      return await fs.readFile(path.join(this.basePath, 'edit.json'), 'utf-8')
-    } catch {
-      return null
-    }
+    return this.get('edit')
   }
 }
