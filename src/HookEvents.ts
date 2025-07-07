@@ -3,16 +3,12 @@ import {
   type HookData,
   type ToolInput,
 } from './schemas/hookData'
-import { FileStorage } from './storage/FileStorage'
+import { Storage } from './storage/Storage'
 
 export type { HookData }
 
 export class HookEvents {
-  private storage: FileStorage
-
-  constructor(private logDirPath: string) {
-    this.storage = new FileStorage(logDirPath)
-  }
+  constructor(private storage: Storage) {}
 
   async logHookData(rawData: unknown): Promise<void> {
     const parseResult = HookDataSchema.safeParse(rawData)

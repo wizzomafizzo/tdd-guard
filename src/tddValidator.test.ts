@@ -10,7 +10,10 @@ describe('tddValidator', () => {
 
     const result = tddValidator(context)
 
-    expect(result).toBe('violation')
+    expect(result).toEqual({
+      decision: 'block',
+      reason: expect.any(String),
+    })
   })
 
   test('returns ok when content contains one test', () => {
@@ -20,7 +23,10 @@ describe('tddValidator', () => {
 
     const result = tddValidator(context)
 
-    expect(result).toBe('ok')
+    expect(result).toEqual({
+      decision: undefined,
+      reason: expect.any(String),
+    })
   })
 
   test('returns violation when implementing more than necessary to make test pass', () => {
@@ -32,7 +38,10 @@ describe('tddValidator', () => {
 
     const result = tddValidator(context)
 
-    expect(result).toBe('violation')
+    expect(result).toEqual({
+      decision: 'block',
+      reason: expect.any(String),
+    })
   })
 })
 

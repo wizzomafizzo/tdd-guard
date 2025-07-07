@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-import { HookEvents } from '../HookEvents'
+import { processHookData } from './processHookData'
+import { FileStorage } from '../storage/FileStorage'
 import { tddValidator } from '../tddValidator'
 import path from 'path'
-
-const logPath = process.env.HOOK_LOG_PATH || path.join(process.cwd(), 'logs')
 
 let inputData = ''
 process.stdin.setEncoding('utf8')
@@ -15,27 +14,15 @@ process.stdin.on('data', (chunk) => {
 
 process.stdin.on('end', async () => {
   try {
-    const hookData = JSON.parse(inputData)
-    const hookEvents = new HookEvents(logPath)
-    await hookEvents.logHookData(hookData)
+    const logPath =
+      process.env.HOOK_LOG_PATH || path.join(process.cwd(), 'logs')
+    const storage = new FileStorage(logPath)
 
-    // Check if this is a PreToolUse hook for Edit tool
-    if (hookData.hook_name === 'PreToolUse' && hookData.tool_name === 'Edit') {
-      const context = {
-        edit: hookData.tool_input?.new_string || '',
-      }
-
-      const result = tddValidator(context)
-
-      if (result === 'violation') {
-        console.log(
-          JSON.stringify({
-            decision: 'block',
-            reason: 'TDD violation detected',
-          })
-        )
-      }
-    }
+    const result = await processHookData(inputData, {
+      storage,
+      tddValidator,
+    })
+    console.log(JSON.stringify(result))
   } catch (error) {
     console.error('Failed to parse hook data:', error)
   } finally {

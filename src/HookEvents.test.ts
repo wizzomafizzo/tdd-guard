@@ -1,21 +1,17 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest'
-import fs from 'fs/promises'
-import path from 'path'
-import os from 'os'
 import { z } from 'zod'
 import { HookEvents } from './HookEvents'
 import { SimpleHookDataSchema, FullHookEventSchema } from './schemas/hookData'
+import { MemoryStorage } from './storage/MemoryStorage'
 
 describe('HookEvents', () => {
   const testContent = 'test content'
   const testNewString = 'test new string'
 
   let sut: Awaited<ReturnType<typeof setupHookEvents>>
-  let tempDir: string
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'hook-events-test-'))
-    sut = await setupHookEvents(tempDir)
+    sut = await setupHookEvents()
   })
 
   afterEach(async () => {
@@ -29,7 +25,7 @@ describe('HookEvents', () => {
       )
     })
 
-    test('creates the specified log file', async () => {
+    test('saves content to storage', async () => {
       expect(await sut.editsExist()).toBe(true)
     })
 
@@ -49,13 +45,13 @@ describe('HookEvents', () => {
   })
 
   describe('when logging TodoWrite data', () => {
-    test('creates todo.txt file', async () => {
+    test('saves todo content to storage', async () => {
       await sut.logHookData(testDataFactory.todosEvent())
 
       expect(await sut.todosExist()).toBe(true)
     })
 
-    test('does not create edit.txt file', async () => {
+    test('does not save edit content', async () => {
       await sut.logHookData(testDataFactory.todosEvent())
 
       expect(await sut.editsExist()).toBe(false)
@@ -155,35 +151,34 @@ describe('HookEvents', () => {
   })
 
   // Test helper
-  async function setupHookEvents(logDir: string) {
-    const hookEvents = new HookEvents(logDir)
-    const editPath = path.join(logDir, 'edit.txt')
-    const todoPath = path.join(logDir, 'todo.txt')
+  async function setupHookEvents() {
+    const storage = new MemoryStorage()
+    const hookEvents = new HookEvents(storage)
 
     const cleanup = async () => {
-      await fs.rm(logDir, { recursive: true, force: true })
+      // No cleanup needed for memory storage
     }
 
     const editsExist = async () => {
-      return fs
-        .access(editPath)
-        .then(() => true)
-        .catch(() => false)
+      const edit = await storage.getEdit()
+      return edit !== null
     }
 
     const todosExist = async () => {
-      return fs
-        .access(todoPath)
-        .then(() => true)
-        .catch(() => false)
+      const todo = await storage.getTodo()
+      return todo !== null
     }
 
     const readEdits = async () => {
-      return fs.readFile(editPath, 'utf-8')
+      const edit = await storage.getEdit()
+      if (edit === null) throw new Error('No edit content')
+      return edit
     }
 
     const readTodos = async () => {
-      return fs.readFile(todoPath, 'utf-8')
+      const todo = await storage.getTodo()
+      if (todo === null) throw new Error('No todo content')
+      return todo
     }
 
     return {

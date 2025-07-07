@@ -10,11 +10,17 @@ export function tddValidator(
 ): TDDValidationResult {
   try {
     const response = modelClient.ask(SYSTEM_PROMPT, context)
+    const parsed = JSON.parse(response)
 
-    // The model should return either 'violation' or 'ok'
-    if (!response) return 'ok'
-    return response.trim().toLowerCase() === 'violation' ? 'violation' : 'ok'
+    // Convert null to undefined for consistency with the type
+    return {
+      decision: parsed.decision === null ? undefined : parsed.decision,
+      reason: parsed.reason,
+    }
   } catch {
-    return 'ok'
+    return {
+      decision: undefined,
+      reason: 'Error during validation',
+    }
   }
 }

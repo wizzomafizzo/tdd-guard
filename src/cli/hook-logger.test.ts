@@ -3,14 +3,22 @@ import { spawn } from 'child_process'
 import path from 'path'
 import fs from 'fs/promises'
 import os from 'os'
+import { FileStorage } from '../storage/FileStorage'
 
 describe('hook-logger CLI', () => {
   let tempDir: string
+  let storage: FileStorage
   const cliPath = path.join(__dirname, 'hook-logger.ts')
 
   beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'hook-logger-test-'))
     vi.stubEnv('HOOK_LOG_PATH', tempDir)
+    storage = new FileStorage(tempDir)
+  })
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true })
+    vi.unstubAllEnvs()
   })
 
   test('has shebang for direct execution', async () => {
@@ -18,11 +26,6 @@ describe('hook-logger CLI', () => {
     const firstLine = content.split('\n')[0]
 
     expect(firstLine).toBe('#!/usr/bin/env node')
-  })
-
-  afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true })
-    vi.unstubAllEnvs()
   })
 
   test('exits with status 0 on invalid JSON', async () => {
@@ -33,7 +36,7 @@ describe('hook-logger CLI', () => {
     expect(exitCode).toBe(0)
   })
 
-  test('logs content to the specified file', async () => {
+  test('saves Edit content to storage', async () => {
     const hookData = {
       tool_name: 'Edit',
       tool_input: {
@@ -43,9 +46,41 @@ describe('hook-logger CLI', () => {
 
     await runCli(JSON.stringify(hookData))
 
-    const logFilePath = path.join(tempDir, 'edit.txt')
-    const logContent = await fs.readFile(logFilePath, 'utf-8')
-    expect(logContent).toContain('test content from CLI')
+    const savedEdit = await storage.getEdit()
+    expect(savedEdit).toBe('test content from CLI')
+  })
+
+  test('saves Write content to storage', async () => {
+    const hookData = {
+      tool_name: 'Write',
+      tool_input: {
+        content: 'file content to write',
+      },
+    }
+
+    await runCli(JSON.stringify(hookData))
+
+    const savedEdit = await storage.getEdit()
+    expect(savedEdit).toBe('file content to write')
+  })
+
+  test('saves Todo content to storage', async () => {
+    const hookData = {
+      tool_name: 'TodoWrite',
+      tool_input: {
+        todos: [
+          { content: 'Write tests', status: 'in_progress' },
+          { content: 'Implement feature', status: 'pending' },
+        ],
+      },
+    }
+
+    await runCli(JSON.stringify(hookData))
+
+    const savedTodo = await storage.getTodo()
+    expect(savedTodo).toBe(
+      'in_progress: Write tests\npending: Implement feature'
+    )
   })
 
   test('logs error to stderr on invalid JSON', async () => {
@@ -81,34 +116,4 @@ describe('hook-logger CLI', () => {
       })
     })
   }
-
-  test('returns block decision when TDD validator detects violation', async () => {
-    const hookData = {
-      hook_name: 'PreToolUse',
-      tool_name: 'Edit',
-      tool_input: {
-        new_string: 'implementation without test',
-      },
-    }
-
-    const { stdout } = await runCli(JSON.stringify(hookData))
-    const output = JSON.parse(stdout)
-
-    expect(output.decision).toBe('block')
-    expect(output.reason).toBe('TDD violation detected')
-  })
-
-  test('returns nothing when TDD validator returns ok', async () => {
-    const hookData = {
-      hook_name: 'PreToolUse',
-      tool_name: 'Edit',
-      tool_input: {
-        new_string: 'test("should work", () => { expect(true).toBe(true) })',
-      },
-    }
-
-    const { stdout } = await runCli(JSON.stringify(hookData))
-
-    expect(stdout).toBe('')
-  })
 })

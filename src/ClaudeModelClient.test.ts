@@ -15,7 +15,6 @@ describe('ClaudeModelClient', () => {
   const result = 'This code follows TDD principles'
   const format = '--output-format json'
   const maxTurnsFlag = '--max-turns 1'
-  const printFlag = '--print'
   const command = 'claude'
   const modelFlag = '--model sonnet'
   const encodingOption = { encoding: 'utf-8' }
@@ -53,10 +52,6 @@ describe('ClaudeModelClient', () => {
 
   test('uses claude command', () => {
     sut.assertCommandContains(command)
-  })
-
-  test('uses print mode flag', () => {
-    sut.assertCommandContains(printFlag)
   })
 
   test('uses sonnet model flag', () => {

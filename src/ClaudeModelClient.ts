@@ -22,11 +22,20 @@ export class ClaudeModelClient implements IModelClient {
 
     const prompt = `${question}${contextExplanation}${contextString}`
     const escapedPrompt = prompt.replace(/'/g, "'\\''")
-    const command = `claude --print '${escapedPrompt}' --output-format json --max-turns 1 --model sonnet`
+    const command = `claude '${escapedPrompt}' --output-format json --max-turns 1 --model sonnet`
 
     const output = execSync(command, { encoding: 'utf-8', timeout: 20000 })
     const response = JSON.parse(output)
 
-    return response.result
+    // Extract the actual model response from the result field
+    const modelResponse = response.result
+
+    // The model may wrap JSON in markdown code blocks, extract it
+    const jsonMatch = modelResponse.match(/```json\s*\n?([\s\S]*?)\n?```/)
+    if (jsonMatch) {
+      return jsonMatch[1].trim()
+    }
+
+    return modelResponse
   }
 }

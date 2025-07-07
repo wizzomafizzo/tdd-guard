@@ -1,1 +1,4 @@
-export type TDDValidationResult = 'ok' | 'violation'
+export type TDDValidationResult = {
+  decision: 'approve' | 'block' | undefined
+  reason: string
+}
