@@ -67,8 +67,17 @@ TDD Guard intercepts Claude Code operations through hooks and validates them aga
 
 ## Behaviors Flagged
 
-- Adding multiple tests at once
-- Implementing more than the current test requires
+### Adding Multiple Tests at Once
+
+TDD Guard prevents writing multiple tests before completing the current TDD cycle:
+
+![TDD Guard blocking multiple tests being written simultaneously for different methods before completing the current TDD cycle](docs/assets/demo-multiple-tests.png)
+
+### Over-Implementation
+
+TDD Guard blocks implementing more functionality than the current failing test requires:
+
+![TDD Guard preventing over-implementation by blocking attempt to implement multiple methods when only one failing test exists](docs/assets/demo-over-implementation.png)
 
 More validation rules are being added.
 
