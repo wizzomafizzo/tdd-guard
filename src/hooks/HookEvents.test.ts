@@ -1,8 +1,10 @@
-import { describe, test, expect, beforeEach, afterEach } from 'vitest'
+import { describe, test, expect, beforeEach } from 'vitest'
 import { z } from 'zod'
 import { HookEvents } from './HookEvents'
-import { SimpleHookDataSchema, FullHookEventSchema } from '../contracts/schemas/hookData'
 import { MemoryStorage } from '../storage/MemoryStorage'
+import { hookDataFactory } from '../test'
+import { EditSchema, WriteSchema } from '../contracts/schemas/toolSchemas'
+import { FullHookEventSchema } from '../contracts/schemas/hookData'
 
 describe('HookEvents', () => {
   const testContent = 'test content'
@@ -14,14 +16,10 @@ describe('HookEvents', () => {
     sut = await setupHookEvents()
   })
 
-  afterEach(async () => {
-    await sut.cleanup()
-  })
-
   describe('with logged content', () => {
     beforeEach(async () => {
       await sut.logHookData(
-        testDataFactory.writeEvent({ content: testContent })
+        hookDataFactory.write({ content: testContent })
       )
     })
 
@@ -38,9 +36,7 @@ describe('HookEvents', () => {
 
   describe('with Edit tool', () => {
     test('logs content from new_string property', async () => {
-      await sut.logHookData(
-        testDataFactory.editEvent({ content: testNewString })
-      )
+      await sut.logHookData(hookDataFactory.edit({ newString: testNewString }))
 
       const logContent = await sut.readEdits()
       const parsed = JSON.parse(logContent)
@@ -50,23 +46,23 @@ describe('HookEvents', () => {
 
   describe('when logging TodoWrite data', () => {
     test('saves todo content to storage', async () => {
-      await sut.logHookData(testDataFactory.todosEvent())
+      await sut.logHookData(hookDataFactory.todoWrite())
 
       expect(await sut.todosExist()).toBe(true)
     })
 
     test('does not save edit content', async () => {
-      await sut.logHookData(testDataFactory.todosEvent())
+      await sut.logHookData(hookDataFactory.todoWrite())
 
       expect(await sut.editsExist()).toBe(false)
     })
 
     test('logs todos with status prefix', async () => {
-      await sut.logHookData(testDataFactory.todosEvent())
+      await sut.logHookData(hookDataFactory.todoWrite())
 
       const logContent = await sut.readTodos()
-      expect(logContent).toContain('pending: First default task')
-      expect(logContent).toContain('in_progress: Second default task')
+      expect(logContent).toContain('in_progress: Write tests')
+      expect(logContent).toContain('pending: Implement feature')
     })
 
     test('handles full hook event structure with nested data', async () => {
@@ -81,24 +77,23 @@ describe('HookEvents', () => {
     })
 
     test('logs single todo with default status', async () => {
-      const todoData = testDataFactory.todoEvent()
-
-      await sut.logHookData(todoData)
+      await sut.logHookData(hookDataFactory.todoWrite())
 
       const logContent = await sut.readTodos()
-      expect(logContent).toContain('pending: Default todo task')
+      expect(logContent).toContain('in_progress: Write tests')
+      expect(logContent).toContain('pending: Implement feature')
     })
   })
 
   describe('when hook data has no content', () => {
     test('does not create file when tool_input is missing', async () => {
-      await sut.logHookData(testDataFactory.emptyEvent())
+      await sut.logHookData(hookDataFactory.emptyEvent())
 
       expect(await sut.editsExist()).toBe(false)
     })
 
     test('does not create file when tool_input is empty', async () => {
-      await sut.logHookData(testDataFactory.emptyToolInputEvent())
+      await sut.logHookData(hookDataFactory.emptyToolInputEvent())
 
       expect(await sut.editsExist()).toBe(false)
     })
@@ -108,12 +103,12 @@ describe('HookEvents', () => {
     test('overwrites previous content instead of appending', async () => {
       // First write
       await sut.logHookData(
-        testDataFactory.writeEvent({ content: 'first content' })
+        hookDataFactory.write({ content: 'first content' })
       )
 
       // Second write should overwrite
       await sut.logHookData(
-        testDataFactory.writeEvent({ content: 'second content' })
+        hookDataFactory.write({ content: 'second content' })
       )
 
       const logContent = await sut.readEdits()
@@ -124,128 +119,79 @@ describe('HookEvents', () => {
   })
 
   describe('JSON format for Edit logs', () => {
-    test('stores valid JSON', async () => {
-      const editData = testDataFactory.editEvent({
-        content: 'new content',
+    let parsedContent: z.infer<typeof EditSchema>
+
+    beforeEach(async () => {
+      const editData = hookDataFactory.edit({
+        newString: 'new content',
         filePath: '/path/to/file.ts',
         oldString: 'old content'
       })
-
       await sut.logHookData(editData)
-
+      
       const logContent = await sut.readEdits()
-      const parsed = JSON.parse(logContent)
-      expect(parsed).toBeDefined()
+      parsedContent = JSON.parse(logContent)
     })
 
-    test('stores file path', async () => {
-      const filePath = '/path/to/file.ts'
-      const editData = testDataFactory.editEvent({
-        content: 'new content',
-        filePath,
-        oldString: 'old content'
-      })
-
-      await sut.logHookData(editData)
-
-      const logContent = await sut.readEdits()
-      const parsed = JSON.parse(logContent)
-      expect(parsed.file_path).toBe(filePath)
+    test('stores valid JSON', () => {
+      expect(parsedContent).toBeDefined()
     })
 
-    test('stores old_string', async () => {
-      const oldString = 'old content'
-      const editData = testDataFactory.editEvent({
-        content: 'new content',
-        filePath: '/path/to/file.ts',
-        oldString
-      })
-
-      await sut.logHookData(editData)
-
-      const logContent = await sut.readEdits()
-      const parsed = JSON.parse(logContent)
-      expect(parsed.old_string).toBe(oldString)
+    test('stores file path', () => {
+      expect(parsedContent.file_path).toBe('/path/to/file.ts')
     })
 
-    test('stores new_string', async () => {
-      const newString = 'new content'
-      const editData = testDataFactory.editEvent({
-        content: newString,
-        filePath: '/path/to/file.ts',
-        oldString: 'old content'
-      })
+    test('stores old_string', () => {
+      expect(parsedContent.old_string).toBe('old content')
+    })
 
-      await sut.logHookData(editData)
-
-      const logContent = await sut.readEdits()
-      const parsed = JSON.parse(logContent)
-      expect(parsed.new_string).toBe(newString)
+    test('stores new_string', () => {
+      expect(parsedContent.new_string).toBe('new content')
     })
   })
 
   describe('JSON format for Write logs', () => {
-    test('stores valid JSON', async () => {
-      const writeData = testDataFactory.writeEvent({
+    let parsedContent: z.infer<typeof WriteSchema>
+
+    beforeEach(async () => {
+      const writeData = hookDataFactory.write({
         content: 'file content',
         filePath: '/path/to/file.ts'
       })
-
       await sut.logHookData(writeData)
-
+      
       const logContent = await sut.readEdits()
-      const parsed = JSON.parse(logContent)
-      expect(parsed).toBeDefined()
+      parsedContent = JSON.parse(logContent)
     })
 
-    test('stores file path', async () => {
-      const filePath = '/path/to/file.ts'
-      const writeData = testDataFactory.writeEvent({
-        content: 'file content',
-        filePath
-      })
-
-      await sut.logHookData(writeData)
-
-      const logContent = await sut.readEdits()
-      const parsed = JSON.parse(logContent)
-      expect(parsed.file_path).toBe(filePath)
+    test('stores valid JSON', () => {
+      expect(parsedContent).toBeDefined()
     })
 
-    test('stores content', async () => {
-      const content = 'file content'
-      const writeData = testDataFactory.writeEvent({
-        content,
-        filePath: '/path/to/file.ts'
-      })
+    test('stores file path', () => {
+      expect(parsedContent.file_path).toBe('/path/to/file.ts')
+    })
 
-      await sut.logHookData(writeData)
-
-      const logContent = await sut.readEdits()
-      const parsed = JSON.parse(logContent)
-      expect(parsed.content).toBe(content)
+    test('stores content', () => {
+      expect(parsedContent.content).toBe('file content')
     })
   })
 
   describe('edge cases for content extraction', () => {
     test('handles Write tool with content', async () => {
-      const writeData = testDataFactory.writeEvent()
-
-      await sut.logHookData(writeData)
+      await sut.logHookData(hookDataFactory.write())
 
       const logContent = await sut.readEdits()
       const parsed = JSON.parse(logContent)
-      expect(parsed.content).toContain('default write content')
+      expect(parsed.content).toBe('file content to write')
     })
 
     test('handles Edit tool with new_string', async () => {
-      const editData = testDataFactory.editEvent()
-
-      await sut.logHookData(editData)
+      await sut.logHookData(hookDataFactory.edit())
 
       const logContent = await sut.readEdits()
       const parsed = JSON.parse(logContent)
-      expect(parsed.new_string).toContain('default edit content')
+      expect(parsed.new_string).toBe('old content; new content')
     })
 
     test('ignores invalid data structures', async () => {
@@ -265,10 +211,6 @@ describe('HookEvents', () => {
   async function setupHookEvents() {
     const storage = new MemoryStorage()
     const hookEvents = new HookEvents(storage)
-
-    const cleanup = async () => {
-      // No cleanup needed for memory storage
-    }
 
     const editsExist = async () => {
       const edit = await storage.getEdit()
@@ -293,7 +235,6 @@ describe('HookEvents', () => {
     }
 
     return {
-      cleanup,
       editsExist,
       todosExist,
       readEdits,
@@ -304,64 +245,6 @@ describe('HookEvents', () => {
 
   // Test data factories with sensible defaults
   const testDataFactory = {
-    // Simple hook data events with defaults
-    editEvent: (overrides?: { content?: string; filePath?: string; oldString?: string }) => {
-      const content = overrides?.content || 'default edit content'
-      return SimpleHookDataSchema.parse({
-        tool_name: 'Edit',
-        tool_input: {
-          new_string: content,
-          file_path: overrides?.filePath,
-          old_string: overrides?.oldString,
-        },
-      })
-    },
-
-    writeEvent: (overrides?: { content?: string; filePath?: string }) => {
-      const content = overrides?.content || 'default write content'
-      return SimpleHookDataSchema.parse({
-        tool_name: 'Write',
-        tool_input: {
-          content,
-          file_path: overrides?.filePath,
-        },
-      })
-    },
-
-    todoEvent: (overrides?: { content?: string; status?: string }) => {
-      return SimpleHookDataSchema.parse({
-        tool_name: 'TodoWrite',
-        tool_input: {
-          todos: [
-            {
-              content: overrides?.content || 'Default todo task',
-              status: overrides?.status || 'pending',
-              priority: 'medium',
-              id: '1',
-            },
-          ],
-        },
-      })
-    },
-
-    todosEvent: (todos?: Array<{ content: string; status?: string }>) => {
-      const items = todos || [
-        { content: 'First default task', status: 'pending' },
-        { content: 'Second default task', status: 'in_progress' },
-      ]
-
-      return SimpleHookDataSchema.parse({
-        tool_name: 'TodoWrite',
-        tool_input: {
-          todos: items.map((item, index) => ({
-            content: item.content,
-            status: item.status || 'pending',
-            priority: 'medium',
-            id: String(index + 1),
-          })),
-        },
-      })
-    },
 
     // Full hook event with TodoWrite defaults
     fullTodoEvent: (overrides?: {
@@ -390,15 +273,6 @@ describe('HookEvents', () => {
           },
         },
       })
-    },
-
-    emptyEvent: () => SimpleHookDataSchema.parse({}),
-
-    emptyToolInputEvent: () => SimpleHookDataSchema.parse({ tool_input: {} }),
-
-    // Generic factory for custom cases
-    customEvent: (data: z.infer<typeof SimpleHookDataSchema>) => {
-      return SimpleHookDataSchema.parse(data)
     },
   }
 })

@@ -1,19 +1,13 @@
 import {
   HookDataSchema,
   type HookData,
+  type ToolInput,
 } from '../contracts/schemas/hookData'
+import { EditSchema, WriteSchema, TodoWriteSchema, createModificationJson } from '../contracts/schemas/toolSchemas'
+
 import { Storage } from '../storage/Storage'
 
 export type { HookData }
-
-// Type for tool input with all possible fields
-type ToolInput = {
-  new_string?: string
-  old_string?: string
-  file_path?: string
-  content?: string
-  todos?: Array<{ content: string; status?: string }>
-}
 
 export class HookEvents {
   constructor(private storage: Storage) {}
@@ -43,40 +37,41 @@ export class HookEvents {
   }
 
   private extractContent(toolInput?: ToolInput, toolName?: string): string | null {
-    if (!toolInput) return null
+    if (!toolInput || !toolName) return null
 
-    // For TodoWrite, use the existing extraction logic
-    if (toolName === 'TodoWrite') {
-      return this.extractTodosContent(toolInput.todos)
-    }
-
-    // For Edit tool, create JSON with file_path, old_string, new_string
-    if (toolName === 'Edit' && toolInput.new_string !== undefined) {
-      const editData = {
-        file_path: toolInput.file_path,
-        old_string: toolInput.old_string,
-        new_string: toolInput.new_string
+    // Use Zod schemas to validate and extract the correct data
+    switch (toolName) {
+      case 'Edit': {
+        const result = EditSchema.safeParse(toolInput)
+        if (result.success) {
+          return createModificationJson(result.data)
+        }
+        break
       }
-      return JSON.stringify(editData)
-    }
-
-    // For Write tool, create JSON with file_path and content
-    if (toolName === 'Write' && toolInput.content !== undefined) {
-      const writeData = {
-        file_path: toolInput.file_path,
-        content: toolInput.content
+      
+      case 'Write': {
+        const result = WriteSchema.safeParse(toolInput)
+        if (result.success) {
+          return createModificationJson(result.data)
+        }
+        break
       }
-      return JSON.stringify(writeData)
+      
+      case 'TodoWrite': {
+        const result = TodoWriteSchema.safeParse(toolInput)
+        if (result.success) {
+          return this.extractTodosContent(result.data.todos)
+        }
+        break
+      }
     }
 
     return null
   }
 
   private extractTodosContent(
-    todos?: Array<{ content: string; status?: string }>
-  ): string | null {
-    if (!todos || todos.length === 0) return null
-
+    todos: Array<{ content: string; status?: string; priority?: string; id?: string }>
+  ): string {
     return todos
       .map((todo) => {
         const status = todo.status || 'pending'
