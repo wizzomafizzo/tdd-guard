@@ -16,7 +16,7 @@ describe('tddValidator', () => {
     })
   })
 
-  test('approves edit when adding single test', () => {
+  test('does not block when adding single test', () => {
     const context: Context = {
       edit: TestDataFactory.singleTestEdit(),
     }
