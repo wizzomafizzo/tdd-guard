@@ -16,7 +16,7 @@ describe('tddValidator', () => {
     })
   })
 
-  test('returns ok when content contains one test', () => {
+  test('approves edit when adding single test', () => {
     const context: Context = {
       edit: TestDataFactory.singleTestEdit(),
     }
