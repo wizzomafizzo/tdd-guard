@@ -1,38 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { processHookData, defaultResult } from './processHookData'
 import { MemoryStorage } from '../storage/MemoryStorage'
+import { hookDataFactory } from '../test'
 
 // Test data constants
 const TEST_CONTENT = 'test implementation code'
-const TEST_TODO = 'Write tests'
 
 const BLOCK_RESULT = {
   decision: 'block',
   reason: 'TDD violation',
 } as const
 
-const WRITE_HOOK_DATA = {
-  tool_name: 'Write',
-  tool_input: {
-    content: TEST_CONTENT,
-  },
-}
+const WRITE_HOOK_DATA = hookDataFactory.write()
 
-const EDIT_HOOK_DATA = {
-  tool_name: 'Edit',
-  tool_input: {
-    new_string: TEST_CONTENT,
-  },
-}
+const EDIT_HOOK_DATA = hookDataFactory.edit()
 
-const TODO_WRITE_HOOK_DATA = {
-  tool_name: 'TodoWrite',
-  tool_input: {
-    todos: [
-      { content: TEST_TODO, status: 'in_progress' },
-    ],
-  },
-}
+const TODO_WRITE_HOOK_DATA = hookDataFactory.todoWrite()
 
 describe('processHookData', () => {
   let sut: ReturnType<typeof createTestProcessor>
@@ -62,32 +45,41 @@ describe('processHookData', () => {
     await sut.process(EDIT_HOOK_DATA)
 
     const savedEdit = await sut.getEdit()
-    expect(savedEdit).toBe(TEST_CONTENT)
+    const parsedEdit = JSON.parse(savedEdit!)
+    expect(parsedEdit).toEqual(EDIT_HOOK_DATA.tool_input)
   })
 
   it('should save todo content to storage when tool is TodoWrite', async () => {
     await sut.process(TODO_WRITE_HOOK_DATA)
 
     const savedTodo = await sut.getTodo()
-    expect(savedTodo).toBe(`in_progress: ${TEST_TODO}`)
+    expect(savedTodo).toBe('in_progress: Write tests\npending: Implement feature')
   })
 
   it('should save edit content when tool has content field', async () => {
     await sut.process(WRITE_HOOK_DATA)
 
     const savedEdit = await sut.getEdit()
-    expect(savedEdit).toBe(TEST_CONTENT)
+    const parsedEdit = JSON.parse(savedEdit!)
+    expect(parsedEdit).toEqual(WRITE_HOOK_DATA.tool_input)
   })
 
   it('should handle nested data structure with data property', async () => {
     const hookData = createNestedHookData('Edit', {
+      file_path: '/test/file.ts',
+      old_string: 'old content',
       new_string: TEST_CONTENT,
     })
 
     await sut.process(hookData)
 
     const savedEdit = await sut.getEdit()
-    expect(savedEdit).toBe(TEST_CONTENT)
+    const parsedEdit = JSON.parse(savedEdit!)
+    expect(parsedEdit).toEqual({
+      file_path: '/test/file.ts',
+      old_string: 'old content',
+      new_string: TEST_CONTENT,
+    })
   })
 
   it('should call tddValidator with context built from storage', async () => {
@@ -100,8 +92,10 @@ describe('processHookData', () => {
 
     const result = await sut.process(EDIT_HOOK_DATA)
 
+    const expectedEditJson = JSON.stringify(EDIT_HOOK_DATA.tool_input)
+
     expect(sut.validatorHasBeenCalledWith({
-      edit: TEST_CONTENT,
+      edit: expectedEditJson,
       test: 'existing test',
       todo: 'existing todo',
     })).toBe(true)
