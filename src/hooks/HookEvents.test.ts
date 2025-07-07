@@ -30,7 +30,9 @@ describe('HookEvents', () => {
     })
 
     test('logs content from Write tool', async () => {
-      expect(await sut.readEdits()).toBe(testContent)
+      const logContent = await sut.readEdits()
+      const parsed = JSON.parse(logContent)
+      expect(parsed.content).toBe(testContent)
     })
   })
 
@@ -40,7 +42,9 @@ describe('HookEvents', () => {
         testDataFactory.editEvent({ content: testNewString })
       )
 
-      expect(await sut.readEdits()).toBe(testNewString)
+      const logContent = await sut.readEdits()
+      const parsed = JSON.parse(logContent)
+      expect(parsed.new_string).toBe(testNewString)
     })
   })
 
@@ -113,8 +117,113 @@ describe('HookEvents', () => {
       )
 
       const logContent = await sut.readEdits()
-      expect(logContent).toBe('second content')
-      expect(logContent).not.toContain('first content')
+      const parsed = JSON.parse(logContent)
+      expect(parsed.content).toBe('second content')
+      expect(parsed.content).not.toContain('first content')
+    })
+  })
+
+  describe('JSON format for Edit logs', () => {
+    test('stores valid JSON', async () => {
+      const editData = testDataFactory.editEvent({
+        content: 'new content',
+        filePath: '/path/to/file.ts',
+        oldString: 'old content'
+      })
+
+      await sut.logHookData(editData)
+
+      const logContent = await sut.readEdits()
+      const parsed = JSON.parse(logContent)
+      expect(parsed).toBeDefined()
+    })
+
+    test('stores file path', async () => {
+      const filePath = '/path/to/file.ts'
+      const editData = testDataFactory.editEvent({
+        content: 'new content',
+        filePath,
+        oldString: 'old content'
+      })
+
+      await sut.logHookData(editData)
+
+      const logContent = await sut.readEdits()
+      const parsed = JSON.parse(logContent)
+      expect(parsed.file_path).toBe(filePath)
+    })
+
+    test('stores old_string', async () => {
+      const oldString = 'old content'
+      const editData = testDataFactory.editEvent({
+        content: 'new content',
+        filePath: '/path/to/file.ts',
+        oldString
+      })
+
+      await sut.logHookData(editData)
+
+      const logContent = await sut.readEdits()
+      const parsed = JSON.parse(logContent)
+      expect(parsed.old_string).toBe(oldString)
+    })
+
+    test('stores new_string', async () => {
+      const newString = 'new content'
+      const editData = testDataFactory.editEvent({
+        content: newString,
+        filePath: '/path/to/file.ts',
+        oldString: 'old content'
+      })
+
+      await sut.logHookData(editData)
+
+      const logContent = await sut.readEdits()
+      const parsed = JSON.parse(logContent)
+      expect(parsed.new_string).toBe(newString)
+    })
+  })
+
+  describe('JSON format for Write logs', () => {
+    test('stores valid JSON', async () => {
+      const writeData = testDataFactory.writeEvent({
+        content: 'file content',
+        filePath: '/path/to/file.ts'
+      })
+
+      await sut.logHookData(writeData)
+
+      const logContent = await sut.readEdits()
+      const parsed = JSON.parse(logContent)
+      expect(parsed).toBeDefined()
+    })
+
+    test('stores file path', async () => {
+      const filePath = '/path/to/file.ts'
+      const writeData = testDataFactory.writeEvent({
+        content: 'file content',
+        filePath
+      })
+
+      await sut.logHookData(writeData)
+
+      const logContent = await sut.readEdits()
+      const parsed = JSON.parse(logContent)
+      expect(parsed.file_path).toBe(filePath)
+    })
+
+    test('stores content', async () => {
+      const content = 'file content'
+      const writeData = testDataFactory.writeEvent({
+        content,
+        filePath: '/path/to/file.ts'
+      })
+
+      await sut.logHookData(writeData)
+
+      const logContent = await sut.readEdits()
+      const parsed = JSON.parse(logContent)
+      expect(parsed.content).toBe(content)
     })
   })
 
@@ -125,7 +234,8 @@ describe('HookEvents', () => {
       await sut.logHookData(writeData)
 
       const logContent = await sut.readEdits()
-      expect(logContent).toContain('default write content')
+      const parsed = JSON.parse(logContent)
+      expect(parsed.content).toContain('default write content')
     })
 
     test('handles Edit tool with new_string', async () => {
@@ -134,7 +244,8 @@ describe('HookEvents', () => {
       await sut.logHookData(editData)
 
       const logContent = await sut.readEdits()
-      expect(logContent).toContain('default edit content')
+      const parsed = JSON.parse(logContent)
+      expect(parsed.new_string).toContain('default edit content')
     })
 
     test('ignores invalid data structures', async () => {
@@ -194,22 +305,25 @@ describe('HookEvents', () => {
   // Test data factories with sensible defaults
   const testDataFactory = {
     // Simple hook data events with defaults
-    editEvent: (overrides?: { content?: string }) => {
+    editEvent: (overrides?: { content?: string; filePath?: string; oldString?: string }) => {
       const content = overrides?.content || 'default edit content'
       return SimpleHookDataSchema.parse({
         tool_name: 'Edit',
         tool_input: {
           new_string: content,
+          file_path: overrides?.filePath,
+          old_string: overrides?.oldString,
         },
       })
     },
 
-    writeEvent: (overrides?: { content?: string }) => {
+    writeEvent: (overrides?: { content?: string; filePath?: string }) => {
       const content = overrides?.content || 'default write content'
       return SimpleHookDataSchema.parse({
         tool_name: 'Write',
         tool_input: {
           content,
+          file_path: overrides?.filePath,
         },
       })
     },

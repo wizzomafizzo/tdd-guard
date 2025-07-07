@@ -58,6 +58,21 @@ describe('tddValidator', () => {
       reason: expect.any(String),
     })
   })
+
+  test('does not block when old_string contains one of the tests in new_string', () => {
+    const context: Context = {
+      edit: TestDataFactory.editWithExistingTest(),
+      todo: TestDataFactory.addDivideMethodTodo(),
+      test: TestDataFactory.passingTests(),
+    }
+
+    const result = tddValidator(context)
+
+    expect(result).toEqual({
+      decision: undefined,
+      reason: expect.any(String),
+    })
+  })
 })
 
 // Test Data Factory
@@ -137,5 +152,42 @@ src/Calculator.test.ts:1:10 - error TS2305: Module '"./Calculator"' has no expor
 Test Files  1 failed (1)
      Tests  no tests
       Time  1.23s (transform 823ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 0ms)`
+  }
+
+  static editWithExistingTest(): string {
+    return JSON.stringify({
+      file_path: '/src/Calculator.test.ts',
+      old_string: `describe('Calculator', () => {
+  test('should add two numbers correctly', () => {
+    const result = calculator.add(2, 3)
+    expect(result).toBe(5)
+  })
+})`,
+      new_string: `describe('Calculator', () => {
+  test('should add two numbers correctly', () => {
+    const result = calculator.add(2, 3)
+    expect(result).toBe(5)
+  })
+  
+  test('should divide two numbers correctly', () => {
+    const result = calculator.divide(4, 2)
+    expect(result).toBe(2)
+  })
+})`,
+    })
+  }
+
+  static addDivideMethodTodo(): string {
+    return 'pending: Add divide method to Calculator class'
+  }
+
+  static passingTests(): string {
+    return ` PASS  src/Calculator.test.ts
+  ✓ Calculator > should add two numbers correctly (2ms)
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  14:23:45
+   Duration  215ms`
   }
 }

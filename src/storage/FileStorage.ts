@@ -21,7 +21,7 @@ export class FileStorage implements Storage {
 
   async saveEdit(content: string): Promise<void> {
     await this.ensureDirectory()
-    await fs.writeFile(path.join(this.basePath, 'edit.txt'), content)
+    await fs.writeFile(path.join(this.basePath, 'edit.json'), content)
   }
 
   async getTest(): Promise<string | null> {
@@ -42,7 +42,7 @@ export class FileStorage implements Storage {
 
   async getEdit(): Promise<string | null> {
     try {
-      return await fs.readFile(path.join(this.basePath, 'edit.txt'), 'utf-8')
+      return await fs.readFile(path.join(this.basePath, 'edit.json'), 'utf-8')
     } catch {
       return null
     }

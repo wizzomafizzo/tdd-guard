@@ -69,4 +69,38 @@ describe('FileStorage', () => {
       expect(retrieved).toBe('edit content')
     })
   })
+
+  describe('JSON file storage', () => {
+    let tempDir: string
+    let storage: FileStorage
+
+    beforeEach(async () => {
+      tempDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), 'filestorage-json-test-')
+      )
+      tempDirs.push(tempDir)
+      storage = new FileStorage(tempDir)
+    })
+
+    it('should save edits to edit.json instead of edit.txt', async () => {
+      const jsonContent = JSON.stringify({
+        file_path: '/test/file.ts',
+        content: 'test content',
+      })
+
+      await storage.saveEdit(jsonContent)
+
+      // Check that edit.json exists
+      const jsonPath = path.join(tempDir, 'edit.json')
+      await expect(fs.access(jsonPath)).resolves.toBeUndefined()
+
+      // Check that edit.txt does not exist
+      const txtPath = path.join(tempDir, 'edit.txt')
+      await expect(fs.access(txtPath)).rejects.toThrow()
+
+      // Verify content
+      const retrieved = await storage.getEdit()
+      expect(retrieved).toBe(jsonContent)
+    })
+  })
 })

@@ -1,11 +1,19 @@
 import {
   HookDataSchema,
   type HookData,
-  type ToolInput,
 } from '../contracts/schemas/hookData'
 import { Storage } from '../storage/Storage'
 
 export type { HookData }
+
+// Type for tool input with all possible fields
+type ToolInput = {
+  new_string?: string
+  old_string?: string
+  file_path?: string
+  content?: string
+  todos?: Array<{ content: string; status?: string }>
+}
 
 export class HookEvents {
   constructor(private storage: Storage) {}
@@ -23,7 +31,7 @@ export class HookEvents {
     const toolInput =
       'data' in hookData ? hookData.data.tool_input : hookData.tool_input
 
-    const content = this.extractContent(toolInput)
+    const content = this.extractContent(toolInput, toolName)
 
     if (content !== null) {
       if (toolName === 'TodoWrite') {
@@ -34,19 +42,31 @@ export class HookEvents {
     }
   }
 
-  private extractContent(toolInput?: ToolInput): string | null {
+  private extractContent(toolInput?: ToolInput, toolName?: string): string | null {
     if (!toolInput) return null
 
-    // Content extractors in priority order
-    const extractors: Array<(input: ToolInput) => string | null> = [
-      (input) => input.new_string ?? null,
-      (input) => input.content ?? null,
-      (input) => this.extractTodosContent(input.todos),
-    ]
+    // For TodoWrite, use the existing extraction logic
+    if (toolName === 'TodoWrite') {
+      return this.extractTodosContent(toolInput.todos)
+    }
 
-    for (const extractor of extractors) {
-      const content = extractor(toolInput)
-      if (content !== null) return content
+    // For Edit tool, create JSON with file_path, old_string, new_string
+    if (toolName === 'Edit' && toolInput.new_string !== undefined) {
+      const editData = {
+        file_path: toolInput.file_path,
+        old_string: toolInput.old_string,
+        new_string: toolInput.new_string
+      }
+      return JSON.stringify(editData)
+    }
+
+    // For Write tool, create JSON with file_path and content
+    if (toolName === 'Write' && toolInput.content !== undefined) {
+      const writeData = {
+        file_path: toolInput.file_path,
+        content: toolInput.content
+      }
+      return JSON.stringify(writeData)
     }
 
     return null

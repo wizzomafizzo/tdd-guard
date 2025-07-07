@@ -11,6 +11,8 @@ const TodoSchema = z.object({
 // Schema for tool_input variations
 const ToolInputSchema = z.object({
   new_string: z.string().optional(),
+  old_string: z.string().optional(),
+  file_path: z.string().optional(),
   content: z.string().optional(),
   todos: z.array(TodoSchema).optional(),
 })

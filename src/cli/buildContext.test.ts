@@ -32,4 +32,22 @@ describe('buildContext', () => {
       todo: 'pending: implement feature',
     })
   })
+
+  it('should parse edit JSON data when valid JSON is stored', async () => {
+    const editJson = JSON.stringify({
+      file_path: '/src/example.ts',
+      content: 'new file content',
+    })
+    await storage.saveEdit(editJson)
+    await storage.saveTest('test code')
+    await storage.saveTodo('pending: implement feature')
+
+    const context = await buildContext(storage)
+
+    expect(context).toEqual({
+      edit: editJson,
+      test: 'test code',
+      todo: 'pending: implement feature',
+    })
+  })
 })
