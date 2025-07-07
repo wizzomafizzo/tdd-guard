@@ -1,5 +1,7 @@
 # TDD Guard
 
+> ⚠️ **Work in Progress**: This project is under active development. Consistent behavior is not yet guaranteed, and you may encounter bugs or unexpected behavior.
+
 A Claude Code hook that enforces Test-Driven Development (TDD) principles by monitoring and validating agent actions in real-time.
 
 It enriches the validation model with context from the agent's current todos and latest test results, enabling intelligent decisions about whether code changes follow TDD practices. This approach enforces TDD without cluttering agent instructions, providing contextual feedback when violations occur.
