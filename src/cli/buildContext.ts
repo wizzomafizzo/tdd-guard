@@ -1,5 +1,5 @@
 import { Storage } from '../storage/Storage'
-import { Context } from '../types/Context'
+import { Context } from '../contracts/types/Context'
 
 export async function buildContext(storage: Storage): Promise<Context> {
   const edit = (await storage.getEdit()) || ''

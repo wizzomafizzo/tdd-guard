@@ -1,5 +1,5 @@
-import { IModelClient } from './types/ModelClient'
-import { Context } from './types/Context'
+import { IModelClient } from '../../contracts/types/ModelClient'
+import { Context } from '../../contracts/types/Context'
 import { execSync } from 'child_process'
 
 export class ClaudeModelClient implements IModelClient {

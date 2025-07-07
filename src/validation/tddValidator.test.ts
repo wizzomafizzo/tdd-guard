@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest'
 import { tddValidator } from './tddValidator'
-import { Context } from './types/Context'
+import { Context } from '../contracts/types/Context'
 
 describe('tddValidator', () => {
   test('returns violation when content contains two tests', () => {

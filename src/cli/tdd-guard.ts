@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { processHookData } from './processHookData'
+import { processHookData } from '../hooks/processHookData'
 import { FileStorage } from '../storage/FileStorage'
-import { tddValidator } from '../tddValidator'
+import { tddValidator } from '../validation/tddValidator'
 import path from 'path'
 
 let inputData = ''

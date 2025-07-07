@@ -1,7 +1,7 @@
-import { ClaudeModelClient } from './ClaudeModelClient'
-import { IModelClient } from './types/ModelClient'
-import { TDDValidationResult } from './types/TDDValidation'
-import { Context } from './types/Context'
+import { ClaudeModelClient } from './models/ClaudeModelClient'
+import { IModelClient } from '../contracts/types/ModelClient'
+import { TDDValidationResult } from '../contracts/types/TDDValidation'
+import { Context } from '../contracts/types/Context'
 import { SYSTEM_PROMPT } from './system-prompt'
 
 export function tddValidator(

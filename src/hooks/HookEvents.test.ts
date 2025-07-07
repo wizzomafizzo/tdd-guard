@@ -1,8 +1,8 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest'
 import { z } from 'zod'
 import { HookEvents } from './HookEvents'
-import { SimpleHookDataSchema, FullHookEventSchema } from './schemas/hookData'
-import { MemoryStorage } from './storage/MemoryStorage'
+import { SimpleHookDataSchema, FullHookEventSchema } from '../contracts/schemas/hookData'
+import { MemoryStorage } from '../storage/MemoryStorage'
 
 describe('HookEvents', () => {
   const testContent = 'test content'

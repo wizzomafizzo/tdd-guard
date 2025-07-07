@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { ClaudeModelClient } from './ClaudeModelClient'
 import { execSync } from 'child_process'
-import { Context } from './types/Context'
+import { Context } from '../../contracts/types/Context'
 
 vi.mock('child_process')
 

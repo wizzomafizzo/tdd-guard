@@ -1,8 +1,8 @@
-import { TDDValidationResult } from '../types/TDDValidation'
+import { TDDValidationResult } from '../contracts/types/TDDValidation'
 import { Storage } from '../storage/Storage'
-import { Context } from '../types/Context'
-import { buildContext } from './buildContext'
-import { HookEvents } from '../HookEvents'
+import { Context } from '../contracts/types/Context'
+import { buildContext } from '../cli/buildContext'
+import { HookEvents } from './HookEvents'
 
 export interface ProcessHookDataDeps {
   storage?: Storage

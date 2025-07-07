@@ -2,8 +2,8 @@ import {
   HookDataSchema,
   type HookData,
   type ToolInput,
-} from './schemas/hookData'
-import { Storage } from './storage/Storage'
+} from '../contracts/schemas/hookData'
+import { Storage } from '../storage/Storage'
 
 export type { HookData }
 
