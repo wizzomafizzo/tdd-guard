@@ -7,137 +7,123 @@ import { randomBytes } from 'node:crypto'
 import { stripVTControlCharacters } from 'node:util'
 
 describe('FileReporter', () => {
-  let testDir: string
-  let testFile: string
-  let originalWrite: typeof process.stdout.write
+  let sut: Awaited<ReturnType<typeof setupFileReporter>>
+
+  const plainText = 'Test output line 1\n'
+  const textWithAnsi = '\x1b[32m✓\x1b[39m Test passed \x1b[2m(5ms)\x1b[22m\n'
+  const textWithoutAnsi = '✓ Test passed (5ms)\n'
 
   beforeEach(() => {
-    // Create a unique temp directory for each test
-    const randomId = randomBytes(8).toString('hex')
-    testDir = join(tmpdir(), `file-reporter-test-${randomId}`)
-    testFile = join(testDir, 'test-output.txt')
-
-    // Save original stdout.write
-    originalWrite = process.stdout.write.bind(process.stdout)
+    sut = setupFileReporter()
   })
 
   afterEach(() => {
-    // Restore original stdout.write
-    process.stdout.write = originalWrite
+    sut.cleanup()
+  })
 
-    // Clean up temp directory
+  describe('file system operations', () => {
+    it('directory does not exist before initialization', () => {
+      expect(sut.dirExists()).toBe(false)
+    })
+
+    it('creates directory on initialization', () => {
+      sut.reporter.onInit()
+      expect(sut.dirExists()).toBe(true)
+    })
+  })
+
+  describe('output capture behavior', () => {
+    beforeEach(() => {
+      sut.reporter.onInit()
+    })
+
+    describe('file writing', () => {
+      beforeEach(() => {
+        sut.writeOutput(plainText)
+      })
+
+      it('creates file when writing output', () => {
+        expect(sut.fileExists()).toBe(true)
+      })
+
+      it('saves exact output to file', () => {
+        expect(sut.getFileContent()).toBe(plainText)
+      })
+    })
+
+    describe('ansi handling', () => {
+      beforeEach(() => {
+        sut.writeOutput(textWithAnsi)
+      })
+
+      it('console output is not stripped of ansi codes', () => {
+        expect(sut.getConsoleOutput()).toBe(textWithAnsi)
+      })
+
+      it('file content matches stripped console output', () => {
+        const strippedConsoleOutput = stripVTControlCharacters(
+          sut.getConsoleOutput()
+        )
+
+        expect(sut.getFileContent()).toBe(strippedConsoleOutput)
+      })
+
+      it('strips ansi codes from output to file', () => {
+        expect(sut.getFileContent()).toBe(textWithoutAnsi)
+      })
+    })
+  })
+})
+
+function setupFileReporter() {
+  // Test file setup
+  const randomId = randomBytes(8).toString('hex')
+  const testDir = join(tmpdir(), `file-reporter-test-${randomId}`)
+  const testFile = join(testDir, 'test-output.txt')
+
+  // Console output mocking
+  const originalWrite = process.stdout.write.bind(process.stdout)
+  let consoleOutput = ''
+  const mockWrite = vi.fn((chunk: string | Uint8Array) => {
+    consoleOutput = chunk?.toString() || ''
+    return true
+  })
+  process.stdout.write = mockWrite
+
+  // Create reporter instance
+  const reporter = new FileReporter(testFile)
+
+  // Test utilities
+  const dirExists = () => existsSync(testDir)
+  const fileExists = () => existsSync(testFile)
+  const getFileContent = () => readFileSync(testFile, 'utf-8')
+  const writeOutput = (output: string) => process.stdout.write(output)
+  const getConsoleOutput = () => consoleOutput
+
+  // Cleanup function
+  const cleanup = () => {
+    process.stdout.write = originalWrite
     if (existsSync(testDir)) {
       rmSync(testDir, { recursive: true, force: true })
     }
-  })
+  }
 
-  it('creates directory if it does not exist', () => {
-    const reporter = new FileReporter(testFile)
+  return {
+    // File system
+    testDir,
+    testFile,
+    dirExists,
+    fileExists,
+    getFileContent,
 
-    expect(existsSync(testDir)).toBe(false)
+    // Reporter
+    reporter,
+    writeOutput,
 
-    reporter.onInit()
+    // Console output
+    getConsoleOutput,
 
-    expect(existsSync(testDir)).toBe(true)
-  })
-
-  it('saves output to provided file path', () => {
-    const reporter = new FileReporter(testFile)
-
-    reporter.onInit()
-
-    // Simulate writing to stdout
-    const testOutput = 'Test output line 1\n'
-    process.stdout.write(testOutput)
-
-    // Check if file was created and contains the output
-    expect(existsSync(testFile)).toBe(true)
-    const fileContent = readFileSync(testFile, 'utf-8')
-    expect(fileContent).toBe(testOutput)
-  })
-
-  it('strips ansi codes from output to file', () => {
-    const reporter = new FileReporter(testFile)
-
-    reporter.onInit()
-
-    // Simulate writing colored output with ANSI codes
-    const coloredOutput = '\x1b[32m✓\x1b[39m Test passed \x1b[2m(5ms)\x1b[22m\n'
-    const expectedClean = '✓ Test passed (5ms)\n'
-
-    process.stdout.write(coloredOutput)
-
-    // Check that file contains clean text without ANSI codes
-    const fileContent = readFileSync(testFile, 'utf-8')
-    expect(fileContent).toBe(expectedClean)
-  })
-
-  it('console output is shown', () => {
-    const reporter = new FileReporter(testFile)
-
-    // Spy on the original stdout.write to verify it gets called
-    const writeSpy = vi.spyOn(process.stdout, 'write')
-
-    reporter.onInit()
-
-    const testOutput = 'Console test output\n'
-    process.stdout.write(testOutput)
-
-    // Verify that the original write method was called with our output
-    expect(writeSpy).toHaveBeenCalledWith(testOutput)
-  })
-
-  it('console output is not stripped of ansi codes', () => {
-    const reporter = new FileReporter(testFile)
-
-    // Create a mock to capture what gets passed to the real stdout
-    const mockWrite = vi.fn()
-    const realOriginalWrite = originalWrite
-    process.stdout.write = mockWrite
-
-    reporter.onInit()
-
-    // Now our reporter has wrapped stdout.write, so restore and test
-    const coloredOutput = '\x1b[32m✓\x1b[39m Test passed\n'
-    process.stdout.write(coloredOutput)
-
-    // Verify the mock (which represents the original stdout) received colored output
-    expect(mockWrite).toHaveBeenCalledWith(coloredOutput)
-
-    // Restore
-    process.stdout.write = realOriginalWrite
-  })
-
-  it('console output and text file content are the same when ansi is stripped', () => {
-    const reporter = new FileReporter(testFile)
-
-    // Capture what goes to console
-    let consoleOutput = ''
-    const mockWrite = vi.fn((chunk: string | Uint8Array) => {
-      consoleOutput = chunk?.toString() || ''
-      return true
-    })
-    const realOriginalWrite = originalWrite
-    process.stdout.write = mockWrite
-
-    reporter.onInit()
-
-    // Write colored output
-    const coloredOutput =
-      '\x1b[31mError:\x1b[39m Test \x1b[33mfailed\x1b[39m with \x1b[2mcode 1\x1b[22m\n'
-    process.stdout.write(coloredOutput)
-
-    // Read file content
-    const fileContent = readFileSync(testFile, 'utf-8')
-
-    // Strip ANSI from console output for comparison
-    const strippedConsoleOutput = stripVTControlCharacters(consoleOutput)
-
-    // Verify they match
-    expect(fileContent).toBe(strippedConsoleOutput)
-    expect(fileContent).toBe('Error: Test failed with code 1\n')
-
-    // Restore
-    process.stdout.write = realOriginalWrite
-  })
-})
+    // Lifecycle
+    cleanup,
+  }
+}
