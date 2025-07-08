@@ -57,9 +57,13 @@ This captures test output for the TDD validation context. Reporters for other te
 
 ## Security Notice
 
-> ⚠️ **Important**: Hooks execute shell commands with your full user permissions without confirmation. You are responsible for ensuring your hooks are safe and secure. Review the [Claude Code Hooks documentation](https://docs.anthropic.com/en/docs/claude-code/hooks) for security considerations.
+As stated in the [Claude Code Hooks documentation](https://docs.anthropic.com/en/docs/claude-code/hooks#security-considerations):
 
-TDD Guard runs with your user permissions and has access to your file system. We provide no warranties or guarantees. Use at your own risk and review the source code if you have security concerns.
+> Hooks execute shell commands with your full user permissions without confirmation. You are responsible for ensuring your hooks are safe and secure. Anthropic is not liable for any data loss or system damage resulting from hook usage.
+
+We share this information for transparency. Please read the full [security considerations](https://docs.anthropic.com/en/docs/claude-code/hooks#security-considerations) before using hooks.
+
+TDD Guard runs with your user permissions and has access to your file system. While we follow security best practices including automated security scanning, dependency audits, and test-driven development, we provide no warranties or guarantees. Use at your own risk and review the source code if you have security concerns.
 
 ## How It Works
 
