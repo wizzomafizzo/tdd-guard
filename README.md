@@ -4,7 +4,7 @@
 [![Security](https://github.com/nizos/tdd-guard/actions/workflows/security.yml/badge.svg)](https://github.com/nizos/tdd-guard/actions/workflows/security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> ⚠️ **Work in Progress**: This project is under active development. Consistent behavior is not yet guaranteed, and you may encounter bugs or unexpected behavior.
+> ℹ️ **Note**: This project is under active development. Consistent behavior is not yet guaranteed.
 
 A Claude Code hook that enforces Test-Driven Development (TDD) principles by monitoring and validating agent actions in real-time.
 
