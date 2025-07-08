@@ -60,10 +60,9 @@ src/
 │
 ├── validation/                   # TDD principle validation
 │   ├── tddValidator.ts           # Sends context to AI model and parses response
-│   ├── models/                   # AI model implementations
-│   │   └── ClaudeModelClient.ts  # Executes Claude CLI for validation
-│   └── prompts/                  # AI model instructions
-│       └── system-prompt.ts      # Detailed TDD Guard rules and guidelines
+│   ├── system-prompt.ts          # Detailed TDD Guard rules and guidelines
+│   └── models/                   # AI model implementations
+│       └── ClaudeModelClient.ts  # Executes Claude CLI for validation
 │
 ├── storage/                      # Data persistence layer
 │   ├── Storage.ts                # Abstract interface for storage operations
