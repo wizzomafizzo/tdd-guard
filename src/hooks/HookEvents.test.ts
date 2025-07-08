@@ -1,221 +1,79 @@
 import { describe, test, expect, beforeEach } from 'vitest'
-import { z } from 'zod'
 import { HookEvents } from './HookEvents'
 import { MemoryStorage } from '../storage/MemoryStorage'
-import { hookDataFactory } from '../test'
-import { EditSchema, WriteSchema } from '../contracts/schemas/toolSchemas'
-import { FullHookEventSchema } from '../contracts/schemas/hookData'
+import { testData } from '../test'
 
 describe('HookEvents', () => {
-  const testContent = 'test content'
-  const testNewString = 'test new string'
-
   let sut: Awaited<ReturnType<typeof setupHookEvents>>
 
   beforeEach(async () => {
     sut = await setupHookEvents()
   })
 
-  describe('with logged content', () => {
+  describe('Write operation', () => {
+    const writeOp = testData.writeOperation()
+
     beforeEach(async () => {
-      await sut.logHookData(
-        hookDataFactory.write({ content: testContent })
-      )
+      await sut.processEvent(writeOp)
     })
 
-    test('saves content to storage', async () => {
-      expect(await sut.modificationsExist()).toBe(true)
-    })
-
-    test('logs content from Write tool', async () => {
-      const logContent = await sut.readModifications()
-      const parsed = JSON.parse(logContent)
-      expect(parsed.content).toBe(testContent)
+    test('stores expected data', async () => {
+      const data = await sut.readModifications()
+      expect(JSON.parse(data)).toStrictEqual(writeOp)
     })
   })
 
-  describe('with Edit tool', () => {
-    test('logs content from new_string property', async () => {
-      await sut.logHookData(hookDataFactory.edit({ newString: testNewString }))
+  describe('Edit operation', () => {
+    const editOp = testData.editOperation()
+    beforeEach(async () => {
+      await sut.processEvent(editOp)
+    })
 
-      const logContent = await sut.readModifications()
-      const parsed = JSON.parse(logContent)
-      expect(parsed.new_string).toBe(testNewString)
+    test('stores expected data', async () => {
+      const data = await sut.readModifications()
+      expect(JSON.parse(data)).toStrictEqual(editOp)
     })
   })
 
-  describe('with MultiEdit tool', () => {
-    test('logs content from edits array', async () => {
-      await sut.logHookData(hookDataFactory.multiEdit())
+  describe('MultiEdit operation', () => {
+    const multiEditOp = testData.multiEditOperation()
+    beforeEach(async () => {
+      await sut.processEvent(multiEditOp)
+    })
 
-      const logContent = await sut.readModifications()
-      const parsed = JSON.parse(logContent)
-      expect(parsed.file_path).toBe('/test/file.ts')
-      expect(parsed.edits).toHaveLength(2)
-      expect(parsed.edits[0].old_string).toBe('first old content')
+    test('stores expected data', async () => {
+      const data = await sut.readModifications()
+      expect(JSON.parse(data)).toStrictEqual(multiEditOp)
     })
   })
 
-  describe('when logging TodoWrite data', () => {
-    test('saves todo content to storage', async () => {
-      await sut.logHookData(hookDataFactory.todoWrite())
-
-      expect(await sut.todosExist()).toBe(true)
+  describe('TodoWrite operation', () => {
+    const todoWriteOp = testData.todoWriteOperation()
+    beforeEach(async () => {
+      await sut.processEvent(todoWriteOp)
     })
 
-    test('does not save modifications content', async () => {
-      await sut.logHookData(hookDataFactory.todoWrite())
-
-      expect(await sut.modificationsExist()).toBe(false)
-    })
-
-    test('logs todos with status prefix', async () => {
-      await sut.logHookData(hookDataFactory.todoWrite())
-
-      const logContent = await sut.readTodos()
-      expect(logContent).toContain('in_progress: Write tests')
-      expect(logContent).toContain('pending: Implement feature')
-    })
-
-    test('handles full hook event structure with nested data', async () => {
-      const fullHookData = testDataFactory.fullTodoEvent()
-
-      await sut.logHookData(fullHookData)
-
-      const logContent = await sut.readTodos()
-      expect(logContent).toContain(
-        'in_progress: Check existing Husky configuration'
-      )
-    })
-
-    test('logs single todo with default status', async () => {
-      await sut.logHookData(hookDataFactory.todoWrite())
-
-      const logContent = await sut.readTodos()
-      expect(logContent).toContain('in_progress: Write tests')
-      expect(logContent).toContain('pending: Implement feature')
-    })
-  })
-
-  describe('when hook data has no content', () => {
-    test('does not create file when tool_input is missing', async () => {
-      await sut.logHookData(hookDataFactory.emptyEvent())
-
-      expect(await sut.modificationsExist()).toBe(false)
-    })
-
-    test('does not create file when tool_input is empty', async () => {
-      await sut.logHookData(hookDataFactory.emptyToolInputEvent())
-
-      expect(await sut.modificationsExist()).toBe(false)
+    test('stores expected data', async () => {
+      const data = await sut.readTodos()
+      expect(JSON.parse(data)).toStrictEqual(todoWriteOp)
     })
   })
 
   describe('overwrite behavior', () => {
     test('overwrites previous content instead of appending', async () => {
       // First write
-      await sut.logHookData(
-        hookDataFactory.write({ content: 'first content' })
+      await sut.processEvent(
+        testData.writeOperation({ tool_input: { file_path: '/path', content: 'first content' }})
       )
 
       // Second write should overwrite
-      await sut.logHookData(
-        hookDataFactory.write({ content: 'second content' })
+      await sut.processEvent(
+        testData.writeOperation({ tool_input: { file_path: '/path', content: 'second content' }})
       )
 
       const logContent = await sut.readModifications()
       const parsed = JSON.parse(logContent)
-      expect(parsed.content).toBe('second content')
-      expect(parsed.content).not.toContain('first content')
-    })
-  })
-
-  describe('JSON format for Edit logs', () => {
-    let parsedContent: z.infer<typeof EditSchema>
-
-    beforeEach(async () => {
-      const editData = hookDataFactory.edit({
-        newString: 'new content',
-        filePath: '/path/to/file.ts',
-        oldString: 'old content'
-      })
-      await sut.logHookData(editData)
-      
-      const logContent = await sut.readModifications()
-      parsedContent = JSON.parse(logContent)
-    })
-
-    test('stores valid JSON', () => {
-      expect(parsedContent).toBeDefined()
-    })
-
-    test('stores file path', () => {
-      expect(parsedContent.file_path).toBe('/path/to/file.ts')
-    })
-
-    test('stores old_string', () => {
-      expect(parsedContent.old_string).toBe('old content')
-    })
-
-    test('stores new_string', () => {
-      expect(parsedContent.new_string).toBe('new content')
-    })
-  })
-
-  describe('JSON format for Write logs', () => {
-    let parsedContent: z.infer<typeof WriteSchema>
-
-    beforeEach(async () => {
-      const writeData = hookDataFactory.write({
-        content: 'file content',
-        filePath: '/path/to/file.ts'
-      })
-      await sut.logHookData(writeData)
-      
-      const logContent = await sut.readModifications()
-      parsedContent = JSON.parse(logContent)
-    })
-
-    test('stores valid JSON', () => {
-      expect(parsedContent).toBeDefined()
-    })
-
-    test('stores file path', () => {
-      expect(parsedContent.file_path).toBe('/path/to/file.ts')
-    })
-
-    test('stores content', () => {
-      expect(parsedContent.content).toBe('file content')
-    })
-  })
-
-  describe('edge cases for content extraction', () => {
-    test('handles Write tool with content', async () => {
-      await sut.logHookData(hookDataFactory.write())
-
-      const logContent = await sut.readModifications()
-      const parsed = JSON.parse(logContent)
-      expect(parsed.content).toBe('file content to write')
-    })
-
-    test('handles Edit tool with new_string', async () => {
-      await sut.logHookData(hookDataFactory.edit())
-
-      const logContent = await sut.readModifications()
-      const parsed = JSON.parse(logContent)
-      expect(parsed.new_string).toBe('old content; new content')
-    })
-
-    test('ignores invalid data structures', async () => {
-      await sut.logHookData({ invalid: 'structure' })
-      expect(await sut.modificationsExist()).toBe(false)
-      expect(await sut.todosExist()).toBe(false)
-    })
-
-    test('ignores non-object data', async () => {
-      await sut.logHookData('not an object')
-      expect(await sut.modificationsExist()).toBe(false)
-      expect(await sut.todosExist()).toBe(false)
+      expect(parsed.tool_input.content).toStrictEqual('second content')
     })
   })
 
@@ -223,16 +81,6 @@ describe('HookEvents', () => {
   async function setupHookEvents() {
     const storage = new MemoryStorage()
     const hookEvents = new HookEvents(storage)
-
-    const modificationsExist = async () => {
-      const modifications = await storage.getModifications()
-      return modifications !== null
-    }
-
-    const todosExist = async () => {
-      const todo = await storage.getTodo()
-      return todo !== null
-    }
 
     const readModifications = async () => {
       const modifications = await storage.getModifications()
@@ -247,44 +95,9 @@ describe('HookEvents', () => {
     }
 
     return {
-      modificationsExist,
-      todosExist,
       readModifications,
       readTodos,
-      logHookData: (data: unknown) => hookEvents.logHookData(data),
+      processEvent: (data: unknown) => hookEvents.processEvent(data),
     }
-  }
-
-  // Test data factories with sensible defaults
-  const testDataFactory = {
-
-    // Full hook event with TodoWrite defaults
-    fullTodoEvent: (overrides?: {
-      content?: string
-      status?: string
-      timestamp?: string
-    }) => {
-      return FullHookEventSchema.parse({
-        timestamp: overrides?.timestamp || '2025-07-05T11:24:53.241Z',
-        tool: 'N/A',
-        data: {
-          session_id: '947d9a0b-108e-47db-a376-b4eb1d2d7533',
-          transcript_path: '/Users/test/.claude/projects/test.jsonl',
-          hook_event_name: 'PreToolUse',
-          tool_name: 'TodoWrite',
-          tool_input: {
-            todos: [
-              {
-                content:
-                  overrides?.content || 'Check existing Husky configuration',
-                status: overrides?.status || 'in_progress',
-                priority: 'high',
-                id: '1',
-              },
-            ],
-          },
-        },
-      })
-    },
   }
 })

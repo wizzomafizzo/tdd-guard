@@ -1,21 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { processHookData, defaultResult } from './processHookData'
 import { MemoryStorage } from '../storage/MemoryStorage'
-import { hookDataFactory } from '../test'
-
-// Test data constants
-const TEST_CONTENT = 'test implementation code'
+import { testData } from '../test'
 
 const BLOCK_RESULT = {
   decision: 'block',
   reason: 'TDD violation',
 } as const
 
-const WRITE_HOOK_DATA = hookDataFactory.write()
-
-const EDIT_HOOK_DATA = hookDataFactory.edit()
-
-const TODO_WRITE_HOOK_DATA = hookDataFactory.todoWrite()
+const WRITE_HOOK_DATA = testData.writeOperation()
+const EDIT_HOOK_DATA = testData.editOperation()
+const TODO_WRITE_HOOK_DATA = testData.todoWriteOperation()
 
 describe('processHookData', () => {
   let sut: ReturnType<typeof createTestProcessor>
@@ -46,14 +41,15 @@ describe('processHookData', () => {
 
     const savedModifications = await sut.getModifications()
     const parsedModifications = JSON.parse(savedModifications!)
-    expect(parsedModifications).toEqual(EDIT_HOOK_DATA.tool_input)
+    expect(parsedModifications).toEqual(EDIT_HOOK_DATA)
   })
 
   it('should save todo content to storage when tool is TodoWrite', async () => {
     await sut.process(TODO_WRITE_HOOK_DATA)
 
     const savedTodo = await sut.getTodo()
-    expect(savedTodo).toBe('in_progress: Write tests\npending: Implement feature')
+    const parsedTodo = JSON.parse(savedTodo!)
+    expect(parsedTodo).toEqual(TODO_WRITE_HOOK_DATA)
   })
 
   it('should save modifications content when tool has content field', async () => {
@@ -61,25 +57,7 @@ describe('processHookData', () => {
 
     const savedModifications = await sut.getModifications()
     const parsedModifications = JSON.parse(savedModifications!)
-    expect(parsedModifications).toEqual(WRITE_HOOK_DATA.tool_input)
-  })
-
-  it('should handle nested data structure with data property', async () => {
-    const hookData = createNestedHookData('Edit', {
-      file_path: '/test/file.ts',
-      old_string: 'old content',
-      new_string: TEST_CONTENT,
-    })
-
-    await sut.process(hookData)
-
-    const savedModifications = await sut.getModifications()
-    const parsedModifications = JSON.parse(savedModifications!)
-    expect(parsedModifications).toEqual({
-      file_path: '/test/file.ts',
-      old_string: 'old content',
-      new_string: TEST_CONTENT,
-    })
+    expect(parsedModifications).toEqual(WRITE_HOOK_DATA)
   })
 
   it('should call tddValidator with context built from storage', async () => {
@@ -93,18 +71,13 @@ describe('processHookData', () => {
     const result = await sut.process(EDIT_HOOK_DATA)
 
     const actualContext = sut.getValidatorCallArgs()
-    const expectedEdit = {
-      file_path: EDIT_HOOK_DATA.tool_input.file_path,
-      old_string: EDIT_HOOK_DATA.tool_input.old_string,
-      new_string: EDIT_HOOK_DATA.tool_input.new_string,
-    }
     
     // Verify the context, parsing JSON to handle formatting differences
     expect({
       ...actualContext,
       modifications: JSON.parse(actualContext.modifications),
     }).toEqual({
-      modifications: expectedEdit,
+      modifications: EDIT_HOOK_DATA,
       test: 'existing test',
       todo: 'existing todo',
     })
@@ -147,7 +120,7 @@ function createTestProcessor() {
   
   // Helper to process hook data
   const process = async (hookData: unknown) => {
-    return processHookData(JSON.stringify(hookData), { 
+    return processHookData(JSON.stringify(hookData), {
       storage, 
       tddValidator: mockValidator 
     })
@@ -173,20 +146,5 @@ function createTestProcessor() {
     // Validator checks
     validatorHasBeenCalled: () => mockValidator.mock.calls.length > 0,
     getValidatorCallArgs: () => mockValidator.mock.calls[0]?.[0] || null,
-  }
-}
-
-// Test helper functions
-function createNestedHookData(tool_name: string, tool_input: Record<string, unknown>) {
-  return {
-    timestamp: '2024-01-01T00:00:00Z',
-    tool: tool_name,
-    data: {
-      session_id: 'test-session',
-      transcript_path: 'test.json',
-      hook_event_name: 'PreToolUse',
-      tool_name,
-      tool_input,
-    },
   }
 }

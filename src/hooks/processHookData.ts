@@ -3,7 +3,7 @@ import { Storage } from '../storage/Storage'
 import { Context } from '../contracts/types/Context'
 import { buildContext } from '../cli/buildContext'
 import { HookEvents } from './HookEvents'
-import { HookDataSchema } from '../contracts/schemas/hookData'
+import { HookDataSchema, isTodoWriteOperation, ToolOperationSchema } from '../contracts/schemas/toolSchemas'
 
 export interface ProcessHookDataDeps {
   storage?: Storage
@@ -15,37 +15,31 @@ export const defaultResult: TDDValidationResult = {
   reason: '',
 }
 
-function shouldSkipValidation(toolName?: string): boolean {
-  return toolName === 'TodoWrite'
-}
-
 export async function processHookData(
   inputData: string,
   deps: ProcessHookDataDeps = {}
 ): Promise<TDDValidationResult> {
   const parsedData = JSON.parse(inputData)
   
-  // Validate and parse the hook data
-  const parseResult = HookDataSchema.safeParse(parsedData)
-  if (!parseResult.success) {
+  const hookResult = HookDataSchema.safeParse(parsedData)
+  if (!hookResult.success) {
     return defaultResult
   }
 
-  const hookData = parseResult.data
-  const toolName = 'data' in hookData ? hookData.data.tool_name : hookData.tool_name
-
-  // Log the hook data to storage
   if (deps.storage) {
     const hookEvents = new HookEvents(deps.storage)
-    await hookEvents.logHookData(parsedData)
+    await hookEvents.processEvent(parsedData)
   }
 
-  // Check if validation should be skipped
-  if (shouldSkipValidation(toolName)) {
+  const operationResult = ToolOperationSchema.safeParse({
+    ...hookResult.data,
+    tool_input: hookResult.data.tool_input,
+  })
+
+  if (!operationResult.success || isTodoWriteOperation(operationResult.data)) {
     return defaultResult
   }
 
-  // Run TDD validation if applicable
   if (deps.tddValidator && deps.storage) {
     const context = await buildContext(deps.storage)
     return deps.tddValidator(context)

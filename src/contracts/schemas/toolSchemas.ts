@@ -1,14 +1,29 @@
 import { z } from 'zod'
 
-// Schema for todos
-export const TodoSchema = z.object({
-  content: z.string(),
-  status: z.string().optional(),
-  priority: z.string().optional(),
-  id: z.string().optional(),
+// Base Hook Context
+export const HookContextSchema = z.object({
+  session_id: z.string(),
+  transcript_path: z.string(),
+  hook_event_name: z.string(),
 })
 
-// Tool-specific schemas
+export const HookDataSchema = HookContextSchema.extend({
+  tool_name: z.string(),
+  tool_input: z.unknown(),
+})
+
+export type HookData = z.infer<typeof HookDataSchema>
+
+// Tool Input Schemas
+export const TodoSchema = z.object({
+  content: z.string(),
+  status: z.enum(['pending', 'in_progress', 'completed']),
+  priority: z.enum(['high', 'medium', 'low']),
+  id: z.string(),
+})
+
+export type Todo = z.infer<typeof TodoSchema>
+
 export const EditSchema = z.object({
   file_path: z.string(),
   old_string: z.string(),
@@ -16,17 +31,9 @@ export const EditSchema = z.object({
   replace_all: z.boolean().optional(),
 })
 
-export const WriteSchema = z.object({
-  file_path: z.string(),
-  content: z.string(),
-})
+export type Edit = z.infer<typeof EditSchema>
 
-export const TodoWriteSchema = z.object({
-  todos: z.array(TodoSchema),
-})
-
-// Schema for individual edit in MultiEdit
-export const EditEntrySchema = z.object({
+const EditEntrySchema = z.object({
   old_string: z.string(),
   new_string: z.string(),
   replace_all: z.boolean().optional(),
@@ -34,78 +41,84 @@ export const EditEntrySchema = z.object({
 
 export const MultiEditSchema = z.object({
   file_path: z.string(),
-  edits: z.array(EditEntrySchema),
+  edits: z.array(EditEntrySchema).min(1),
 })
 
-// Discriminated union for tool operations
+export type MultiEdit = z.infer<typeof MultiEditSchema>
+
+export const WriteSchema = z.object({
+  file_path: z.string(),
+  content: z.string(),
+})
+
+export type Write = z.infer<typeof WriteSchema>
+
+export const TodoWriteSchema = z.object({
+  todos: z.array(TodoSchema).min(1),
+})
+
+export type TodoWrite = z.infer<typeof TodoWriteSchema>
+
+// Tool Operation Schemas
+export const EditOperationSchema = HookContextSchema.extend({
+  tool_name: z.literal('Edit'),
+  tool_input: EditSchema,
+})
+
+export const MultiEditOperationSchema = HookContextSchema.extend({
+  tool_name: z.literal('MultiEdit'),
+  tool_input: MultiEditSchema,
+})
+
+export const WriteOperationSchema = HookContextSchema.extend({
+  tool_name: z.literal('Write'),
+  tool_input: WriteSchema,
+})
+
+export const TodoWriteOperationSchema = HookContextSchema.extend({
+  tool_name: z.literal('TodoWrite'),
+  tool_input: TodoWriteSchema,
+})
+
+export type EditOperation = z.infer<typeof EditOperationSchema>
+export type MultiEditOperation = z.infer<typeof MultiEditOperationSchema>
+export type WriteOperation = z.infer<typeof WriteOperationSchema>
+export type TodoWriteOperation = z.infer<typeof TodoWriteOperationSchema>
+
+// Discriminated Unions
 export const ToolOperationSchema = z.discriminatedUnion('tool_name', [
-  z.object({
-    tool_name: z.literal('Edit'),
-    tool_input: EditSchema,
-  }),
-  z.object({
-    tool_name: z.literal('Write'),
-    tool_input: WriteSchema,
-  }),
-  z.object({
-    tool_name: z.literal('TodoWrite'),
-    tool_input: TodoWriteSchema,
-  }),
-  z.object({
-    tool_name: z.literal('MultiEdit'),
-    tool_input: MultiEditSchema,
-  }),
+  EditOperationSchema,
+  MultiEditOperationSchema,
+  WriteOperationSchema,
+  TodoWriteOperationSchema,
 ])
 
-// Union of modification types
-export const ModificationSchema = z.union([
-  EditSchema,
-  WriteSchema,
-  MultiEditSchema,
+export type ToolOperation = z.infer<typeof ToolOperationSchema>
+
+export const FileModificationSchema = z.discriminatedUnion('tool_name', [
+  EditOperationSchema,
+  MultiEditOperationSchema,
+  WriteOperationSchema,
 ])
 
-// Type guards
-export const isEditOperation = (
-  content: unknown
-): content is z.infer<typeof EditSchema> => {
-  return EditSchema.safeParse(content).success
-}
+export type FileModification = z.infer<typeof FileModificationSchema>
 
-// Helper for parsing stored content with proper error handling
-export const parseStoredContent = (
-  jsonString: string
-): z.infer<typeof ModificationSchema> => {
-  const parsed = JSON.parse(jsonString)
-  const result = ModificationSchema.safeParse(parsed)
+// Type Guards
+export const isEditOperation = (op: ToolOperation): op is EditOperation =>
+  op.tool_name === 'Edit'
 
-  if (!result.success) {
-    throw new Error(`Invalid stored content: ${result.error.message}`)
-  }
+export const isMultiEditOperation = (
+  op: ToolOperation
+): op is MultiEditOperation => op.tool_name === 'MultiEdit'
 
-  return result.data
-}
+export const isWriteOperation = (op: ToolOperation): op is WriteOperation =>
+  op.tool_name === 'Write'
 
-// Helper to create modification JSON from validated data
-export const createModificationJson = (
-  data:
-    | z.infer<typeof EditSchema>
-    | z.infer<typeof WriteSchema>
-    | z.infer<typeof MultiEditSchema>
-): string => {
-  if ('edits' in data) {
-    // It's a multi-edit operation - exclude replace_all from storage
-    const { file_path, edits } = data
-    const cleanedEdits = edits.map(({ old_string, new_string }) => ({
-      old_string,
-      new_string,
-    }))
-    return JSON.stringify({ file_path, edits: cleanedEdits })
-  } else if ('new_string' in data) {
-    // It's an edit operation - exclude replace_all from storage
-    const { file_path, old_string, new_string } = data
-    return JSON.stringify({ file_path, old_string, new_string })
-  } else {
-    // It's a write operation
-    return JSON.stringify(data)
-  }
-}
+export const isTodoWriteOperation = (
+  op: ToolOperation
+): op is TodoWriteOperation => op.tool_name === 'TodoWrite'
+
+export const isFileModification = (op: ToolOperation): op is FileModification =>
+  op.tool_name === 'Edit' ||
+  op.tool_name === 'MultiEdit' ||
+  op.tool_name === 'Write'

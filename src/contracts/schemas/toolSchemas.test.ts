@@ -1,281 +1,481 @@
 import { describe, test, expect } from 'vitest'
 import {
+  TodoSchema,
   EditSchema,
+  MultiEditSchema,
   WriteSchema,
   TodoWriteSchema,
-  TodoSchema,
-  MultiEditSchema,
+  EditOperationSchema,
+  MultiEditOperationSchema,
+  WriteOperationSchema,
+  TodoWriteOperationSchema,
   ToolOperationSchema,
+  FileModificationSchema,
   isEditOperation,
-  parseStoredContent,
-  createModificationJson,
+  isMultiEditOperation,
+  isWriteOperation,
+  isTodoWriteOperation,
+  isFileModification,
 } from './toolSchemas'
-import { hookDataFactory } from '../../test'
+import { testData } from '../../test'
 
 describe('Tool-specific schemas', () => {
   describe('TodoSchema', () => {
-    test('validates correct todo structure', () => {
-      const todo = {
-        content: 'Implement feature',
-        status: 'pending',
-        priority: 'high',
-        id: '123',
-      }
-
+    test.each([
+      {
+        description: 'without content',
+        todo: testData.todoWithout(['content']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without status',
+        todo: testData.todoWithout(['status']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without priority',
+        todo: testData.todoWithout(['priority']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without id',
+        todo: testData.todoWithout(['id']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'with everything',
+        todo: testData.todo(),
+        expectedSuccess: true,
+      },
+    ])('$description', ({ todo, expectedSuccess }) => {
       const result = TodoSchema.safeParse(todo)
+      expect(result.success).toBe(expectedSuccess)
 
-      expect(result.success).toBe(true)
-      if (result.success) {
+      if (expectedSuccess && result.success) {
         expect(result.data).toEqual(todo)
       }
-    })
-
-    test('validates todo with only required content field', () => {
-      const todo = {
-        content: 'Minimal todo',
-      }
-
-      const result = TodoSchema.safeParse(todo)
-
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.content).toBe('Minimal todo')
-        expect(result.data.status).toBeUndefined()
-      }
-    })
-
-    test('fails when content is missing', () => {
-      const invalidTodo = {
-        status: 'pending',
-        priority: 'high',
-      }
-
-      const result = TodoSchema.safeParse(invalidTodo)
-
-      expect(result.success).toBe(false)
     })
   })
 
   describe('EditSchema', () => {
-    test('validates correct edit input', () => {
-      const editData = hookDataFactory.edit()
-      const validInput = editData.tool_input
+    test.each([
+      {
+        description: 'without file_path',
+        edit: testData.editWithout(['file_path']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without old_string',
+        edit: testData.editWithout(['old_string']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without new_string',
+        edit: testData.editWithout(['new_string']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'with everything',
+        edit: testData.edit(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with replace_all true',
+        edit: testData.edit({ replace_all: true }),
+        expectedSuccess: true,
+      },
+    ])('$description', ({ edit, expectedSuccess }) => {
+      const result = EditSchema.safeParse(edit)
+      expect(result.success).toBe(expectedSuccess)
 
-      const result = EditSchema.safeParse(validInput)
-
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data).toEqual(validInput)
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(edit)
       }
-    })
-
-    test('validates edit input with optional replace_all', () => {
-      const editData = hookDataFactory.edit()
-      const validInput = {
-        ...editData.tool_input,
-        replace_all: true,
-      }
-
-      const result = EditSchema.safeParse(validInput)
-
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.replace_all).toBe(true)
-      }
-    })
-
-    test('fails when required fields are missing', () => {
-      const invalidInput = hookDataFactory.incompleteEditContent()
-
-      const result = EditSchema.safeParse(invalidInput)
-
-      expect(result.success).toBe(false)
-    })
-  })
-
-  describe('WriteSchema', () => {
-    test('validates correct write input', () => {
-      const writeData = hookDataFactory.write()
-      const validInput = writeData.tool_input
-
-      const result = WriteSchema.safeParse(validInput)
-
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data).toEqual(validInput)
-      }
-    })
-
-    test('fails when content is missing', () => {
-      const invalidInput = hookDataFactory.incompleteWriteContent()
-
-      const result = WriteSchema.safeParse(invalidInput)
-
-      expect(result.success).toBe(false)
-    })
-  })
-
-  describe('TodoWriteSchema', () => {
-    test('validates correct todo input', () => {
-      const todoData = hookDataFactory.todoWrite()
-      const validInput = todoData.tool_input
-
-      const result = TodoWriteSchema.safeParse(validInput)
-
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.todos).toHaveLength(2) // default factory creates 2 todos
-      }
-    })
-
-    test('validates todos with minimal fields', () => {
-      const todoData = hookDataFactory.todoWrite({
-        todos: [
-          {
-            content: 'Implement feature',
-          },
-        ],
-      })
-      const validInput = todoData.tool_input
-
-      const result = TodoWriteSchema.safeParse(validInput)
-
-      expect(result.success).toBe(true)
     })
   })
 
   describe('MultiEditSchema', () => {
-    test('validates correct multi-edit input', () => {
-      const multiEditData = hookDataFactory.multiEdit()
-      const validInput = multiEditData.tool_input
+    test.each([
+      {
+        description: 'with valid multi-edit',
+        multiEdit: testData.multiEdit(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'without file_path',
+        multiEdit: testData.multiEditWithout(['file_path']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without edits',
+        multiEdit: testData.multiEditWithout(['edits']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'with empty edits array',
+        multiEdit: testData.multiEdit({ edits: [] }),
+        expectedSuccess: false,
+      },
+    ])('$description', ({ multiEdit, expectedSuccess }) => {
+      const result = MultiEditSchema.safeParse(multiEdit)
+      expect(result.success).toBe(expectedSuccess)
 
-      const result = MultiEditSchema.safeParse(validInput)
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(multiEdit)
+      }
+    })
+  })
 
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.file_path).toBe('/test/file.ts')
-        expect(result.data.edits).toHaveLength(2)
+  describe('WriteSchema', () => {
+    test.each([
+      {
+        description: 'with valid write',
+        write: testData.write(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'without file_path',
+        write: testData.writeWithout(['file_path']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without content',
+        write: testData.writeWithout(['content']),
+        expectedSuccess: false,
+      },
+    ])('$description', ({ write, expectedSuccess }) => {
+      const result = WriteSchema.safeParse(write)
+      expect(result.success).toBe(expectedSuccess)
+
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(write)
+      }
+    })
+  })
+
+  describe('TodoWriteSchema', () => {
+    test.each([
+      {
+        description: 'with valid todo write',
+        todoWrite: testData.todoWrite(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with empty todos array',
+        todoWrite: testData.todoWrite({ todos: [] }),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without todos',
+        todoWrite: testData.todoWriteWithout(['todos']),
+        expectedSuccess: false,
+      },
+    ])('$description', ({ todoWrite, expectedSuccess }) => {
+      const result = TodoWriteSchema.safeParse(todoWrite)
+      expect(result.success).toBe(expectedSuccess)
+
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(todoWrite)
+      }
+    })
+  })
+
+  describe('EditOperationSchema', () => {
+    test.each([
+      {
+        description: 'with valid edit operation',
+        editOperation: testData.editOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with wrong tool_name',
+        editOperation: testData.invalidEditOperation({ tool_name: 'Write' }),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without tool_input',
+        editOperation: testData.editOperationWithout(['tool_input']),
+        expectedSuccess: false,
+      },
+    ])('$description', ({ editOperation, expectedSuccess }) => {
+      const result = EditOperationSchema.safeParse(editOperation)
+      expect(result.success).toBe(expectedSuccess)
+
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(editOperation)
+      }
+    })
+  })
+
+  describe('MultiEditOperationSchema', () => {
+    test.each([
+      {
+        description: 'with valid multi-edit operation',
+        multiEditOperation: testData.multiEditOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with wrong tool_name',
+        multiEditOperation: testData.invalidMultiEditOperation({
+          tool_name: 'Edit',
+        }),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without tool_input',
+        multiEditOperation: testData.multiEditOperationWithout(['tool_input']),
+        expectedSuccess: false,
+      },
+    ])('$description', ({ multiEditOperation, expectedSuccess }) => {
+      const result = MultiEditOperationSchema.safeParse(multiEditOperation)
+      expect(result.success).toBe(expectedSuccess)
+
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(multiEditOperation)
+      }
+    })
+  })
+
+  describe('WriteOperationSchema', () => {
+    test.each([
+      {
+        description: 'with valid write operation',
+        writeOperation: testData.writeOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with wrong tool_name',
+        writeOperation: testData.invalidWriteOperation({ tool_name: 'Edit' }),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without tool_input',
+        writeOperation: testData.writeOperationWithout(['tool_input']),
+        expectedSuccess: false,
+      },
+    ])('$description', ({ writeOperation, expectedSuccess }) => {
+      const result = WriteOperationSchema.safeParse(writeOperation)
+      expect(result.success).toBe(expectedSuccess)
+
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(writeOperation)
+      }
+    })
+  })
+
+  describe('TodoWriteOperationSchema', () => {
+    test.each([
+      {
+        description: 'with valid todo write operation',
+        todoWriteOperation: testData.todoWriteOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with wrong tool_name',
+        todoWriteOperation: testData.invalidTodoWriteOperation({
+          tool_name: 'Edit',
+        }),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without tool_input',
+        todoWriteOperation: testData.todoWriteOperationWithout(['tool_input']),
+        expectedSuccess: false,
+      },
+    ])('$description', ({ todoWriteOperation, expectedSuccess }) => {
+      const result = TodoWriteOperationSchema.safeParse(todoWriteOperation)
+      expect(result.success).toBe(expectedSuccess)
+
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(todoWriteOperation)
+      }
+    })
+  })
+
+  describe('ToolOperationSchema', () => {
+    test.each([
+      {
+        description: 'with valid Edit operation',
+        toolOperation: testData.editOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with valid MultiEdit operation',
+        toolOperation: testData.multiEditOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with valid Write operation',
+        toolOperation: testData.writeOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with valid TodoWrite operation',
+        toolOperation: testData.todoWriteOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with unknown tool_name',
+        toolOperation: { tool_name: 'Unknown', tool_input: {} },
+        expectedSuccess: false,
+      },
+    ])('$description', ({ toolOperation, expectedSuccess }) => {
+      const result = ToolOperationSchema.safeParse(toolOperation)
+      expect(result.success).toBe(expectedSuccess)
+
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(toolOperation)
+      }
+    })
+  })
+
+  describe('FileModificationSchema', () => {
+    test.each([
+      {
+        description: 'with valid Edit operation',
+        fileModification: testData.editOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with valid MultiEdit operation',
+        fileModification: testData.multiEditOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with valid Write operation',
+        fileModification: testData.writeOperation(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with TodoWrite operation (should reject)',
+        fileModification: testData.todoWriteOperation(),
+        expectedSuccess: false,
+      },
+    ])('$description', ({ fileModification, expectedSuccess }) => {
+      const result = FileModificationSchema.safeParse(fileModification)
+      expect(result.success).toBe(expectedSuccess)
+
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(fileModification)
       }
     })
   })
 })
 
-describe('Discriminated union schemas', () => {
-  test('validates Edit operation', () => {
-    const editOperation = hookDataFactory.edit()
-
-    const result = ToolOperationSchema.safeParse(editOperation)
-
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.tool_name).toBe('Edit')
-    }
-  })
-
-  test('validates Write operation', () => {
-    const writeOperation = hookDataFactory.write()
-
-    const result = ToolOperationSchema.safeParse(writeOperation)
-
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.tool_name).toBe('Write')
-    }
-  })
-
-  test('validates MultiEdit operation', () => {
-    const multiEditOperation = hookDataFactory.multiEdit()
-
-    const result = ToolOperationSchema.safeParse(multiEditOperation)
-
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.tool_name).toBe('MultiEdit')
-    }
-  })
-
-  test('rejects invalid tool_name', () => {
-    const invalidOperation = hookDataFactory.invalidToolName()
-
-    const result = ToolOperationSchema.safeParse(invalidOperation)
-
-    expect(result.success).toBe(false)
-  })
-
-  test('validates correct fields for each tool type', () => {
-    const editWithWrongFields = hookDataFactory.editWithWrongFields()
-
-    const result = ToolOperationSchema.safeParse(editWithWrongFields)
-
-    expect(result.success).toBe(false)
-  })
-})
-
-describe('Stored content schemas', () => {
-  test('validates stored edit content using EditSchema', () => {
-    const editData = hookDataFactory.edit()
-    const storedEdit = editData.tool_input
-
-    const result = EditSchema.safeParse(storedEdit)
-
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data).toEqual(storedEdit)
-    }
-  })
-
-  test('validates stored write content using WriteSchema', () => {
-    const writeData = hookDataFactory.write()
-    const storedWrite = writeData.tool_input
-
-    const result = WriteSchema.safeParse(storedWrite)
-
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data).toEqual(storedWrite)
-    }
-  })
-})
-
 describe('Type guards', () => {
-  test('isEditOperation identifies edit operations', () => {
-    const editData = hookDataFactory.edit()
-    const editContent = editData.tool_input
+  // Create test data for all operation types
+  const editOperation = testData.editOperation()
+  const multiEditOperation = testData.multiEditOperation()
+  const writeOperation = testData.writeOperation()
+  const todoWriteOperation = testData.todoWriteOperation()
 
-    expect(isEditOperation(editContent)).toBe(true)
+  describe('isEditOperation', () => {
+    test.each([
+      { operation: editOperation, operationType: 'Edit', expected: true },
+      {
+        operation: multiEditOperation,
+        operationType: 'MultiEdit',
+        expected: false,
+      },
+      { operation: writeOperation, operationType: 'Write', expected: false },
+      {
+        operation: todoWriteOperation,
+        operationType: 'TodoWrite',
+        expected: false,
+      },
+    ])(
+      'returns $expected for $operationType operation',
+      ({ operation, expected }) => {
+        expect(isEditOperation(operation)).toBe(expected)
+      }
+    )
   })
 
-  test('isEditOperation rejects non-edit operations', () => {
-    const writeData = hookDataFactory.write()
-    const writeContent = writeData.tool_input
-
-    expect(isEditOperation(writeContent)).toBe(false)
+  describe('isMultiEditOperation', () => {
+    test.each([
+      { operation: editOperation, operationType: 'Edit', expected: false },
+      {
+        operation: multiEditOperation,
+        operationType: 'MultiEdit',
+        expected: true,
+      },
+      { operation: writeOperation, operationType: 'Write', expected: false },
+      {
+        operation: todoWriteOperation,
+        operationType: 'TodoWrite',
+        expected: false,
+      },
+    ])(
+      'returns $expected for $operationType operation',
+      ({ operation, expected }) => {
+        expect(isMultiEditOperation(operation)).toBe(expected)
+      }
+    )
   })
 
-  test('isEditOperation rejects invalid content', () => {
-    const invalidContent = hookDataFactory.incompleteEditContent()
-
-    expect(isEditOperation(invalidContent)).toBe(false)
+  describe('isWriteOperation', () => {
+    test.each([
+      { operation: editOperation, operationType: 'Edit', expected: false },
+      {
+        operation: multiEditOperation,
+        operationType: 'MultiEdit',
+        expected: false,
+      },
+      { operation: writeOperation, operationType: 'Write', expected: true },
+      {
+        operation: todoWriteOperation,
+        operationType: 'TodoWrite',
+        expected: false,
+      },
+    ])(
+      'returns $expected for $operationType operation',
+      ({ operation, expected }) => {
+        expect(isWriteOperation(operation)).toBe(expected)
+      }
+    )
   })
-})
 
-describe('Parsing helpers', () => {
-  test('parseStoredContent parses valid edit JSON', () => {
-    const editData = hookDataFactory.edit()
-    const editJson = JSON.stringify(editData.tool_input)
-
-    const result = parseStoredContent(editJson)
-
-    expect(result).toEqual(editData.tool_input)
+  describe('isTodoWriteOperation', () => {
+    test.each([
+      { operation: editOperation, operationType: 'Edit', expected: false },
+      {
+        operation: multiEditOperation,
+        operationType: 'MultiEdit',
+        expected: false,
+      },
+      { operation: writeOperation, operationType: 'Write', expected: false },
+      {
+        operation: todoWriteOperation,
+        operationType: 'TodoWrite',
+        expected: true,
+      },
+    ])(
+      'returns $expected for $operationType operation',
+      ({ operation, expected }) => {
+        expect(isTodoWriteOperation(operation)).toBe(expected)
+      }
+    )
   })
 
-  test('createModificationJson handles MultiEdit data', () => {
-    const multiEditData = hookDataFactory.multiEdit()
-    const json = createModificationJson(multiEditData.tool_input)
-    const parsed = JSON.parse(json)
-
-    expect(parsed.file_path).toBe('/test/file.ts')
-    expect(parsed.edits).toHaveLength(2)
-    expect(parsed.edits[0]).not.toHaveProperty('replace_all')
+  describe('isFileModification', () => {
+    test.each([
+      { operation: editOperation, operationType: 'Edit', expected: true },
+      {
+        operation: multiEditOperation,
+        operationType: 'MultiEdit',
+        expected: true,
+      },
+      { operation: writeOperation, operationType: 'Write', expected: true },
+      {
+        operation: todoWriteOperation,
+        operationType: 'TodoWrite',
+        expected: false,
+      },
+    ])(
+      'returns $expected for $operationType operation',
+      ({ operation, expected }) => {
+        expect(isFileModification(operation)).toBe(expected)
+      }
+    )
   })
 })

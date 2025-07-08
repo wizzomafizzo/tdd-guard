@@ -1,1 +1,44 @@
-export { hookDataFactory } from './factories/hookDataFactory'
+import * as todoFactory from './factories/todoFactory'
+import * as editFactory from './factories/editFactory'
+import * as multiEditFactory from './factories/multiEditFactory'
+import * as writeFactory from './factories/writeFactory'
+import { TEST_DEFAULTS } from './factories/testDefaults'
+
+/**
+ * Unified test data factory that combines all individual factories
+ * Provides a single import point for all test data creation needs
+ */
+export const testData = {
+  // Todo, TodoWrite, and TodoWriteOperation factories
+  todo: todoFactory.todo,
+  todoWithout: todoFactory.todoWithout,
+  todoWrite: todoFactory.todoWrite,
+  todoWriteWithout: todoFactory.todoWriteWithout,
+  todoWriteOperation: todoFactory.todoWriteOperation,
+  todoWriteOperationWithout: todoFactory.todoWriteOperationWithout,
+  invalidTodoWriteOperation: todoFactory.invalidTodoWriteOperation,
+
+  // Edit and EditOperation factories
+  edit: editFactory.edit,
+  editWithout: editFactory.editWithout,
+  editOperation: editFactory.editOperation,
+  editOperationWithout: editFactory.editOperationWithout,
+  invalidEditOperation: editFactory.invalidEditOperation,
+
+  // MultiEdit and MultiEditOperation factories
+  multiEdit: multiEditFactory.multiEdit,
+  multiEditWithout: multiEditFactory.multiEditWithout,
+  multiEditOperation: multiEditFactory.multiEditOperation,
+  multiEditOperationWithout: multiEditFactory.multiEditOperationWithout,
+  invalidMultiEditOperation: multiEditFactory.invalidMultiEditOperation,
+
+  // Write and WriteOperation factories
+  write: writeFactory.write,
+  writeWithout: writeFactory.writeWithout,
+  writeOperation: writeFactory.writeOperation,
+  writeOperationWithout: writeFactory.writeOperationWithout,
+  invalidWriteOperation: writeFactory.invalidWriteOperation,
+
+  // Default test data values
+  defaults: TEST_DEFAULTS,
+}
