@@ -52,11 +52,10 @@ src/
 │   │   ├── ModelClient.ts        # Interface for AI model implementations
 │   │   └── TDDValidation.ts      # Validation result structure (approve/block)
 │   └── schemas/                  # Runtime data validation
-│       ├── hookData.ts           # Zod schemas for parsing Claude Code hooks
-│       └── toolSchemas.ts        # Zod schemas for Claude Code tool inputs
+│       └── toolSchemas.ts        # Tool operations with discriminated unions
 │
 ├── hooks/                        # Hook data extraction and processing
-│   ├── HookEvents.ts             # Extracts content from tool inputs
+│   ├── HookEvents.ts             # Processes and persists tool operations
 │   └── processHookData.ts        # Orchestrates hook parsing and validation flow
 │
 ├── validation/                   # TDD principle validation
@@ -69,6 +68,16 @@ src/
 │   ├── Storage.ts                # Abstract interface for storage operations
 │   ├── FileStorage.ts            # Persists context data to files
 │   └── MemoryStorage.ts          # In-memory Map storage for testing
+│
+├── test/                         # Test utilities and factories
+│   ├── index.ts                  # Unified export for all test factories
+│   └── factories/                # Test data creation utilities
+│       ├── testDefaults.ts       # Common default values for test data
+│       ├── helpers.ts            # Shared factory utilities
+│       ├── todoFactory.ts        # Todo and TodoWrite operation factories
+│       ├── editFactory.ts        # Edit operation factories
+│       ├── multiEditFactory.ts   # MultiEdit operation factories
+│       └── writeFactory.ts       # Write operation factories
 │
 └── reporters/                    # Test output capture
     └── FileReporter.ts           # Vitest reporter that captures test results to file
