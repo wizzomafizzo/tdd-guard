@@ -61,7 +61,7 @@ TDD Guard runs with your user permissions and has access to your file system. We
 
 TDD Guard intercepts Claude Code operations through hooks and validates them against TDD principles:
 
-1. **Hook Integration**: Configured as pre-execution hooks for Edit, Write, and TodoWrite operations
+1. **Hook Integration**: Configured as pre-execution hooks for Edit, MultiEdit, Write, and TodoWrite operations
 2. **Data Collection**: Extracts code changes, task descriptions, and test results into persistent storage
 3. **Context Building**: Aggregates recent edits, todos, and test output into a validation context
 4. **AI Validation**: Sends context to Claude CLI with TDD Guard prompt to check for violations
