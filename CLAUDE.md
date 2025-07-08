@@ -60,7 +60,10 @@ src/
 │
 ├── validation/                   # TDD principle validation
 │   ├── tddValidator.ts           # Sends context to AI model and parses response
-│   ├── system-prompt.ts          # Detailed TDD Guard rules and guidelines
+│   ├── context/                  # Context engineering and formatting
+│   │   └── context.ts            # Formats operation data for model validation
+│   ├── prompts/                  # Modular prompt system
+│   │   └── ...                   # Operation-specific instructions and prompts
 │   └── models/                   # AI model implementations
 │       └── ClaudeModelClient.ts  # Executes Claude CLI for validation
 │
@@ -72,12 +75,7 @@ src/
 ├── test/                         # Test utilities and factories
 │   ├── index.ts                  # Unified export for all test factories
 │   └── factories/                # Test data creation utilities
-│       ├── testDefaults.ts       # Common default values for test data
-│       ├── helpers.ts            # Shared factory utilities
-│       ├── todoFactory.ts        # Todo and TodoWrite operation factories
-│       ├── editFactory.ts        # Edit operation factories
-│       ├── multiEditFactory.ts   # MultiEdit operation factories
-│       └── writeFactory.ts       # Write operation factories
+│       └── ...                   # Various operation factories and helpers
 │
 └── reporters/                    # Test output capture
     └── FileReporter.ts           # Vitest reporter that captures test results to file
