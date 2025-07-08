@@ -52,10 +52,11 @@ src/
 │   │   ├── ModelClient.ts        # Interface for AI model implementations
 │   │   └── TDDValidation.ts      # Validation result structure (approve/block)
 │   └── schemas/                  # Runtime data validation
-│       └── hookData.ts           # Zod schemas for parsing Claude Code hooks
+│       ├── hookData.ts           # Zod schemas for parsing Claude Code hooks
+│       └── toolSchemas.ts        # Zod schemas for Claude Code tool inputs
 │
 ├── hooks/                        # Hook data extraction and processing
-│   ├── HookEvents.ts             # Extracts content from tool inputs (Edit, Write, Todo)
+│   ├── HookEvents.ts             # Extracts content from tool inputs
 │   └── processHookData.ts        # Orchestrates hook parsing and validation flow
 │
 ├── validation/                   # TDD principle validation
@@ -66,7 +67,7 @@ src/
 │
 ├── storage/                      # Data persistence layer
 │   ├── Storage.ts                # Abstract interface for storage operations
-│   ├── FileStorage.ts            # Persists to edit.txt, todo.txt, test.txt files
+│   ├── FileStorage.ts            # Persists context data to files
 │   └── MemoryStorage.ts          # In-memory Map storage for testing
 │
 └── reporters/                    # Test output capture
