@@ -33,3 +33,6 @@ test-results
 .env
 .env.local
 .env.*.local
+
+# Other
+TODO.md
