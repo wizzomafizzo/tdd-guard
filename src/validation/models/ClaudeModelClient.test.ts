@@ -9,7 +9,7 @@ describe('ClaudeModelClient', () => {
   const question = 'Does this follow TDD?'
   const context = {
     todo: 'todo list content',
-    edit: 'edit content',
+    modifications: 'modifications content',
     test: 'test output content',
   }
   const result = 'This code follows TDD principles'
@@ -34,8 +34,10 @@ describe('ClaudeModelClient', () => {
     sut.assertCommandContains('<todo>todo list content</todo>')
   })
 
-  test('includes edit context in prompt', () => {
-    sut.assertCommandContains('<edit>edit content</edit>')
+  test('includes modifications context in prompt', () => {
+    sut.assertCommandContains(
+      '<modifications>modifications content</modifications>'
+    )
   })
 
   test('includes test context in prompt', () => {
@@ -66,9 +68,9 @@ describe('ClaudeModelClient', () => {
     sut.assertCommandContains('The following context is provided:')
   })
 
-  test('explains edit section', () => {
+  test('explains modifications section', () => {
     sut.assertCommandContains(
-      'Edit: This section shows the changes that the agent wants to make'
+      'Modifications: This section shows the changes that the agent wants to make'
     )
   })
 
@@ -82,17 +84,19 @@ describe('ClaudeModelClient', () => {
     sut.assertCommandContains('Test: The test output from running the tests')
   })
 
-  test('handles context with only edit field', () => {
-    const contextWithOnlyEdit = { edit: 'only edit content' }
+  test('handles context with only modifications field', () => {
+    const contextWithOnlyModifications = {
+      modifications: 'only modifications content',
+    }
     const sutWithPartialContext = setupModelClient({
-      context: contextWithOnlyEdit,
+      context: contextWithOnlyModifications,
     })
     sutWithPartialContext.assertCommandContains(
-      '<edit>only edit content</edit>'
+      '<modifications>only modifications content</modifications>'
     )
-    // Should still explain edit section
+    // Should still explain modifications section
     sutWithPartialContext.assertCommandContains(
-      'Edit: This section shows the changes that the agent wants to make'
+      'Modifications: This section shows the changes that the agent wants to make'
     )
     // Should not include todo section or tags when todo is not present
     sutWithPartialContext.assertCommandDoesNotContain('Todo:')
@@ -116,7 +120,9 @@ describe('ClaudeModelClient', () => {
 
   describe('handles special characters', () => {
     const questionWithQuote = "What's the TDD pattern?"
-    const contextWithQuote = { edit: "test('it should work', () => {})" }
+    const contextWithQuote = {
+      modifications: "test('it should work', () => {})",
+    }
 
     let sut: ReturnType<typeof setupModelClient>
 

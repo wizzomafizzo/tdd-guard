@@ -31,7 +31,7 @@ export class HookEvents {
       if (toolName === 'TodoWrite') {
         await this.storage.saveTodo(content)
       } else {
-        await this.storage.saveEdit(content)
+        await this.storage.saveModifications(content)
       }
     }
   }

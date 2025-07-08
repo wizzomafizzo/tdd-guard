@@ -37,27 +37,27 @@ describe('tdd-guard CLI', () => {
     expect(exitCode).toBe(0)
   })
 
-  test('saves Edit content to storage', async () => {
+  test('saves Edit content', async () => {
     const hookData = hookDataFactory.edit()
 
     await runCli(JSON.stringify(hookData))
 
-    const savedEdit = await storage.getEdit()
-    const parsedEdit = JSON.parse(savedEdit!)
-    expect(parsedEdit).toEqual(hookData.tool_input)
+    const savedModifications = await storage.getModifications()
+    const parsedModifications = JSON.parse(savedModifications!)
+    expect(parsedModifications).toEqual(hookData.tool_input)
   })
 
-  test('saves Write content to storage', async () => {
+  test('saves Write content', async () => {
     const hookData = hookDataFactory.write()
 
     await runCli(JSON.stringify(hookData))
 
-    const savedEdit = await storage.getEdit()
-    const parsedEdit = JSON.parse(savedEdit!)
-    expect(parsedEdit).toEqual(hookData.tool_input)
+    const savedModifications = await storage.getModifications()
+    const parsedModifications = JSON.parse(savedModifications!)
+    expect(parsedModifications).toEqual(hookData.tool_input)
   })
 
-  test('saves Todo content to storage', async () => {
+  test('saves TodoWrite content', async () => {
     const hookData = hookDataFactory.todoWrite()
 
     await runCli(JSON.stringify(hookData))
@@ -66,6 +66,24 @@ describe('tdd-guard CLI', () => {
     expect(savedTodo).toBe(
       'in_progress: Write tests\npending: Implement feature'
     )
+  })
+
+  test('saves MultiEdit content', async () => {
+    const hookData = hookDataFactory.multiEdit()
+
+    await runCli(JSON.stringify(hookData))
+
+    const savedModifications = await storage.getModifications()
+    const parsedModifications = JSON.parse(savedModifications!)
+
+    // The saved data excludes replace_all field
+    expect(parsedModifications).toEqual({
+      file_path: hookData.tool_input.file_path,
+      edits: hookData.tool_input.edits.map(({ old_string, new_string }) => ({
+        old_string,
+        new_string,
+      })),
+    })
   })
 
   test('logs error to stderr on invalid JSON', async () => {

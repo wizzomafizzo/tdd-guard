@@ -6,9 +6,9 @@ export class ClaudeModelClient implements IModelClient {
   ask(question: string, context: Context): string {
     let contextExplanation = '\n\nThe following context is provided:\n'
     contextExplanation +=
-      'Edit: This section shows the changes that the agent wants to make\n'
+      'Modifications: This section shows the changes that the agent wants to make\n'
 
-    let contextString = `<edit>${context.edit}</edit>`
+    let contextString = `<modifications>${context.modifications}</modifications>`
 
     if (context.todo) {
       contextExplanation += "Todo: Current state of the agent's task list\n"

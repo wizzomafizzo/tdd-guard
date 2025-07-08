@@ -24,11 +24,11 @@ describe('HookEvents', () => {
     })
 
     test('saves content to storage', async () => {
-      expect(await sut.editsExist()).toBe(true)
+      expect(await sut.modificationsExist()).toBe(true)
     })
 
     test('logs content from Write tool', async () => {
-      const logContent = await sut.readEdits()
+      const logContent = await sut.readModifications()
       const parsed = JSON.parse(logContent)
       expect(parsed.content).toBe(testContent)
     })
@@ -38,7 +38,7 @@ describe('HookEvents', () => {
     test('logs content from new_string property', async () => {
       await sut.logHookData(hookDataFactory.edit({ newString: testNewString }))
 
-      const logContent = await sut.readEdits()
+      const logContent = await sut.readModifications()
       const parsed = JSON.parse(logContent)
       expect(parsed.new_string).toBe(testNewString)
     })
@@ -48,7 +48,7 @@ describe('HookEvents', () => {
     test('logs content from edits array', async () => {
       await sut.logHookData(hookDataFactory.multiEdit())
 
-      const logContent = await sut.readEdits()
+      const logContent = await sut.readModifications()
       const parsed = JSON.parse(logContent)
       expect(parsed.file_path).toBe('/test/file.ts')
       expect(parsed.edits).toHaveLength(2)
@@ -63,10 +63,10 @@ describe('HookEvents', () => {
       expect(await sut.todosExist()).toBe(true)
     })
 
-    test('does not save edit content', async () => {
+    test('does not save modifications content', async () => {
       await sut.logHookData(hookDataFactory.todoWrite())
 
-      expect(await sut.editsExist()).toBe(false)
+      expect(await sut.modificationsExist()).toBe(false)
     })
 
     test('logs todos with status prefix', async () => {
@@ -101,13 +101,13 @@ describe('HookEvents', () => {
     test('does not create file when tool_input is missing', async () => {
       await sut.logHookData(hookDataFactory.emptyEvent())
 
-      expect(await sut.editsExist()).toBe(false)
+      expect(await sut.modificationsExist()).toBe(false)
     })
 
     test('does not create file when tool_input is empty', async () => {
       await sut.logHookData(hookDataFactory.emptyToolInputEvent())
 
-      expect(await sut.editsExist()).toBe(false)
+      expect(await sut.modificationsExist()).toBe(false)
     })
   })
 
@@ -123,7 +123,7 @@ describe('HookEvents', () => {
         hookDataFactory.write({ content: 'second content' })
       )
 
-      const logContent = await sut.readEdits()
+      const logContent = await sut.readModifications()
       const parsed = JSON.parse(logContent)
       expect(parsed.content).toBe('second content')
       expect(parsed.content).not.toContain('first content')
@@ -141,7 +141,7 @@ describe('HookEvents', () => {
       })
       await sut.logHookData(editData)
       
-      const logContent = await sut.readEdits()
+      const logContent = await sut.readModifications()
       parsedContent = JSON.parse(logContent)
     })
 
@@ -172,7 +172,7 @@ describe('HookEvents', () => {
       })
       await sut.logHookData(writeData)
       
-      const logContent = await sut.readEdits()
+      const logContent = await sut.readModifications()
       parsedContent = JSON.parse(logContent)
     })
 
@@ -193,7 +193,7 @@ describe('HookEvents', () => {
     test('handles Write tool with content', async () => {
       await sut.logHookData(hookDataFactory.write())
 
-      const logContent = await sut.readEdits()
+      const logContent = await sut.readModifications()
       const parsed = JSON.parse(logContent)
       expect(parsed.content).toBe('file content to write')
     })
@@ -201,20 +201,20 @@ describe('HookEvents', () => {
     test('handles Edit tool with new_string', async () => {
       await sut.logHookData(hookDataFactory.edit())
 
-      const logContent = await sut.readEdits()
+      const logContent = await sut.readModifications()
       const parsed = JSON.parse(logContent)
       expect(parsed.new_string).toBe('old content; new content')
     })
 
     test('ignores invalid data structures', async () => {
       await sut.logHookData({ invalid: 'structure' })
-      expect(await sut.editsExist()).toBe(false)
+      expect(await sut.modificationsExist()).toBe(false)
       expect(await sut.todosExist()).toBe(false)
     })
 
     test('ignores non-object data', async () => {
       await sut.logHookData('not an object')
-      expect(await sut.editsExist()).toBe(false)
+      expect(await sut.modificationsExist()).toBe(false)
       expect(await sut.todosExist()).toBe(false)
     })
   })
@@ -224,9 +224,9 @@ describe('HookEvents', () => {
     const storage = new MemoryStorage()
     const hookEvents = new HookEvents(storage)
 
-    const editsExist = async () => {
-      const edit = await storage.getEdit()
-      return edit !== null
+    const modificationsExist = async () => {
+      const modifications = await storage.getModifications()
+      return modifications !== null
     }
 
     const todosExist = async () => {
@@ -234,10 +234,10 @@ describe('HookEvents', () => {
       return todo !== null
     }
 
-    const readEdits = async () => {
-      const edit = await storage.getEdit()
-      if (edit === null) throw new Error('No edit content')
-      return edit
+    const readModifications = async () => {
+      const modifications = await storage.getModifications()
+      if (modifications === null) throw new Error('No modifications content')
+      return modifications
     }
 
     const readTodos = async () => {
@@ -247,9 +247,9 @@ describe('HookEvents', () => {
     }
 
     return {
-      editsExist,
+      modificationsExist,
       todosExist,
-      readEdits,
+      readModifications,
       readTodos,
       logHookData: (data: unknown) => hookEvents.logHookData(data),
     }

@@ -1,5 +1,5 @@
 export type Context = {
-  edit: string
+  modifications: string
   todo?: string
   test?: string
 }

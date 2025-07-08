@@ -40,12 +40,12 @@ describe.each(getStorageImplementations())('%s', (name, setupStorage) => {
     })
   })
 
-  describe('saveEdit and getEdit', () => {
+  describe('saveModifications and getModifications', () => {
     it('should store content that can be retrieved', async () => {
-      const content = 'edit content'
+      const content = 'modifications content'
 
-      await storage.saveEdit(content)
-      expect(await storage.getEdit()).toBe(content)
+      await storage.saveModifications(content)
+      expect(await storage.getModifications()).toBe(content)
     })
   })
 
@@ -58,8 +58,8 @@ describe.each(getStorageImplementations())('%s', (name, setupStorage) => {
       expect(await storage.getTodo()).toBeNull()
     })
 
-    it('should return null when no edit data exists', async () => {
-      expect(await storage.getEdit()).toBeNull()
+    it('should return null when no modifications data exists', async () => {
+      expect(await storage.getModifications()).toBeNull()
     })
   })
 
@@ -67,10 +67,10 @@ describe.each(getStorageImplementations())('%s', (name, setupStorage) => {
     beforeEach(async () => {
       await storage.saveTest('first content')
       await storage.saveTodo('first content')
-      await storage.saveEdit('first content')
+      await storage.saveModifications('first content')
       await storage.saveTest('second content')
       await storage.saveTodo('second content')
-      await storage.saveEdit('second content')
+      await storage.saveModifications('second content')
     })
 
     it('should overwrite existing test content', async () => {
@@ -81,8 +81,8 @@ describe.each(getStorageImplementations())('%s', (name, setupStorage) => {
       expect(await storage.getTodo()).toBe('second content')
     })
 
-    it('should overwrite existing edit content', async () => {
-      expect(await storage.getEdit()).toBe('second content')
+    it('should overwrite existing modifications content', async () => {
+      expect(await storage.getModifications()).toBe('second content')
     })
   })
 })

@@ -41,12 +41,12 @@ describe('processHookData', () => {
     await expect(processHookData(invalidJson)).rejects.toThrow()
   })
 
-  it('should save edit content to storage when tool is Edit', async () => {
+  it('should save modifications content to storage when tool is Edit', async () => {
     await sut.process(EDIT_HOOK_DATA)
 
-    const savedEdit = await sut.getEdit()
-    const parsedEdit = JSON.parse(savedEdit!)
-    expect(parsedEdit).toEqual(EDIT_HOOK_DATA.tool_input)
+    const savedModifications = await sut.getModifications()
+    const parsedModifications = JSON.parse(savedModifications!)
+    expect(parsedModifications).toEqual(EDIT_HOOK_DATA.tool_input)
   })
 
   it('should save todo content to storage when tool is TodoWrite', async () => {
@@ -56,12 +56,12 @@ describe('processHookData', () => {
     expect(savedTodo).toBe('in_progress: Write tests\npending: Implement feature')
   })
 
-  it('should save edit content when tool has content field', async () => {
+  it('should save modifications content when tool has content field', async () => {
     await sut.process(WRITE_HOOK_DATA)
 
-    const savedEdit = await sut.getEdit()
-    const parsedEdit = JSON.parse(savedEdit!)
-    expect(parsedEdit).toEqual(WRITE_HOOK_DATA.tool_input)
+    const savedModifications = await sut.getModifications()
+    const parsedModifications = JSON.parse(savedModifications!)
+    expect(parsedModifications).toEqual(WRITE_HOOK_DATA.tool_input)
   })
 
   it('should handle nested data structure with data property', async () => {
@@ -73,9 +73,9 @@ describe('processHookData', () => {
 
     await sut.process(hookData)
 
-    const savedEdit = await sut.getEdit()
-    const parsedEdit = JSON.parse(savedEdit!)
-    expect(parsedEdit).toEqual({
+    const savedModifications = await sut.getModifications()
+    const parsedModifications = JSON.parse(savedModifications!)
+    expect(parsedModifications).toEqual({
       file_path: '/test/file.ts',
       old_string: 'old content',
       new_string: TEST_CONTENT,
@@ -85,7 +85,7 @@ describe('processHookData', () => {
   it('should call tddValidator with context built from storage', async () => {
     // Pre-populate storage
     await sut.populateStorage({
-      edit: 'existing edit',
+      modifications: 'existing modifications',
       test: 'existing test',
       todo: 'existing todo',
     })
@@ -102,9 +102,9 @@ describe('processHookData', () => {
     // Verify the context, parsing JSON to handle formatting differences
     expect({
       ...actualContext,
-      edit: JSON.parse(actualContext.edit),
+      modifications: JSON.parse(actualContext.modifications),
     }).toEqual({
-      edit: expectedEdit,
+      modifications: expectedEdit,
       test: 'existing test',
       todo: 'existing todo',
     })
@@ -114,7 +114,7 @@ describe('processHookData', () => {
   it('should not call tddValidator for TodoWrite operations', async () => {
     // Pre-populate storage with existing edits that might cause false blocks
     await sut.populateStorage({
-      edit: 'existing edit that might trigger validation',
+      modifications: 'existing modifications that might trigger validation',
     })
 
     const result = await sut.process(TODO_WRITE_HOOK_DATA)
@@ -154,8 +154,8 @@ function createTestProcessor() {
   }
   
   // Pre-populate storage helper
-  const populateStorage = async (data: { edit?: string; test?: string; todo?: string }) => {
-    if (data.edit) await storage.saveEdit(data.edit)
+  const populateStorage = async (data: { modifications?: string; test?: string; todo?: string }) => {
+    if (data.modifications) await storage.saveModifications(data.modifications)
     if (data.test) await storage.saveTest(data.test)
     if (data.todo) await storage.saveTodo(data.todo)
   }
@@ -166,7 +166,7 @@ function createTestProcessor() {
     populateStorage,
     
     // Storage accessors
-    getEdit: () => storage.getEdit(),
+    getModifications: () => storage.getModifications(),
     getTest: () => storage.getTest(),
     getTodo: () => storage.getTodo(),
     

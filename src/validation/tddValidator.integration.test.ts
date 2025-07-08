@@ -5,7 +5,7 @@ import { Context } from '../contracts/types/Context'
 describe('tddValidator', () => {
   test('returns violation when content contains two tests', () => {
     const context: Context = {
-      edit: TestDataFactory.multipleTestEdits(),
+      modifications: TestDataFactory.multipleTestEdits(),
     }
 
     const result = tddValidator(context)
@@ -18,7 +18,7 @@ describe('tddValidator', () => {
 
   test('does not block when adding single test', () => {
     const context: Context = {
-      edit: TestDataFactory.singleTestEdit(),
+      modifications: TestDataFactory.singleTestEdit(),
     }
 
     const result = tddValidator(context)
@@ -31,7 +31,7 @@ describe('tddValidator', () => {
 
   test('returns violation when implementing more than necessary to make test pass', () => {
     const context: Context = {
-      edit: TestDataFactory.excessiveEdit(),
+      modifications: TestDataFactory.excessiveEdit(),
       todo: TestDataFactory.relevantTodo(),
       test: TestDataFactory.correctTestFailure(),
     }
@@ -46,7 +46,7 @@ describe('tddValidator', () => {
 
   test('allows stub creation to satisfy missing imports', () => {
     const context: Context = {
-      edit: TestDataFactory.stubCreationEdit(),
+      modifications: TestDataFactory.stubCreationEdit(),
       todo: TestDataFactory.calculatorTodo(),
       test: TestDataFactory.missingImportFailure(),
     }
@@ -61,7 +61,7 @@ describe('tddValidator', () => {
 
   test('does not block when old_string contains one of two tests in new_string', () => {
     const context: Context = {
-      edit: TestDataFactory.editWithExistingTest(),
+      modifications: TestDataFactory.editWithExistingTest(),
       todo: TestDataFactory.addDivideMethodTodo(),
       test: TestDataFactory.passingTests(),
     }
@@ -76,7 +76,7 @@ describe('tddValidator', () => {
 
   test('does not block refactoring tests with MultiEdit', () => {
     const context: Context = {
-      edit: TestDataFactory.batchEditFormat(),
+      modifications: TestDataFactory.batchEditFormat(),
       todo: TestDataFactory.refactoringTodo(),
       test: TestDataFactory.allTestsPassing(),
     }

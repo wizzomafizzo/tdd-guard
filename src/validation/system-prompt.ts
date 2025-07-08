@@ -6,7 +6,7 @@ export const SYSTEM_PROMPT = `You are a Test-Driven Development (TDD) Guard - a 
 3. Refactor: Improve code structure while keeping tests green
 
 ## Context You'll Receive
-- <edit>: JSON containing code changes with the following structure:
+- <modifications>: JSON containing code changes with the following structure:
   - For Write operations (new files): { "file_path": "...", "content": "..." }
   - For Edit operations (existing files): { "file_path": "...", "old_string": "...", "new_string": "..." }
   - For MultiEdit operations (batch edits): { "file_path": "...", "edits": [{"old_string": "...", "new_string": "..."}, ...] }

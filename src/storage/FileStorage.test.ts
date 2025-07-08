@@ -59,14 +59,14 @@ describe('FileStorage', () => {
       expect(retrieved).toBe('todo content')
     })
 
-    it('should create directory for saveEdit', async () => {
+    it('should create directory for saveModifications', async () => {
       await expect(fs.access(nonExistentPath)).rejects.toThrow()
 
-      await storage.saveEdit('edit content')
+      await storage.saveModifications('modifications content')
 
       await expect(fs.access(nonExistentPath)).resolves.toBeUndefined()
-      const retrieved = await storage.getEdit()
-      expect(retrieved).toBe('edit content')
+      const retrieved = await storage.getModifications()
+      expect(retrieved).toBe('modifications content')
     })
   })
 
@@ -82,24 +82,24 @@ describe('FileStorage', () => {
       storage = new FileStorage(tempDir)
     })
 
-    it('should save edits to edit.json instead of edit.txt', async () => {
+    it('should save modifications to modifications.json instead of modifications.txt', async () => {
       const jsonContent = JSON.stringify({
         file_path: '/test/file.ts',
         content: 'test content',
       })
 
-      await storage.saveEdit(jsonContent)
+      await storage.saveModifications(jsonContent)
 
-      // Check that edit.json exists
-      const jsonPath = path.join(tempDir, 'edit.json')
+      // Check that modifications.json exists
+      const jsonPath = path.join(tempDir, 'modifications.json')
       await expect(fs.access(jsonPath)).resolves.toBeUndefined()
 
-      // Check that edit.txt does not exist
-      const txtPath = path.join(tempDir, 'edit.txt')
+      // Check that modifications.txt does not exist
+      const txtPath = path.join(tempDir, 'modifications.txt')
       await expect(fs.access(txtPath)).rejects.toThrow()
 
       // Verify content
-      const retrieved = await storage.getEdit()
+      const retrieved = await storage.getModifications()
       expect(retrieved).toBe(jsonContent)
     })
   })

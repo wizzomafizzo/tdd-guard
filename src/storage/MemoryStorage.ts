@@ -11,8 +11,8 @@ export class MemoryStorage implements Storage {
     this.store.set('todo', content)
   }
 
-  async saveEdit(content: string): Promise<void> {
-    this.store.set('edit', content)
+  async saveModifications(content: string): Promise<void> {
+    this.store.set('modifications', content)
   }
 
   async getTest(): Promise<string | null> {
@@ -23,7 +23,7 @@ export class MemoryStorage implements Storage {
     return this.store.get('todo') ?? null
   }
 
-  async getEdit(): Promise<string | null> {
-    return this.store.get('edit') ?? null
+  async getModifications(): Promise<string | null> {
+    return this.store.get('modifications') ?? null
   }
 }

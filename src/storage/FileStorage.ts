@@ -6,7 +6,7 @@ export class FileStorage implements Storage {
   private readonly files = {
     test: 'test.txt',
     todo: 'todo.txt',
-    edit: 'edit.json',
+    modifications: 'modifications.json',
   } as const
 
   constructor(private basePath: string) {}
@@ -42,8 +42,8 @@ export class FileStorage implements Storage {
     await this.save('todo', content)
   }
 
-  async saveEdit(content: string): Promise<void> {
-    await this.save('edit', content)
+  async saveModifications(content: string): Promise<void> {
+    await this.save('modifications', content)
   }
 
   async getTest(): Promise<string | null> {
@@ -54,7 +54,7 @@ export class FileStorage implements Storage {
     return this.get('todo')
   }
 
-  async getEdit(): Promise<string | null> {
-    return this.get('edit')
+  async getModifications(): Promise<string | null> {
+    return this.get('modifications')
   }
 }
