@@ -5,7 +5,7 @@ import path from 'path'
 export class FileStorage implements Storage {
   private readonly files = {
     test: 'test.txt',
-    todo: 'todo.txt',
+    todo: 'todo.json',
     modifications: 'modifications.json',
   } as const
 

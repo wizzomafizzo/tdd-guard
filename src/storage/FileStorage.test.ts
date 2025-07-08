@@ -10,11 +10,7 @@ describe('FileStorage', () => {
   afterEach(async () => {
     // Clean up any temp directories created during tests
     for (const dir of tempDirs) {
-      try {
-        await fs.rm(dir, { recursive: true, force: true })
-      } catch {
-        // Ignore cleanup errors
-      }
+      await fs.rm(dir, { recursive: true, force: true })
     }
     tempDirs = []
   })

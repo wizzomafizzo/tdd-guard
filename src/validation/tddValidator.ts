@@ -2,14 +2,15 @@ import { ClaudeModelClient } from './models/ClaudeModelClient'
 import { IModelClient } from '../contracts/types/ModelClient'
 import { TDDValidationResult } from '../contracts/types/TDDValidation'
 import { Context } from '../contracts/types/Context'
-import { SYSTEM_PROMPT } from './system-prompt'
+import { generateDynamicContext } from './context/context'
 
 export function tddValidator(
   context: Context,
   modelClient: IModelClient = new ClaudeModelClient()
 ): TDDValidationResult {
   try {
-    const response = modelClient.ask(SYSTEM_PROMPT, context)
+    const prompt = generateDynamicContext(context)
+    const response = modelClient.ask(prompt)
     const parsed = JSON.parse(response)
 
     // Convert null to undefined for consistency with the type

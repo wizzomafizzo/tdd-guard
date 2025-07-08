@@ -1,191 +1,139 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { ClaudeModelClient } from './ClaudeModelClient'
 import { execSync } from 'child_process'
-import { Context } from '../../contracts/types/Context'
 
 vi.mock('child_process')
 
 describe('ClaudeModelClient', () => {
-  const question = 'Does this follow TDD?'
-  const context = {
-    todo: 'todo list content',
-    modifications: 'modifications content',
-    test: 'test output content',
-  }
-  const result = 'This code follows TDD principles'
-  const format = '--output-format json'
-  const maxTurnsFlag = '--max-turns 1'
-  const command = 'claude'
-  const modelFlag = '--model sonnet'
-  const encodingOption = { encoding: 'utf-8' }
-  const timeoutOption = { timeout: 20000 }
-
-  let sut: ReturnType<typeof setupModelClient>
+  const mockExecSync = vi.mocked(execSync)
+  let client: ClaudeModelClient
 
   beforeEach(() => {
-    sut = setupModelClient()
+    vi.clearAllMocks()
+    client = new ClaudeModelClient()
   })
 
-  test('includes question in prompt', () => {
-    sut.assertCommandContains(question)
-  })
+  describe('command construction', () => {
+    test('uses correct claude command with all flags', () => {
+      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
 
-  test('includes todo context in prompt', () => {
-    sut.assertCommandContains('<todo>todo list content</todo>')
-  })
+      client.ask('test prompt')
 
-  test('includes modifications context in prompt', () => {
-    sut.assertCommandContains(
-      '<modifications>modifications content</modifications>'
-    )
-  })
-
-  test('includes test context in prompt', () => {
-    sut.assertCommandContains('<test>test output content</test>')
-  })
-
-  test('uses json output format', () => {
-    sut.assertCommandContains(format)
-  })
-
-  test('limits to single turn', () => {
-    sut.assertCommandContains(maxTurnsFlag)
-  })
-
-  test('uses claude command', () => {
-    sut.assertCommandContains(command)
-  })
-
-  test('uses sonnet model flag', () => {
-    sut.assertCommandContains(modelFlag)
-  })
-
-  test('includes line break after question', () => {
-    sut.assertCommandContains(question + '\n')
-  })
-
-  test('includes context explanation', () => {
-    sut.assertCommandContains('The following context is provided:')
-  })
-
-  test('explains modifications section', () => {
-    sut.assertCommandContains(
-      'Modifications: This section shows the changes that the agent wants to make'
-    )
-  })
-
-  test('explains todo section when present', () => {
-    sut.assertCommandContains(
-      "Todo: Current state of the agent'\\''s task list"
-    )
-  })
-
-  test('explains test section when present', () => {
-    sut.assertCommandContains('Test: The test output from running the tests')
-  })
-
-  test('handles context with only modifications field', () => {
-    const contextWithOnlyModifications = {
-      modifications: 'only modifications content',
-    }
-    const sutWithPartialContext = setupModelClient({
-      context: contextWithOnlyModifications,
-    })
-    sutWithPartialContext.assertCommandContains(
-      '<modifications>only modifications content</modifications>'
-    )
-    // Should still explain modifications section
-    sutWithPartialContext.assertCommandContains(
-      'Modifications: This section shows the changes that the agent wants to make'
-    )
-    // Should not include todo section or tags when todo is not present
-    sutWithPartialContext.assertCommandDoesNotContain('Todo:')
-    sutWithPartialContext.assertCommandDoesNotContain('<todo>')
-    // Should not include test section or tags when test is not present
-    sutWithPartialContext.assertCommandDoesNotContain('Test:')
-    sutWithPartialContext.assertCommandDoesNotContain('<test>')
-  })
-
-  test('uses utf-8 encoding', () => {
-    sut.assertCalledWithOptions(encodingOption)
-  })
-
-  test('sets timeout to 20 seconds', () => {
-    sut.assertCalledWithOptions(timeoutOption)
-  })
-
-  test('returns parsed result from response', () => {
-    expect(sut.result).toBe(result)
-  })
-
-  describe('handles special characters', () => {
-    const questionWithQuote = "What's the TDD pattern?"
-    const contextWithQuote = {
-      modifications: "test('it should work', () => {})",
-    }
-
-    let sut: ReturnType<typeof setupModelClient>
-
-    beforeEach(() => {
-      sut = setupModelClient({
-        question: questionWithQuote,
-        context: contextWithQuote,
-      })
-    })
-
-    test('escapes single quotes in question', () => {
-      sut.assertCommandContains("What'\\''s the TDD pattern?")
-    })
-
-    test('escapes single quotes in context', () => {
-      sut.assertCommandContains("test('\\''it should work'\\''")
-    })
-  })
-
-  // Test helper
-  function setupModelClient(testData?: {
-    question?: string
-    context?: Context
-    result?: string
-  }) {
-    const {
-      question: q = question,
-      context: c = context,
-      result: r = result,
-    } = testData || {}
-
-    const mockExecSync = vi.mocked(execSync)
-    mockExecSync.mockReturnValue(JSON.stringify({ result: r }))
-
-    const client = new ClaudeModelClient()
-    const actualResult = client.ask(q, c)
-
-    const assertCommandContains = (content: string) => {
       expect(mockExecSync).toHaveBeenCalledWith(
-        expect.stringContaining(content),
+        'claude - --output-format json --max-turns 1 --model sonnet',
         expect.any(Object)
       )
-    }
+    })
+  })
 
-    const assertCommandDoesNotContain = (content: string) => {
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.not.stringContaining(content),
-        expect.any(Object)
-      )
-    }
+  describe('subprocess configuration', () => {
+    test('passes prompt via input option', () => {
+      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
+      const prompt = 'Does this follow TDD?'
 
-    const assertCalledWithOptions = (expectedOptions: object) => {
+      client.ask(prompt)
+
       expect(mockExecSync).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining(expectedOptions)
+        expect.objectContaining({
+          input: prompt,
+        })
       )
-    }
+    })
 
-    return {
-      result: actualResult,
-      assertCommandContains,
-      assertCommandDoesNotContain,
-      assertCalledWithOptions,
-    }
-  }
+    test('uses utf-8 encoding', () => {
+      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
+
+      client.ask('test')
+
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          encoding: 'utf-8',
+        })
+      )
+    })
+
+    test('sets timeout to 20 seconds', () => {
+      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
+
+      client.ask('test')
+
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          timeout: 20000,
+        })
+      )
+    })
+  })
+
+  describe('response parsing', () => {
+    test('extracts JSON from markdown code blocks', () => {
+      mockExecSync.mockReturnValue(
+        JSON.stringify({ result: '```json\n{"approved": true}\n```' })
+      )
+
+      const result = client.ask('test prompt')
+
+      expect(result).toBe('{"approved": true}')
+    })
+
+    test('handles JSON code blocks with extra whitespace', () => {
+      mockExecSync.mockReturnValue(
+        JSON.stringify({
+          result: '```json  \n\n  {"approved": false}  \n\n```',
+        })
+      )
+
+      const result = client.ask('test prompt')
+
+      expect(result).toBe('{"approved": false}')
+    })
+
+    test('returns raw response when no JSON code block found', () => {
+      mockExecSync.mockReturnValue(
+        JSON.stringify({ result: 'Plain text response' })
+      )
+
+      const result = client.ask('test prompt')
+
+      expect(result).toBe('Plain text response')
+    })
+
+    test('handles response with text before and after JSON block', () => {
+      mockExecSync.mockReturnValue(
+        JSON.stringify({
+          result:
+            'Here is the analysis:\n```json\n{"approved": true}\n```\nThat concludes the review.',
+        })
+      )
+
+      const result = client.ask('test prompt')
+
+      expect(result).toBe('{"approved": true}')
+    })
+  })
+
+  describe('error handling', () => {
+    test('throws error when execSync fails', () => {
+      mockExecSync.mockImplementation(() => {
+        throw new Error('Command failed')
+      })
+
+      expect(() => client.ask('test')).toThrow('Command failed')
+    })
+
+    test('throws error when response is not valid JSON', () => {
+      mockExecSync.mockReturnValue('invalid json')
+
+      expect(() => client.ask('test')).toThrow()
+    })
+
+    test('throws error when response lacks result field', () => {
+      mockExecSync.mockReturnValue(JSON.stringify({ error: 'No result' }))
+
+      expect(() => client.ask('test')).toThrow()
+    })
+  })
 })
