@@ -75,9 +75,13 @@ TDD Guard intercepts Claude Code operations through hooks and validates them aga
 4. **AI Validation**: Sends context to Claude CLI with TDD Guard prompt to check for violations
 5. **Decision**: Returns `approve`, `block` (with reason), or `null` (insufficient data)
 
+### Context Engineering
+
+TDD Guard dynamically adjusts context based on operation type. Different instructions are used for different operations, ensuring more focused instructions. Context is formatted with clear markdown sections for better AI comprehension.
+
 ## Customizing the System Prompt
 
-To modify TDD validation rules or adjust the AI's behavior, edit the system prompt at [`src/validation/system-prompt.ts`](https://github.com/nizos/tdd-guard/blob/main/src/validation/system-prompt.ts). After making changes:
+To modify TDD validation rules or adjust the AI's behavior, edit the TDD instructions at [`src/validation/prompts/tdd-instructions.ts`](https://github.com/nizos/tdd-guard/blob/main/src/validation/prompts/tdd-instructions.ts). After making changes:
 
 1. Rebuild the project: `npm run build`
 2. Restart your Claude Code session to ensure changes take effect
