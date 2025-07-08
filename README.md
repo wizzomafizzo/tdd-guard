@@ -64,7 +64,7 @@ TDD Guard intercepts Claude Code operations through hooks and validates them aga
 1. **Hook Integration**: Configured as pre-execution hooks for Edit, Write, and TodoWrite operations
 2. **Data Collection**: Extracts code changes, task descriptions, and test results into persistent storage
 3. **Context Building**: Aggregates recent edits, todos, and test output into a validation context
-4. **AI Validation**: Sends context to Claude CLI with TDD Detective prompt to check for violations
+4. **AI Validation**: Sends context to Claude CLI with TDD Guard prompt to check for violations
 5. **Decision**: Returns `approve`, `block` (with reason), or `null` (insufficient data)
 
 ## Customizing the System Prompt
