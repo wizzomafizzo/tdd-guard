@@ -5,7 +5,8 @@ import { existsSync, mkdirSync } from 'fs'
 
 export class ClaudeModelClient implements IModelClient {
   ask(prompt: string): string {
-    const command = `claude - --output-format json --max-turns 1 --model sonnet`
+    const claudeBinary = process.env.CLAUDE_BINARY_PATH || 'claude'
+    const command = `${claudeBinary} - --output-format json --max-turns 1 --model sonnet`
     const claudeDir = join(process.cwd(), '.claude')
 
     if (!existsSync(claudeDir)) {

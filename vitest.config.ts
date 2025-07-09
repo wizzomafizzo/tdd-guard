@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config'
 import { FileReporter } from './src/reporters/FileReporter'
+import 'dotenv/config'
 
 export default defineConfig({
   test: {

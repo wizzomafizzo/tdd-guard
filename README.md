@@ -27,7 +27,17 @@ npm run build
 
 ### Configuration
 
-1. Add to `.claude/settings.json`:
+1. **Environment Variables**: Copy `.env.example` to `.env` and configure:
+
+```bash
+# Path to Claude CLI binary (required after /migrate-to-local)
+CLAUDE_BINARY_PATH=/Users/YOUR_USERNAME/.claude/local/claude
+
+# Path where TDD Guard stores logs and session data (defaults to ./logs)
+HOOK_LOG_PATH=
+```
+
+2. **Claude Code Hooks**: Add to `.claude/settings.json`:
 
 ```json
 {
@@ -47,7 +57,7 @@ npm run build
 }
 ```
 
-2. Configure test reporter in `vitest.config.ts`:
+3. **Test Reporter**: Configure test reporter in `vitest.config.ts`:
 
 ```javascript
 reporters: ['default', new FileReporter('logs/test.txt')]

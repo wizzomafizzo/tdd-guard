@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import 'dotenv/config'
 import { processHookData } from '../hooks/processHookData'
 import { FileStorage } from '../storage/FileStorage'
 import { tddValidator } from '../validation/tddValidator'

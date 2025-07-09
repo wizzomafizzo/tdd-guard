@@ -17,6 +17,34 @@ describe('ClaudeModelClient', () => {
 
   describe('command construction', () => {
     test('uses correct claude command with all flags', () => {
+      delete process.env.CLAUDE_BINARY_PATH
+      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
+
+      client.ask('test prompt')
+
+      expect(mockExecSync).toHaveBeenCalledWith(
+        'claude - --output-format json --max-turns 1 --model sonnet',
+        expect.any(Object)
+      )
+    })
+
+    test('uses CLAUDE_BINARY_PATH environment variable when set', () => {
+      const customPath = '/custom/path/to/claude'
+      process.env.CLAUDE_BINARY_PATH = customPath
+      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
+
+      client.ask('test prompt')
+
+      expect(mockExecSync).toHaveBeenCalledWith(
+        `${customPath} - --output-format json --max-turns 1 --model sonnet`,
+        expect.any(Object)
+      )
+
+      delete process.env.CLAUDE_BINARY_PATH
+    })
+
+    test('falls back to default claude command when CLAUDE_BINARY_PATH not set', () => {
+      delete process.env.CLAUDE_BINARY_PATH
       mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
 
       client.ask('test prompt')
