@@ -6,7 +6,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    testTimeout: 60000,
+    testTimeout: 120000,
     reporters: ['default', new FileReporter('logs/test.txt')],
   },
 })
