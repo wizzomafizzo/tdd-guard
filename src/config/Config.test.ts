@@ -12,28 +12,16 @@ describe('Config', () => {
     process.env = originalEnv
   })
 
-  test('uses TDD_DATA_DIR environment variable when set', () => {
-    process.env.TDD_DATA_DIR = '/custom/data/path'
-
-    const config = new Config()
-
-    expect(config.dataDir).toBe('/custom/data/path')
-  })
-
-  test('defaults to .claude/tdd-guard/data when TDD_DATA_DIR not set', () => {
-    delete process.env.TDD_DATA_DIR
-
+  test('dataDir is hardcoded to .claude/tdd-guard/data', () => {
     const config = new Config()
 
     expect(config.dataDir).toBe('.claude/tdd-guard/data')
   })
 
   test('testReportPath returns test.txt path within dataDir', () => {
-    process.env.TDD_DATA_DIR = '/my/data'
-
     const config = new Config()
 
-    expect(config.testReportPath).toBe('/my/data/test.txt')
+    expect(config.testReportPath).toBe('.claude/tdd-guard/data/test.txt')
   })
 
   test('useLocalClaude returns true when USE_LOCAL_CLAUDE is true', () => {
@@ -66,10 +54,8 @@ describe('Config', () => {
   })
 
   test('fileStoragePath returns storage subdirectory within dataDir', () => {
-    process.env.TDD_DATA_DIR = '/my/data'
-
     const config = new Config()
 
-    expect(config.fileStoragePath).toBe('/my/data/storage')
+    expect(config.fileStoragePath).toBe('.claude/tdd-guard/data/storage')
   })
 })

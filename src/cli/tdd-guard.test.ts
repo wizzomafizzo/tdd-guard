@@ -15,14 +15,14 @@ describe('tdd-guard CLI', () => {
   })
 
   test('uses fileStoragePath from Config for FileStorage', async () => {
-    const testConfig = testData.config({
-      fileStoragePath: '/test/data/storage',
-    })
+    const testConfig = testData.config()
 
     const mockFileStorage = vi.mocked(FileStorage)
 
     await run('{}', testConfig)
 
-    expect(mockFileStorage).toHaveBeenCalledWith('/test/data/storage')
+    expect(mockFileStorage).toHaveBeenCalledWith(
+      '.claude/tdd-guard/data/storage'
+    )
   })
 })

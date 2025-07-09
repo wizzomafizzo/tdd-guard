@@ -1,10 +1,11 @@
 import { Config } from '../../config/Config'
 
 export function config(overrides: Partial<Config> = {}): Config {
+  const dataDir = overrides.dataDir ?? '.claude/tdd-guard/data'
   return {
-    dataDir: overrides.dataDir ?? '/test/data',
+    dataDir,
     useLocalClaude: overrides.useLocalClaude ?? false,
-    testReportPath: overrides.testReportPath ?? '/test/data/test.txt',
-    fileStoragePath: overrides.fileStoragePath ?? '/test/data/storage',
+    testReportPath: overrides.testReportPath ?? `${dataDir}/test.txt`,
+    fileStoragePath: overrides.fileStoragePath ?? `${dataDir}/storage`,
   } as Config
 }

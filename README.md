@@ -34,9 +34,6 @@ npm run build
 # Set to 'true' to use Claude from ~/.claude/local/claude
 # Set to 'false' to use system Claude (claude in PATH)
 USE_LOCAL_CLAUDE=false
-
-# Directory where TDD Guard stores all data (defaults to .claude/tdd-guard/data)
-TDD_DATA_DIR=
 ```
 
 2. **Claude Code Hooks**: Add to `.claude/settings.json`:

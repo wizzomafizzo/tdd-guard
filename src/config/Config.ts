@@ -3,7 +3,7 @@ export class Config {
   readonly useLocalClaude: boolean
 
   constructor() {
-    this.dataDir = process.env.TDD_DATA_DIR || '.claude/tdd-guard/data'
+    this.dataDir = '.claude/tdd-guard/data'
     this.useLocalClaude = process.env.USE_LOCAL_CLAUDE === 'true'
   }
 
