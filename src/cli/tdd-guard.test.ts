@@ -21,8 +21,6 @@ describe('tdd-guard CLI', () => {
 
     await run('{}', testConfig)
 
-    expect(mockFileStorage).toHaveBeenCalledWith(
-      '.claude/tdd-guard/data/storage'
-    )
+    expect(mockFileStorage).toHaveBeenCalledWith('.claude/tdd-guard/data')
   })
 })

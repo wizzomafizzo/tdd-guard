@@ -8,7 +8,7 @@ import { Config } from '../config/Config'
 
 export async function run(input: string, config?: Config) {
   const appConfig = config || new Config()
-  const storage = new FileStorage(appConfig.fileStoragePath)
+  const storage = new FileStorage(appConfig.dataDir)
 
   return processHookData(input, {
     storage,

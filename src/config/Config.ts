@@ -10,8 +10,4 @@ export class Config {
   get testReportPath(): string {
     return `${this.dataDir}/test.txt`
   }
-
-  get fileStoragePath(): string {
-    return `${this.dataDir}/storage`
-  }
 }

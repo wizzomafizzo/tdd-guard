@@ -6,6 +6,5 @@ export function config(overrides: Partial<Config> = {}): Config {
     dataDir,
     useLocalClaude: overrides.useLocalClaude ?? false,
     testReportPath: overrides.testReportPath ?? `${dataDir}/test.txt`,
-    fileStoragePath: overrides.fileStoragePath ?? `${dataDir}/storage`,
   } as Config
 }

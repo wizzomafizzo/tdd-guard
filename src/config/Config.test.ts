@@ -52,10 +52,4 @@ describe('Config', () => {
 
     delete process.env.USE_LOCAL_CLAUDE
   })
-
-  test('fileStoragePath returns storage subdirectory within dataDir', () => {
-    const config = new Config()
-
-    expect(config.fileStoragePath).toBe('.claude/tdd-guard/data/storage')
-  })
 })

@@ -17,8 +17,7 @@ describe('tdd-guard CLI', () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tdd-guard-test-'))
     const storagePath = path.join(tempDir, 'storage')
     testConfig = testData.config({
-      dataDir: tempDir,
-      fileStoragePath: storagePath,
+      dataDir: storagePath,
     })
     storage = new FileStorage(storagePath)
   })
