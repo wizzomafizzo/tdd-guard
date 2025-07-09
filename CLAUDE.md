@@ -88,3 +88,7 @@ src/
 - **Single responsibility**: Each module has one clear purpose
 - **Test coverage**: Every implementation has corresponding tests
 - **Type safety**: Comprehensive TypeScript types with runtime validation
+
+### Architecture Decision Records
+
+Important architectural decisions are documented in `docs/adr/`. These records explain the context, decision, and consequences of significant design choices.
