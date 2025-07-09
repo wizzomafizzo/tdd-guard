@@ -118,7 +118,6 @@ Agent corrects its behavior and implements minimal implementation
 
 ## Known Limitations
 
-- Creates a new session for each validation, cluttering the session list
 - Not tested with multiple subagents working simultaneously
 - Currently only supports Claude Code
 - Test output context only available for Vitest
@@ -130,7 +129,6 @@ Agent corrects its behavior and implements minimal implementation
 - Add support for other testing frameworks (Jest, Mocha, etc.)
 - Improve handling of concurrent subagents
 - Support other AI agents (Gemini CLI, etc.)
-- Optimize session management to reduce clutter
 - Expand TDD validation rules
 - Enrich context with file paths and more metadata
 
