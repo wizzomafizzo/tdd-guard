@@ -7,93 +7,57 @@ import { testData } from '../../test'
 vi.mock('child_process')
 vi.mock('fs', { spy: true })
 
+const mockExecFileSync = vi.mocked(execFileSync)
+
 describe('ClaudeModelClient', () => {
-  const mockExecFileSync = vi.mocked(execFileSync)
+  let sut: Awaited<ReturnType<typeof createSut>>
   let client: ClaudeModelClient
 
   beforeEach(() => {
-    vi.clearAllMocks()
-
-    // Default mock response
-    mockExecFileSync.mockReturnValue(JSON.stringify({ result: 'test' }))
-
-    // Mock fs.existsSync to return true by default
-    vi.spyOn(fs, 'existsSync').mockReturnValue(true)
-
-    // Create client with test config (useLocalClaude: false by default)
-    const config = testData.config()
-    client = new ClaudeModelClient(config)
+    sut = createSut()
+    client = sut.client
   })
 
   describe('command construction', () => {
-    test('uses correct claude command with all flags', () => {
-      client.ask('test prompt')
+    test('uses claude command', () => {
+      const call = sut.askAndGetCall()
+      expect(call.command).toBe('claude')
+    })
 
-      expect(mockExecFileSync).toHaveBeenCalledWith(
-        'claude',
-        [
-          '-',
-          '--output-format',
-          'json',
-          '--max-turns',
-          '1',
-          '--model',
-          'sonnet',
-        ],
-        expect.any(Object)
-      )
+    test('uses correct flags', () => {
+      const call = sut.askAndGetCall()
+      expect(call.args).toEqual([
+        '-',
+        '--output-format',
+        'json',
+        '--max-turns',
+        '1',
+        '--model',
+        'sonnet',
+      ])
     })
   })
 
   describe('subprocess configuration', () => {
     test('passes prompt via input option', () => {
       const prompt = 'Does this follow TDD?'
-
-      client.ask(prompt)
-
-      expect(mockExecFileSync).toHaveBeenCalledWith(
-        'claude',
-        expect.any(Array),
-        expect.objectContaining({
-          input: prompt,
-        })
-      )
+      const call = sut.askAndGetCall(prompt)
+      expect(call.options.input).toBe(prompt)
     })
 
     test('uses utf-8 encoding', () => {
-      client.ask('test')
-
-      expect(mockExecFileSync).toHaveBeenCalledWith(
-        'claude',
-        expect.any(Array),
-        expect.objectContaining({
-          encoding: 'utf-8',
-        })
-      )
+      const call = sut.askAndGetCall()
+      expect(call.options.encoding).toBe('utf-8')
     })
 
     test('sets timeout to 20 seconds', () => {
-      client.ask('test')
-
-      expect(mockExecFileSync).toHaveBeenCalledWith(
-        'claude',
-        expect.any(Array),
-        expect.objectContaining({
-          timeout: 20000,
-        })
-      )
+      const call = sut.askAndGetCall()
+      expect(call.options.timeout).toBe(20000)
     })
 
     test('executes claude command from .claude subdirectory', () => {
-      client.ask('test')
-
-      expect(mockExecFileSync).toHaveBeenCalledWith(
-        'claude',
-        expect.any(Array),
-        expect.objectContaining({
-          cwd: expect.stringContaining('.claude'),
-        })
-      )
+      const call = sut.askAndGetCall()
+      expect(call.options.cwd).toContain('.claude')
     })
 
     test('creates .claude directory if it does not exist', () => {
@@ -116,9 +80,7 @@ describe('ClaudeModelClient', () => {
 
   describe('response parsing', () => {
     test('extracts JSON from markdown code blocks', () => {
-      mockExecFileSync.mockReturnValue(
-        JSON.stringify({ result: '```json\n{"approved": true}\n```' })
-      )
+      sut.mockResponse('```json\n{"approved": true}\n```')
 
       const result = client.ask('test prompt')
 
@@ -126,11 +88,7 @@ describe('ClaudeModelClient', () => {
     })
 
     test('handles JSON code blocks with extra whitespace', () => {
-      mockExecFileSync.mockReturnValue(
-        JSON.stringify({
-          result: '```json  \n\n  {"approved": false}  \n\n```',
-        })
-      )
+      sut.mockResponse('```json  \n\n  {"approved": false}  \n\n```')
 
       const result = client.ask('test prompt')
 
@@ -138,9 +96,7 @@ describe('ClaudeModelClient', () => {
     })
 
     test('returns raw response when no JSON code block found', () => {
-      mockExecFileSync.mockReturnValue(
-        JSON.stringify({ result: 'Plain text response' })
-      )
+      sut.mockResponse('Plain text response')
 
       const result = client.ask('test prompt')
 
@@ -148,11 +104,8 @@ describe('ClaudeModelClient', () => {
     })
 
     test('handles response with text before and after JSON block', () => {
-      mockExecFileSync.mockReturnValue(
-        JSON.stringify({
-          result:
-            'Here is the analysis:\n```json\n{"approved": true}\n```\nThat concludes the review.',
-        })
+      sut.mockResponse(
+        'Here is the analysis:\n```json\n{"approved": true}\n```\nThat concludes the review.'
       )
 
       const result = client.ask('test prompt')
@@ -185,55 +138,60 @@ describe('ClaudeModelClient', () => {
 
   describe('security', () => {
     test('uses execFileSync with system claude when useLocalClaude is false', () => {
-      const config = testData.config({ useLocalClaude: false })
-      const client = new ClaudeModelClient(config)
-      client.ask('test prompt')
+      const localSut = createSut({ useLocalClaude: false })
+      localSut.client.ask('test prompt')
 
-      // Should use execFileSync with 'claude' command
-      expect(mockExecFileSync).toHaveBeenCalledWith(
-        'claude',
-        [
-          '-',
-          '--output-format',
-          'json',
-          '--max-turns',
-          '1',
-          '--model',
-          'sonnet',
-        ],
-        expect.objectContaining({
-          encoding: 'utf-8',
-          timeout: 20000,
-          input: 'test prompt',
-          cwd: expect.stringContaining('.claude'),
-        })
-      )
+      const call = localSut.getLastCall()
+      expect(call.command).toBe('claude')
     })
 
     test('uses execFileSync with local claude path when useLocalClaude is true', () => {
-      const config = testData.config({ useLocalClaude: true })
-      const client = new ClaudeModelClient(config)
-      client.ask('test prompt')
+      const localSut = createSut({ useLocalClaude: true })
+      localSut.client.ask('test prompt')
 
-      // Should use execFileSync with full path
-      expect(mockExecFileSync).toHaveBeenCalledWith(
-        `${process.env.HOME}/.claude/local/claude`,
-        [
-          '-',
-          '--output-format',
-          'json',
-          '--max-turns',
-          '1',
-          '--model',
-          'sonnet',
-        ],
-        expect.objectContaining({
-          encoding: 'utf-8',
-          timeout: 20000,
-          input: 'test prompt',
-          cwd: expect.stringContaining('.claude'),
-        })
-      )
+      const call = localSut.getLastCall()
+      expect(call.command).toBe(`${process.env.HOME}/.claude/local/claude`)
     })
   })
 })
+
+// Test Helpers
+function createSut(overrides?: Partial<ReturnType<typeof testData.config>>) {
+  // Setup mocks
+  vi.clearAllMocks()
+  mockExecFileSync.mockReturnValue(JSON.stringify({ result: 'test' }))
+  vi.spyOn(fs, 'existsSync').mockReturnValue(true)
+
+  const config = testData.config(overrides)
+  const client = new ClaudeModelClient(config)
+
+  const mockResponse = (response: string | object) => {
+    const jsonResponse =
+      typeof response === 'string'
+        ? JSON.stringify({ result: response })
+        : JSON.stringify(response)
+    mockExecFileSync.mockReturnValue(jsonResponse)
+  }
+
+  const getLastCall = () => {
+    const lastCall =
+      mockExecFileSync.mock.calls[mockExecFileSync.mock.calls.length - 1]
+    return {
+      command: lastCall[0] as string,
+      args: lastCall[1] as string[],
+      options: lastCall[2] as Record<string, unknown>,
+    }
+  }
+
+  const askAndGetCall = (prompt = 'test prompt') => {
+    client.ask(prompt)
+    return getLastCall()
+  }
+
+  return {
+    client,
+    mockResponse,
+    getLastCall,
+    askAndGetCall,
+  }
+}
