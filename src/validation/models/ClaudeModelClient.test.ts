@@ -1,8 +1,10 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { ClaudeModelClient } from './ClaudeModelClient'
 import { execSync } from 'child_process'
+import * as fs from 'fs'
 
 vi.mock('child_process')
+vi.mock('fs', { spy: true })
 
 describe('ClaudeModelClient', () => {
   const mockExecSync = vi.mocked(execSync)
@@ -65,6 +67,37 @@ describe('ClaudeModelClient', () => {
           timeout: 20000,
         })
       )
+    })
+
+    test('executes claude command from .claude subdirectory', () => {
+      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
+
+      client.ask('test')
+
+      expect(mockExecSync).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          cwd: expect.stringContaining('.claude'),
+        })
+      )
+    })
+
+    test('creates .claude directory if it does not exist', () => {
+      const mockMkdirSync = vi.spyOn(fs, 'mkdirSync')
+      const mockExistsSync = vi.spyOn(fs, 'existsSync')
+
+      mockExistsSync.mockReturnValue(false)
+      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
+
+      client.ask('test')
+
+      expect(mockMkdirSync).toHaveBeenCalledWith(
+        expect.stringContaining('.claude'),
+        { recursive: true }
+      )
+
+      mockMkdirSync.mockRestore()
+      mockExistsSync.mockRestore()
     })
   })
 
