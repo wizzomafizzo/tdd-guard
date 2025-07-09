@@ -36,12 +36,33 @@ describe('Config', () => {
     expect(config.testReportPath).toBe('/my/data/test.txt')
   })
 
-  test('claudeBinaryPath uses CLAUDE_BINARY_PATH when set', () => {
-    process.env.CLAUDE_BINARY_PATH = '/custom/claude'
+  test('useLocalClaude returns true when USE_LOCAL_CLAUDE is true', () => {
+    process.env.USE_LOCAL_CLAUDE = 'true'
 
     const config = new Config()
 
-    expect(config.claudeBinaryPath).toBe('/custom/claude')
+    expect(config.useLocalClaude).toBe(true)
+
+    delete process.env.USE_LOCAL_CLAUDE
+  })
+
+  test('useLocalClaude returns false when USE_LOCAL_CLAUDE is not true', () => {
+    // Test with 'false'
+    process.env.USE_LOCAL_CLAUDE = 'false'
+    let config = new Config()
+    expect(config.useLocalClaude).toBe(false)
+
+    // Test with undefined
+    delete process.env.USE_LOCAL_CLAUDE
+    config = new Config()
+    expect(config.useLocalClaude).toBe(false)
+
+    // Test with empty string
+    process.env.USE_LOCAL_CLAUDE = ''
+    config = new Config()
+    expect(config.useLocalClaude).toBe(false)
+
+    delete process.env.USE_LOCAL_CLAUDE
   })
 
   test('fileStoragePath returns storage subdirectory within dataDir', () => {

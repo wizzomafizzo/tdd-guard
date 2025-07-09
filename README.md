@@ -30,8 +30,10 @@ npm run build
 1. **Environment Variables**: Copy `.env.example` to `.env` and configure:
 
 ```bash
-# Path to Claude CLI binary (required after /migrate-to-local)
-CLAUDE_BINARY_PATH=/Users/YOUR_USERNAME/.claude/local/claude
+# Use local Claude installation (true/false)
+# Set to 'true' to use Claude from ~/.claude/local/claude
+# Set to 'false' to use system Claude (claude in PATH)
+USE_LOCAL_CLAUDE=false
 
 # Directory where TDD Guard stores all data (defaults to .claude/tdd-guard/data)
 TDD_DATA_DIR=

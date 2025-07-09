@@ -1,10 +1,10 @@
 export class Config {
   readonly dataDir: string
-  readonly claudeBinaryPath: string
+  readonly useLocalClaude: boolean
 
   constructor() {
     this.dataDir = process.env.TDD_DATA_DIR || '.claude/tdd-guard/data'
-    this.claudeBinaryPath = process.env.CLAUDE_BINARY_PATH || 'claude'
+    this.useLocalClaude = process.env.USE_LOCAL_CLAUDE === 'true'
   }
 
   get testReportPath(): string {

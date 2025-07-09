@@ -1,56 +1,45 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { ClaudeModelClient } from './ClaudeModelClient'
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 import * as fs from 'fs'
+import { testData } from '../../test'
 
 vi.mock('child_process')
 vi.mock('fs', { spy: true })
 
 describe('ClaudeModelClient', () => {
-  const mockExecSync = vi.mocked(execSync)
+  const mockExecFileSync = vi.mocked(execFileSync)
   let client: ClaudeModelClient
 
   beforeEach(() => {
     vi.clearAllMocks()
-    client = new ClaudeModelClient()
+
+    // Default mock response
+    mockExecFileSync.mockReturnValue(JSON.stringify({ result: 'test' }))
+
+    // Mock fs.existsSync to return true by default
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true)
+
+    // Create client with test config (useLocalClaude: false by default)
+    const config = testData.config()
+    client = new ClaudeModelClient(config)
   })
 
   describe('command construction', () => {
     test('uses correct claude command with all flags', () => {
-      delete process.env.CLAUDE_BINARY_PATH
-      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
-
       client.ask('test prompt')
 
-      expect(mockExecSync).toHaveBeenCalledWith(
-        'claude - --output-format json --max-turns 1 --model sonnet',
-        expect.any(Object)
-      )
-    })
-
-    test('uses CLAUDE_BINARY_PATH environment variable when set', () => {
-      const customPath = '/custom/path/to/claude'
-      process.env.CLAUDE_BINARY_PATH = customPath
-      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
-
-      client.ask('test prompt')
-
-      expect(mockExecSync).toHaveBeenCalledWith(
-        `${customPath} - --output-format json --max-turns 1 --model sonnet`,
-        expect.any(Object)
-      )
-
-      delete process.env.CLAUDE_BINARY_PATH
-    })
-
-    test('falls back to default claude command when CLAUDE_BINARY_PATH not set', () => {
-      delete process.env.CLAUDE_BINARY_PATH
-      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
-
-      client.ask('test prompt')
-
-      expect(mockExecSync).toHaveBeenCalledWith(
-        'claude - --output-format json --max-turns 1 --model sonnet',
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'claude',
+        [
+          '-',
+          '--output-format',
+          'json',
+          '--max-turns',
+          '1',
+          '--model',
+          'sonnet',
+        ],
         expect.any(Object)
       )
     })
@@ -58,13 +47,13 @@ describe('ClaudeModelClient', () => {
 
   describe('subprocess configuration', () => {
     test('passes prompt via input option', () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
       const prompt = 'Does this follow TDD?'
 
       client.ask(prompt)
 
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'claude',
+        expect.any(Array),
         expect.objectContaining({
           input: prompt,
         })
@@ -72,12 +61,11 @@ describe('ClaudeModelClient', () => {
     })
 
     test('uses utf-8 encoding', () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
-
       client.ask('test')
 
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'claude',
+        expect.any(Array),
         expect.objectContaining({
           encoding: 'utf-8',
         })
@@ -85,12 +73,11 @@ describe('ClaudeModelClient', () => {
     })
 
     test('sets timeout to 20 seconds', () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
-
       client.ask('test')
 
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'claude',
+        expect.any(Array),
         expect.objectContaining({
           timeout: 20000,
         })
@@ -98,12 +85,11 @@ describe('ClaudeModelClient', () => {
     })
 
     test('executes claude command from .claude subdirectory', () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
-
       client.ask('test')
 
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'claude',
+        expect.any(Array),
         expect.objectContaining({
           cwd: expect.stringContaining('.claude'),
         })
@@ -115,7 +101,6 @@ describe('ClaudeModelClient', () => {
       const mockExistsSync = vi.spyOn(fs, 'existsSync')
 
       mockExistsSync.mockReturnValue(false)
-      mockExecSync.mockReturnValue(JSON.stringify({ result: 'test' }))
 
       client.ask('test')
 
@@ -131,7 +116,7 @@ describe('ClaudeModelClient', () => {
 
   describe('response parsing', () => {
     test('extracts JSON from markdown code blocks', () => {
-      mockExecSync.mockReturnValue(
+      mockExecFileSync.mockReturnValue(
         JSON.stringify({ result: '```json\n{"approved": true}\n```' })
       )
 
@@ -141,7 +126,7 @@ describe('ClaudeModelClient', () => {
     })
 
     test('handles JSON code blocks with extra whitespace', () => {
-      mockExecSync.mockReturnValue(
+      mockExecFileSync.mockReturnValue(
         JSON.stringify({
           result: '```json  \n\n  {"approved": false}  \n\n```',
         })
@@ -153,7 +138,7 @@ describe('ClaudeModelClient', () => {
     })
 
     test('returns raw response when no JSON code block found', () => {
-      mockExecSync.mockReturnValue(
+      mockExecFileSync.mockReturnValue(
         JSON.stringify({ result: 'Plain text response' })
       )
 
@@ -163,7 +148,7 @@ describe('ClaudeModelClient', () => {
     })
 
     test('handles response with text before and after JSON block', () => {
-      mockExecSync.mockReturnValue(
+      mockExecFileSync.mockReturnValue(
         JSON.stringify({
           result:
             'Here is the analysis:\n```json\n{"approved": true}\n```\nThat concludes the review.',
@@ -177,8 +162,8 @@ describe('ClaudeModelClient', () => {
   })
 
   describe('error handling', () => {
-    test('throws error when execSync fails', () => {
-      mockExecSync.mockImplementation(() => {
+    test('throws error when execFileSync fails', () => {
+      mockExecFileSync.mockImplementation(() => {
         throw new Error('Command failed')
       })
 
@@ -186,15 +171,69 @@ describe('ClaudeModelClient', () => {
     })
 
     test('throws error when response is not valid JSON', () => {
-      mockExecSync.mockReturnValue('invalid json')
+      mockExecFileSync.mockReturnValue('invalid json')
 
       expect(() => client.ask('test')).toThrow()
     })
 
     test('throws error when response lacks result field', () => {
-      mockExecSync.mockReturnValue(JSON.stringify({ error: 'No result' }))
+      mockExecFileSync.mockReturnValue(JSON.stringify({ error: 'No result' }))
 
       expect(() => client.ask('test')).toThrow()
+    })
+  })
+
+  describe('security', () => {
+    test('uses execFileSync with system claude when useLocalClaude is false', () => {
+      const config = testData.config({ useLocalClaude: false })
+      const client = new ClaudeModelClient(config)
+      client.ask('test prompt')
+
+      // Should use execFileSync with 'claude' command
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'claude',
+        [
+          '-',
+          '--output-format',
+          'json',
+          '--max-turns',
+          '1',
+          '--model',
+          'sonnet',
+        ],
+        expect.objectContaining({
+          encoding: 'utf-8',
+          timeout: 20000,
+          input: 'test prompt',
+          cwd: expect.stringContaining('.claude'),
+        })
+      )
+    })
+
+    test('uses execFileSync with local claude path when useLocalClaude is true', () => {
+      const config = testData.config({ useLocalClaude: true })
+      const client = new ClaudeModelClient(config)
+      client.ask('test prompt')
+
+      // Should use execFileSync with full path
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        `${process.env.HOME}/.claude/local/claude`,
+        [
+          '-',
+          '--output-format',
+          'json',
+          '--max-turns',
+          '1',
+          '--model',
+          'sonnet',
+        ],
+        expect.objectContaining({
+          encoding: 'utf-8',
+          timeout: 20000,
+          input: 'test prompt',
+          cwd: expect.stringContaining('.claude'),
+        })
+      )
     })
   })
 })

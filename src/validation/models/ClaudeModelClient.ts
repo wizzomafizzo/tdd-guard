@@ -1,19 +1,37 @@
 import { IModelClient } from '../../contracts/types/ModelClient'
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
+import { Config } from '../../config/Config'
 
 export class ClaudeModelClient implements IModelClient {
+  private config: Config
+
+  constructor(config?: Config) {
+    this.config = config || new Config()
+  }
+
   ask(prompt: string): string {
-    const claudeBinary = process.env.CLAUDE_BINARY_PATH || 'claude'
-    const command = `${claudeBinary} - --output-format json --max-turns 1 --model sonnet`
+    const claudeBinary = this.config.useLocalClaude
+      ? `${process.env.HOME}/.claude/local/claude`
+      : 'claude'
+
+    const args = [
+      '-',
+      '--output-format',
+      'json',
+      '--max-turns',
+      '1',
+      '--model',
+      'sonnet',
+    ]
     const claudeDir = join(process.cwd(), '.claude')
 
     if (!existsSync(claudeDir)) {
       mkdirSync(claudeDir, { recursive: true })
     }
 
-    const output = execSync(command, {
+    const output = execFileSync(claudeBinary, args, {
       encoding: 'utf-8',
       timeout: 20000,
       input: prompt,

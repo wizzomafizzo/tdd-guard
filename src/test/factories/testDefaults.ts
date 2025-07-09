@@ -71,4 +71,7 @@ export const TEST_DEFAULTS = {
       ...multiEdit,
     },
   },
+  // Context defaults
+  modifications: 'Test modifications',
+  test: 'Test results',
 } as const
