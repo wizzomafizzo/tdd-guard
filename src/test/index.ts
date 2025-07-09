@@ -3,6 +3,7 @@ import * as editFactory from './factories/editFactory'
 import * as multiEditFactory from './factories/multiEditFactory'
 import * as writeFactory from './factories/writeFactory'
 import { TEST_DEFAULTS } from './factories/testDefaults'
+import * as configFactory from './factories/configFactory'
 
 /**
  * Unified test data factory that combines all individual factories
@@ -38,6 +39,9 @@ export const testData = {
   writeOperation: writeFactory.writeOperation,
   writeOperationWithout: writeFactory.writeOperationWithout,
   invalidWriteOperation: writeFactory.invalidWriteOperation,
+
+  // Config factories
+  config: configFactory.config,
 
   // Default test data values
   defaults: TEST_DEFAULTS,

@@ -36,3 +36,6 @@ test-results
 
 # Other
 TODO.md
+
+# TDD Guard data directory
+.claude/tdd-guard/

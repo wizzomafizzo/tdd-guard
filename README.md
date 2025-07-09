@@ -33,8 +33,8 @@ npm run build
 # Path to Claude CLI binary (required after /migrate-to-local)
 CLAUDE_BINARY_PATH=/Users/YOUR_USERNAME/.claude/local/claude
 
-# Path where TDD Guard stores logs and session data (defaults to ./logs)
-HOOK_LOG_PATH=
+# Directory where TDD Guard stores all data (defaults to .claude/tdd-guard/data)
+TDD_DATA_DIR=
 ```
 
 2. **Claude Code Hooks**: Add to `.claude/settings.json`:

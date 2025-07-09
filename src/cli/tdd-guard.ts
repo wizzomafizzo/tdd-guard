@@ -4,29 +4,35 @@ import 'dotenv/config'
 import { processHookData } from '../hooks/processHookData'
 import { FileStorage } from '../storage/FileStorage'
 import { tddValidator } from '../validation/tddValidator'
-import path from 'path'
+import { Config } from '../config/Config'
 
-let inputData = ''
-process.stdin.setEncoding('utf8')
+export async function run(input: string, config?: Config) {
+  const appConfig = config || new Config()
+  const storage = new FileStorage(appConfig.fileStoragePath)
 
-process.stdin.on('data', (chunk) => {
-  inputData += chunk
-})
+  return processHookData(input, {
+    storage,
+    tddValidator,
+  })
+}
 
-process.stdin.on('end', async () => {
-  try {
-    const logPath =
-      process.env.HOOK_LOG_PATH || path.join(process.cwd(), 'logs')
-    const storage = new FileStorage(logPath)
+// Only run if this is the main module
+if (require.main === module) {
+  let inputData = ''
+  process.stdin.setEncoding('utf8')
 
-    const result = await processHookData(inputData, {
-      storage,
-      tddValidator,
-    })
-    console.log(JSON.stringify(result))
-  } catch (error) {
-    console.error('Failed to parse hook data:', error)
-  } finally {
-    process.exit(0)
-  }
-})
+  process.stdin.on('data', (chunk) => {
+    inputData += chunk
+  })
+
+  process.stdin.on('end', async () => {
+    try {
+      const result = await run(inputData)
+      console.log(JSON.stringify(result))
+    } catch (error) {
+      console.error('Failed to parse hook data:', error)
+    } finally {
+      process.exit(0)
+    }
+  })
+}

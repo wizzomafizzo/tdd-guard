@@ -1,25 +1,30 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, test, expect, beforeEach, afterEach } from 'vitest'
 import { spawn } from 'child_process'
 import path from 'path'
 import fs from 'fs/promises'
 import os from 'os'
 import { FileStorage } from '../storage/FileStorage'
 import { testData } from '../test'
+import { run } from './tdd-guard'
 
 describe('tdd-guard CLI', () => {
   let tempDir: string
   let storage: FileStorage
+  let testConfig: ReturnType<typeof testData.config>
   const cliPath = path.join(__dirname, 'tdd-guard.ts')
 
   beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tdd-guard-test-'))
-    vi.stubEnv('HOOK_LOG_PATH', tempDir)
-    storage = new FileStorage(tempDir)
+    const storagePath = path.join(tempDir, 'storage')
+    testConfig = testData.config({
+      dataDir: tempDir,
+      fileStoragePath: storagePath,
+    })
+    storage = new FileStorage(storagePath)
   })
 
   afterEach(async () => {
     await fs.rm(tempDir, { recursive: true, force: true })
-    vi.unstubAllEnvs()
   })
 
   test('has shebang for direct execution', async () => {
@@ -48,7 +53,7 @@ describe('tdd-guard CLI', () => {
   test('saves Edit data', async () => {
     const hookData = testData.editOperation()
 
-    await runCli(JSON.stringify(hookData))
+    await run(JSON.stringify(hookData), testConfig)
 
     const savedModifications = await storage.getModifications()
     expect(JSON.parse(savedModifications!)).toStrictEqual(hookData)
@@ -57,7 +62,7 @@ describe('tdd-guard CLI', () => {
   test('saves Write data', async () => {
     const hookData = testData.writeOperation()
 
-    await runCli(JSON.stringify(hookData))
+    await run(JSON.stringify(hookData), testConfig)
 
     const savedModifications = await storage.getModifications()
     expect(JSON.parse(savedModifications!)).toStrictEqual(hookData)
@@ -66,7 +71,7 @@ describe('tdd-guard CLI', () => {
   test('saves TodoWrite data', async () => {
     const hookData = testData.todoWriteOperation()
 
-    await runCli(JSON.stringify(hookData))
+    await run(JSON.stringify(hookData), testConfig)
 
     const savedTodos = await storage.getTodo()
     expect(JSON.parse(savedTodos!)).toStrictEqual(hookData)
@@ -75,7 +80,7 @@ describe('tdd-guard CLI', () => {
   test('saves MultiEdit data', async () => {
     const hookData = testData.multiEditOperation()
 
-    await runCli(JSON.stringify(hookData))
+    await run(JSON.stringify(hookData), testConfig)
 
     const savedModifications = await storage.getModifications()
     expect(JSON.parse(savedModifications!)).toStrictEqual(hookData)

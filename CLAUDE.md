@@ -10,7 +10,7 @@ This aids the agent in adhering to TDD principles without cluttering instruction
 TDD Guard uses environment variables for configuration. Copy `.env.example` to `.env` and configure as needed:
 
 - `CLAUDE_BINARY_PATH`: Path to Claude CLI binary (required after `/migrate-to-local` command)
-- `HOOK_LOG_PATH`: Directory for logs and session data (defaults to `./logs`)
+- `TDD_DATA_DIR`: Directory where TDD Guard stores all data (defaults to `.claude/tdd-guard/data`)
 
 ## Development Workflow
 
