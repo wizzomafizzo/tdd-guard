@@ -59,7 +59,16 @@ USE_LOCAL_CLAUDE=false
 3. **Test Reporter**: Configure test reporter in `vitest.config.ts`:
 
 ```javascript
-reporters: ['default', new FileReporter('logs/test.txt')]
+import { FileReporter } from '/path/to/tdd-guard/dist/reporters/FileReporter.js'
+import { Config } from '/path/to/tdd-guard/dist/config/Config.js'
+
+const config = new Config()
+
+export default defineConfig({
+  test: {
+    reporters: ['default', new FileReporter(config.testReportPath)],
+  },
+})
 ```
 
 This captures test output for the TDD validation context. Reporters for other test frameworks coming soon.
