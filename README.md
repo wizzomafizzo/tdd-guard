@@ -60,13 +60,10 @@ USE_LOCAL_CLAUDE=false
 
 ```javascript
 import { FileReporter } from '/path/to/tdd-guard/dist/reporters/FileReporter.js'
-import { Config } from '/path/to/tdd-guard/dist/config/Config.js'
-
-const config = new Config()
 
 export default defineConfig({
   test: {
-    reporters: ['default', new FileReporter(config.testReportPath)],
+    reporters: ['default', new FileReporter()],
   },
 })
 ```

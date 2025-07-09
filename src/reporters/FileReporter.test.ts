@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { randomBytes } from 'node:crypto'
 import { stripVTControlCharacters } from 'node:util'
+import { Config } from '../config/Config'
 
 describe('FileReporter', () => {
   let sut: Awaited<ReturnType<typeof setupFileReporter>>
@@ -29,6 +30,20 @@ describe('FileReporter', () => {
     it('creates directory on initialization', () => {
       sut.reporter.onInit()
       expect(sut.dirExists()).toBe(true)
+    })
+  })
+
+  describe('constructor behavior', () => {
+    it('uses Config default path when no path provided', () => {
+      const reporter = new FileReporter()
+      const config = new Config()
+      expect(reporter['outputPath']).toBe(config.testReportPath)
+    })
+
+    it('uses provided path when specified', () => {
+      const customPath = '/custom/path/test.txt'
+      const reporter = new FileReporter(customPath)
+      expect(reporter['outputPath']).toBe(customPath)
     })
   })
 
