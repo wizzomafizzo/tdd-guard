@@ -5,6 +5,7 @@ export function config(overrides: Partial<Config> = {}): Config {
   return {
     dataDir,
     useLocalClaude: overrides.useLocalClaude ?? false,
+    anthropicApiKey: overrides.anthropicApiKey,
     testReportPath: overrides.testReportPath ?? `${dataDir}/test.txt`,
   } as Config
 }

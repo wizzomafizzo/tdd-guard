@@ -52,4 +52,22 @@ describe('Config', () => {
 
     delete process.env.USE_LOCAL_CLAUDE
   })
+
+  test('anthropicApiKey returns value from ANTHROPIC_API_KEY env var', () => {
+    process.env.ANTHROPIC_API_KEY = 'test-api-key-123'
+
+    const config = new Config()
+
+    expect(config.anthropicApiKey).toBe('test-api-key-123')
+
+    delete process.env.ANTHROPIC_API_KEY
+  })
+
+  test('anthropicApiKey returns undefined when ANTHROPIC_API_KEY is not set', () => {
+    delete process.env.ANTHROPIC_API_KEY
+
+    const config = new Config()
+
+    expect(config.anthropicApiKey).toBeUndefined()
+  })
 })
