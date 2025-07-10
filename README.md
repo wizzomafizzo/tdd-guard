@@ -34,6 +34,11 @@ npm run build
 # Set to 'true' to use Claude from ~/.claude/local/claude
 # Set to 'false' to use system Claude (claude in PATH)
 USE_LOCAL_CLAUDE=false
+
+# Anthropic API Key (optional)
+# Required when using AnthropicModelClient for TDD validation
+# Get your API key from https://console.anthropic.com/
+ANTHROPIC_API_KEY=your-api-key-here
 ```
 
 2. **Claude Code Hooks**: Add to `.claude/settings.json`:
