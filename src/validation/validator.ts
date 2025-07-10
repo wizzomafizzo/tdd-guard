@@ -1,6 +1,6 @@
 import { ClaudeModelClient } from './models/ClaudeModelClient'
 import { IModelClient } from '../contracts/types/ModelClient'
-import { TDDValidationResult } from '../contracts/types/TDDValidation'
+import { ValidationResult } from '../contracts/types/ValidationResult'
 import { Context } from '../contracts/types/Context'
 import { generateDynamicContext } from './context/context'
 
@@ -9,10 +9,10 @@ interface ModelResponseJson {
   reason: string
 }
 
-export async function tddValidator(
+export async function validator(
   context: Context,
   modelClient: IModelClient = new ClaudeModelClient()
-): Promise<TDDValidationResult> {
+): Promise<ValidationResult> {
   try {
     const prompt = generateDynamicContext(context)
     const response = await modelClient.ask(prompt)
@@ -25,7 +25,7 @@ export async function tddValidator(
   }
 }
 
-function parseModelResponse(response: string): TDDValidationResult {
+function parseModelResponse(response: string): ValidationResult {
   const jsonString = extractJsonString(response)
   const parsed = JSON.parse(jsonString)
   return normalizeValidationResult(parsed)
@@ -85,7 +85,7 @@ function isValidJson(str: string): boolean {
 
 function normalizeValidationResult(
   parsed: ModelResponseJson
-): TDDValidationResult {
+): ValidationResult {
   return {
     decision: parsed.decision === null ? undefined : parsed.decision,
     reason: parsed.reason,

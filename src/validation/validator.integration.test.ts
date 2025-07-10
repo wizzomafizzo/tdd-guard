@@ -1,14 +1,14 @@
 import { describe, test, expect } from 'vitest'
-import { tddValidator } from './tddValidator'
+import { validator } from './validator'
 import { Context } from '../contracts/types/Context'
 
-describe('tddValidator', () => {
+describe('validator', () => {
   test('returns violation when content contains two tests', async () => {
     const context: Context = {
       modifications: TestDataFactory.multipleTestEdits(),
     }
 
-    const result = await tddValidator(context)
+    const result = await validator(context)
 
     expect(result).toEqual({
       decision: 'block',
@@ -21,7 +21,7 @@ describe('tddValidator', () => {
       modifications: TestDataFactory.singleTestEdit(),
     }
 
-    const result = await tddValidator(context)
+    const result = await validator(context)
 
     expect(result).toEqual({
       decision: undefined,
@@ -36,7 +36,7 @@ describe('tddValidator', () => {
       test: TestDataFactory.correctTestFailure(),
     }
 
-    const result = await tddValidator(context)
+    const result = await validator(context)
 
     expect(result).toEqual({
       decision: 'block',
@@ -51,7 +51,7 @@ describe('tddValidator', () => {
       test: TestDataFactory.missingImportFailure(),
     }
 
-    const result = await tddValidator(context)
+    const result = await validator(context)
 
     expect(result).toEqual({
       decision: undefined,
@@ -66,7 +66,7 @@ describe('tddValidator', () => {
       test: TestDataFactory.passingTests(),
     }
 
-    const result = await tddValidator(context)
+    const result = await validator(context)
 
     expect(result).toEqual({
       decision: undefined,
@@ -81,7 +81,7 @@ describe('tddValidator', () => {
       test: TestDataFactory.allTestsPassing(),
     }
 
-    const result = await tddValidator(context)
+    const result = await validator(context)
 
     expect(result).toEqual({
       decision: undefined,

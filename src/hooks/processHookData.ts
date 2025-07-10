@@ -1,4 +1,4 @@
-import { TDDValidationResult } from '../contracts/types/TDDValidation'
+import { ValidationResult } from '../contracts/types/ValidationResult'
 import { Storage } from '../storage/Storage'
 import { Context } from '../contracts/types/Context'
 import { buildContext } from '../cli/buildContext'
@@ -7,10 +7,10 @@ import { HookDataSchema, isTodoWriteOperation, ToolOperationSchema } from '../co
 
 export interface ProcessHookDataDeps {
   storage?: Storage
-  tddValidator?: (context: Context) => Promise<TDDValidationResult>
+  validator?: (context: Context) => Promise<ValidationResult>
 }
 
-export const defaultResult: TDDValidationResult = {
+export const defaultResult: ValidationResult = {
   decision: undefined,
   reason: '',
 }
@@ -18,7 +18,7 @@ export const defaultResult: TDDValidationResult = {
 export async function processHookData(
   inputData: string,
   deps: ProcessHookDataDeps = {}
-): Promise<TDDValidationResult> {
+): Promise<ValidationResult> {
   const parsedData = JSON.parse(inputData)
   
   const hookResult = HookDataSchema.safeParse(parsedData)
@@ -40,9 +40,9 @@ export async function processHookData(
     return defaultResult
   }
 
-  if (deps.tddValidator && deps.storage) {
+  if (deps.validator && deps.storage) {
     const context = await buildContext(deps.storage)
-    return await deps.tddValidator(context)
+    return await deps.validator(context)
   }
 
   return defaultResult

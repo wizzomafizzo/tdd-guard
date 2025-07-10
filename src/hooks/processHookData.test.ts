@@ -19,7 +19,7 @@ describe('processHookData', () => {
     sut = createTestProcessor()
   })
 
-  it('should return a TDDValidationResult', async () => {
+  it('should return a ValidationResult', async () => {
     const hookData = { type: 'test', data: 'some data' }
 
     const result = await sut.process(hookData)
@@ -60,7 +60,7 @@ describe('processHookData', () => {
     expect(parsedModifications).toEqual(WRITE_HOOK_DATA)
   })
 
-  it('should call tddValidator with context built from storage', async () => {
+  it('should call validator with context built from storage', async () => {
     // Pre-populate storage
     await sut.populateStorage({
       modifications: 'existing modifications',
@@ -84,7 +84,7 @@ describe('processHookData', () => {
     expect(result).toEqual(BLOCK_RESULT)
   })
 
-  it('should not call tddValidator for TodoWrite operations', async () => {
+  it('should not call validator for TodoWrite operations', async () => {
     // Pre-populate storage with existing edits that might cause false blocks
     await sut.populateStorage({
       modifications: 'existing modifications that might trigger validation',
@@ -122,7 +122,7 @@ function createTestProcessor() {
   const process = async (hookData: unknown) => {
     return processHookData(JSON.stringify(hookData), {
       storage, 
-      tddValidator: mockValidator 
+      validator: mockValidator
     })
   }
   

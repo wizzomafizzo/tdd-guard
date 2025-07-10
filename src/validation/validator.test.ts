@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
-import { tddValidator } from './tddValidator'
+import { validator } from './validator'
 import { Context } from '../contracts/types/Context'
 import { IModelClient } from '../contracts/types/ModelClient'
 import { generateDynamicContext } from './context/context'
@@ -9,7 +9,7 @@ vi.mock('./context/context', () => ({
   generateDynamicContext: vi.fn(),
 }))
 
-describe('tddValidator with mock model', () => {
+describe('validator with mock model', () => {
   const mockGenerateDynamicContext = vi.mocked(generateDynamicContext)
 
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe('tddValidator with mock model', () => {
 
   describe('simplified interface', () => {
     test('should only pass prompt to model client without context', async () => {
-      const { result, mockModelClient, context } = await runTddValidator(
+      const { result, mockModelClient, context } = await runValidator(
         JSON.stringify({ decision: null, reason: 'ok' }),
         { prompt: 'complete prompt with all context included' }
       )
@@ -89,7 +89,7 @@ describe('tddValidator with mock model', () => {
 
     testCases.forEach(({ name, modelResponse, expected }) => {
       test(name, async () => {
-        const { result } = await runTddValidator(modelResponse)
+        const { result } = await runValidator(modelResponse)
         expect(result).toEqual(expected)
       })
     })
@@ -97,7 +97,7 @@ describe('tddValidator with mock model', () => {
 
   describe('prompt generation for different tools', () => {
     test('should send correct prompt for Edit operation', async () => {
-      const { result, mockModelClient, context } = await runTddValidator(
+      const { result, mockModelClient, context } = await runValidator(
         JSON.stringify({ decision: null, reason: 'ok' }),
         { prompt: 'mocked prompt with Edit instructions' }
       )
@@ -114,7 +114,7 @@ describe('tddValidator with mock model', () => {
   })
 
   // Test helper
-  async function runTddValidator(
+  async function runValidator(
     modelResponse: string,
     options?: {
       contextOverrides?: Partial<Context>
@@ -132,7 +132,7 @@ describe('tddValidator with mock model', () => {
 
     mockGenerateDynamicContext.mockReturnValue(options?.prompt || 'test prompt')
 
-    const result = await tddValidator(context, mockModelClient)
+    const result = await validator(context, mockModelClient)
 
     return {
       result,

@@ -57,7 +57,7 @@ src/
 │   ├── types/                    # TypeScript interfaces and types
 │   │   ├── Context.ts            # Data structure passed to model for validation
 │   │   ├── ModelClient.ts        # Interface for AI model implementations
-│   │   └── TDDValidation.ts      # Validation result structure (approve/block)
+│   │   └── ValidationResult.ts      # Validation result structure (approve/block)
 │   └── schemas/                  # Runtime data validation
 │       └── toolSchemas.ts        # Tool operations with discriminated unions
 │
@@ -66,7 +66,7 @@ src/
 │   └── processHookData.ts        # Orchestrates hook parsing and validation flow
 │
 ├── validation/                   # TDD principle validation
-│   ├── tddValidator.ts           # Sends context to AI model and parses response
+│   ├── validator.ts           # Sends context to AI model and parses response
 │   ├── context/                  # Context engineering and formatting
 │   │   └── context.ts            # Formats operation data for model validation
 │   ├── prompts/                  # Modular prompt system

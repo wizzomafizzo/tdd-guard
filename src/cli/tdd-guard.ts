@@ -3,7 +3,7 @@
 import 'dotenv/config'
 import { processHookData } from '../hooks/processHookData'
 import { FileStorage } from '../storage/FileStorage'
-import { tddValidator } from '../validation/tddValidator'
+import { validator } from '../validation/validator'
 import { Config } from '../config/Config'
 
 export async function run(input: string, config?: Config) {
@@ -12,7 +12,7 @@ export async function run(input: string, config?: Config) {
 
   return processHookData(input, {
     storage,
-    tddValidator,
+    validator: validator,
   })
 }
 
