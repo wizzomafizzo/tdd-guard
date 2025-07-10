@@ -1,25 +1,42 @@
 import { describe, test, expect } from 'vitest'
 import { testData } from '../../test'
-import { processContext, generateDynamicContext } from './context'
-import { prompts } from '../prompts/prompts'
+import { generateDynamicContext } from './context'
+import { ROLE_AND_CONTEXT } from '../prompts/role-and-context'
+import { TDD_CORE_PRINCIPLES } from '../prompts/tdd-core-principles'
+import { FILE_TYPE_RULES } from '../prompts/file-type-rules'
+import { RESPONSE_FORMAT } from '../prompts/response-format'
+import { EDIT_ANALYSIS } from '../prompts/edit-analysis'
+import { MULTI_EDIT_ANALYSIS } from '../prompts/multi-edit-analysis'
+import { WRITE_ANALYSIS } from '../prompts/write-analysis'
 
-describe('processContext', () => {
+describe('generateDynamicContext', () => {
   describe('when Edit operation', () => {
-    test('should format Edit operation with file path, old string, and new string', () => {
+    test('should format Edit operation with file path, old content, and new content', () => {
       const editOperation = testData.editOperation()
       const context = {
         modifications: JSON.stringify(editOperation),
       }
 
-      const result = processContext(context)
+      const result = generateDynamicContext(context)
 
-      expect(result).toContain(prompts.EDIT_INSTRUCTIONS)
+      // Check core sections are included
+      expect(result).toContain(ROLE_AND_CONTEXT)
+      expect(result).toContain(TDD_CORE_PRINCIPLES)
+      expect(result).toContain(FILE_TYPE_RULES)
+      expect(result).toContain(EDIT_ANALYSIS)
+      expect(result).toContain(RESPONSE_FORMAT)
+
+      // Check modifications section
+      expect(result).toContain('## Changes to Review')
+      expect(result).toContain(
+        'This section shows the code changes being proposed'
+      )
       expect(result).toContain('### File Path')
       expect(result).toContain('```')
       expect(result).toContain(editOperation.tool_input.file_path)
-      expect(result).toContain('### Old String')
+      expect(result).toContain('### Old Content')
       expect(result).toContain(editOperation.tool_input.old_string)
-      expect(result).toContain('### New String')
+      expect(result).toContain('### New Content')
       expect(result).toContain(editOperation.tool_input.new_string)
     })
   })
@@ -31,19 +48,30 @@ describe('processContext', () => {
         modifications: JSON.stringify(multiEditOperation),
       }
 
-      const result = processContext(context)
+      const result = generateDynamicContext(context)
 
-      expect(result).toContain(prompts.MULTI_EDIT_INSTRUCTIONS)
+      // Check core sections are included
+      expect(result).toContain(ROLE_AND_CONTEXT)
+      expect(result).toContain(TDD_CORE_PRINCIPLES)
+      expect(result).toContain(FILE_TYPE_RULES)
+      expect(result).toContain(MULTI_EDIT_ANALYSIS)
+      expect(result).toContain(RESPONSE_FORMAT)
+
+      // Check modifications section
+      expect(result).toContain('## Changes to Review')
+      expect(result).toContain(
+        'This section shows the code changes being proposed'
+      )
       expect(result).toContain('### File Path')
       expect(result).toContain('```')
       expect(result).toContain(multiEditOperation.tool_input.file_path)
       expect(result).toContain('### Edits')
       expect(result).toContain('#### Edit 1:')
-      expect(result).toContain('**Old String:**')
+      expect(result).toContain('**Old Content:**')
       expect(result).toContain(
         multiEditOperation.tool_input.edits[0].old_string
       )
-      expect(result).toContain('**New String:**')
+      expect(result).toContain('**New Content:**')
       expect(result).toContain(
         multiEditOperation.tool_input.edits[0].new_string
       )
@@ -57,19 +85,28 @@ describe('processContext', () => {
         modifications: JSON.stringify(writeOperation),
       }
 
-      const result = processContext(context)
+      const result = generateDynamicContext(context)
 
-      expect(result).toContain(prompts.WRITE_INSTRUCTIONS)
+      // Check core sections are included
+      expect(result).toContain(ROLE_AND_CONTEXT)
+      expect(result).toContain(TDD_CORE_PRINCIPLES)
+      expect(result).toContain(FILE_TYPE_RULES)
+      expect(result).toContain(WRITE_ANALYSIS)
+      expect(result).toContain(RESPONSE_FORMAT)
+
+      // Check modifications section
+      expect(result).toContain('## Changes to Review')
+      expect(result).toContain('This section shows the new file being created')
       expect(result).toContain('### File Path')
       expect(result).toContain('```')
       expect(result).toContain(writeOperation.tool_input.file_path)
-      expect(result).toContain('### Content')
+      expect(result).toContain('### New File Content')
       expect(result).toContain(writeOperation.tool_input.content)
     })
   })
 
   describe('when test output is provided', () => {
-    test('should append test information after modification details', () => {
+    test('should append test information with description', () => {
       const editOperation = testData.editOperation()
       const testOutput = 'Test failed: Expected 5 but got 4'
       const context = {
@@ -77,17 +114,20 @@ describe('processContext', () => {
         test: testOutput,
       }
 
-      const result = processContext(context)
+      const result = generateDynamicContext(context)
 
-      expect(result).toContain(prompts.EDIT_INSTRUCTIONS)
-      expect(result).toContain('### Last Test Output')
+      expect(result).toContain('### Test Output')
+      expect(result).toContain(
+        'This section shows the output from the most recent test run'
+      )
+      expect(result).toContain('Which tests are failing and why')
       expect(result).toContain('```')
       expect(result).toContain(testOutput)
     })
   })
 
   describe('when todo is provided', () => {
-    test('should append todo information after modification details', () => {
+    test('should append todo information with description', () => {
       const editOperation = testData.editOperation()
       const todoJson = JSON.stringify(
         testData.todoWriteOperation().tool_input.todos
@@ -97,38 +137,78 @@ describe('processContext', () => {
         todo: todoJson,
       }
 
-      const result = processContext(context)
+      const result = generateDynamicContext(context)
 
-      expect(result).toContain(prompts.EDIT_INSTRUCTIONS)
-      expect(result).toContain('### Latest Todo State')
+      expect(result).toContain('### Todo List')
+      expect(result).toContain("This section shows the developer's task list")
+      expect(result).toContain('What the developer is currently working on')
       expect(result).toContain('[pending] Implement feature (high)')
     })
   })
-})
 
-describe('generateDynamicContext', () => {
-  test('should combine role prompt, TDD instructions, processed context, and answering instructions', () => {
-    const editOperation = testData.editOperation()
-    const context = {
-      modifications: JSON.stringify(editOperation),
-    }
+  describe('prompt ordering', () => {
+    test('should assemble prompts in correct order', () => {
+      const editOperation = testData.editOperation()
+      const context = {
+        modifications: JSON.stringify(editOperation),
+      }
 
-    const result = generateDynamicContext(context)
+      const result = generateDynamicContext(context)
 
-    // Should have all parts in the correct order
-    expect(result).toContain(prompts.ROLE_PROMPT)
-    expect(result).toContain(prompts.TDD_INSTRUCTIONS)
-    expect(result).toContain(prompts.EDIT_INSTRUCTIONS)
-    expect(result).toContain(prompts.ANSWERING_INSTRUCTIONS)
+      // Verify order by checking indexOf
+      const roleIndex = result.indexOf('You are a Test-Driven Development')
+      const principlesIndex = result.indexOf('## TDD Fundamentals')
+      const fileRulesIndex = result.indexOf('## File Type Specific Rules')
+      const analysisIndex = result.indexOf('## Analyzing Edit Operations')
+      const changesIndex = result.indexOf('## Changes to Review')
+      const responseIndex = result.indexOf('## Your Response')
 
-    // Verify order
-    const roleIndex = result.indexOf(prompts.ROLE_PROMPT)
-    const tddIndex = result.indexOf(prompts.TDD_INSTRUCTIONS)
-    const editIndex = result.indexOf(prompts.EDIT_INSTRUCTIONS)
-    const answerIndex = result.indexOf(prompts.ANSWERING_INSTRUCTIONS)
+      expect(roleIndex).toBeLessThan(principlesIndex)
+      expect(principlesIndex).toBeLessThan(fileRulesIndex)
+      expect(fileRulesIndex).toBeLessThan(analysisIndex)
+      expect(analysisIndex).toBeLessThan(changesIndex)
+      expect(changesIndex).toBeLessThan(responseIndex)
+    })
+  })
 
-    expect(roleIndex).toBeLessThan(tddIndex)
-    expect(tddIndex).toBeLessThan(editIndex)
-    expect(editIndex).toBeLessThan(answerIndex)
+  describe('operation-specific analysis inclusion', () => {
+    test('should include only Edit analysis for Edit operations', () => {
+      const editOperation = testData.editOperation()
+      const context = {
+        modifications: JSON.stringify(editOperation),
+      }
+
+      const result = generateDynamicContext(context)
+
+      expect(result).toContain(EDIT_ANALYSIS)
+      expect(result).not.toContain(MULTI_EDIT_ANALYSIS)
+      expect(result).not.toContain(WRITE_ANALYSIS)
+    })
+
+    test('should include only MultiEdit analysis for MultiEdit operations', () => {
+      const multiEditOperation = testData.multiEditOperation()
+      const context = {
+        modifications: JSON.stringify(multiEditOperation),
+      }
+
+      const result = generateDynamicContext(context)
+
+      expect(result).toContain(MULTI_EDIT_ANALYSIS)
+      expect(result).not.toContain(EDIT_ANALYSIS)
+      expect(result).not.toContain(WRITE_ANALYSIS)
+    })
+
+    test('should include only Write analysis for Write operations', () => {
+      const writeOperation = testData.writeOperation()
+      const context = {
+        modifications: JSON.stringify(writeOperation),
+      }
+
+      const result = generateDynamicContext(context)
+
+      expect(result).toContain(WRITE_ANALYSIS)
+      expect(result).not.toContain(EDIT_ANALYSIS)
+      expect(result).not.toContain(MULTI_EDIT_ANALYSIS)
+    })
   })
 })

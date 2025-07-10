@@ -85,6 +85,99 @@ describe('validator with mock model', () => {
         modelResponse: '{"decision": null, "reason": "No issues found"}',
         expected: { decision: undefined, reason: 'No issues found' },
       },
+      {
+        name: 'should extract JSON from response with detailed explanation before JSON',
+        modelResponse: `Analysis paragraph one explaining the issue.
+
+Analysis paragraph two with more details.
+
+{
+  "decision": "block",
+  "reason": "Multiple test addition violation - adding 2 new tests simultaneously instead of following TDD discipline of one test at a time"
+}`,
+        expected: {
+          decision: 'block',
+          reason:
+            'Multiple test addition violation - adding 2 new tests simultaneously instead of following TDD discipline of one test at a time',
+        },
+      },
+      {
+        name: 'should extract JSON with line break before opening brace',
+        modelResponse: `Analysis text that gets cut off mid-sentence because it's too lo...
+{
+  "decision": "block",
+  "reason": "Multiple test addition violation - adding 2 new tests simultaneously instead of following TDD discipline of one test at a time"
+}`,
+        expected: {
+          decision: 'block',
+          reason:
+            'Multiple test addition violation - adding 2 new tests simultaneously instead of following TDD discipline of one test at a time',
+        },
+      },
+      {
+        name: 'should extract JSON when analyzing constructor error',
+        modelResponse: `Analysis with code blocks:
+
+\`\`\`
+Calculator is not a constructor
+\`\`\`
+
+More analysis after the error message.
+
+{
+  "decision": "block",
+  "reason": "Over-implementation: Test fails with 'Calculator is not a constructor' but you're adding both the class AND the add method. Should only create empty class first, then run test again to get proper failure for the add method."
+}`,
+        expected: {
+          decision: 'block',
+          reason:
+            "Over-implementation: Test fails with 'Calculator is not a constructor' but you're adding both the class AND the add method. Should only create empty class first, then run test again to get proper failure for the add method.",
+        },
+      },
+      {
+        name: 'should extract JSON when analyzing not defined error with typescript code',
+        modelResponse: `Analysis with TypeScript code block:
+
+\`\`\`typescript
+export class Calculator {
+  add(a: number, b: number): number {
+    return a + b;
+  }
+}
+\`\`\`
+
+Analysis continues after the code block.
+
+{
+  "decision": "block",
+  "reason": "Over-implementation violation. Test fails with 'Calculator is not defined' but implementation adds both class AND add method. Should only create empty class first, then run test to get next failure."
+}`,
+        expected: {
+          decision: 'block',
+          reason:
+            "Over-implementation violation. Test fails with 'Calculator is not defined' but implementation adds both class AND add method. Should only create empty class first, then run test to get next failure.",
+        },
+      },
+      {
+        name: 'should extract JSON when model provides extensive analysis before decision',
+        modelResponse: `Extensive analysis with lists:
+
+1. First point about the issue
+2. Second point with more detail
+3. Third point explaining the problem
+
+This violates TDD principles as explained in the numbered list above.
+
+{
+  "decision": "block",
+  "reason": "Multiple test addition violation - adding 2 new tests simultaneously instead of following TDD discipline of one test at a time"
+}`,
+        expected: {
+          decision: 'block',
+          reason:
+            'Multiple test addition violation - adding 2 new tests simultaneously instead of following TDD discipline of one test at a time',
+        },
+      },
     ]
 
     testCases.forEach(({ name, modelResponse, expected }) => {

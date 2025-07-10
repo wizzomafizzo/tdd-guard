@@ -5,6 +5,8 @@ import * as writeFactory from './factories/writeFactory'
 import { TEST_DEFAULTS } from './factories/testDefaults'
 import * as configFactory from './factories/configFactory'
 import * as contextFactory from './factories/contextFactory'
+import * as operations from './factories/operations'
+import * as scenarios from './factories/scenarios'
 
 /**
  * Unified test data factory that combines all individual factories
@@ -47,6 +49,20 @@ export const testData = {
   // Context factories
   context: contextFactory.context,
   contextWithout: contextFactory.contextWithout,
+
+  // Operations - type-safe operation helpers
+  createWriteOperation: operations.createWriteOperation,
+  createEditOperation: operations.createEditOperation,
+  createMultiEditOperation: operations.createMultiEditOperation,
+
+  // Scenarios - test data for integration tests
+  testResults: scenarios.testResults,
+  testModifications: scenarios.testModifications,
+  implementationModifications: scenarios.implementationModifications,
+  refactoringImplementation: scenarios.refactoringImplementation,
+  refactoringTestResults: scenarios.refactoringTestResults,
+  refactoringTests: scenarios.refactoringTests,
+  todos: scenarios.todos,
 
   // Default test data values
   defaults: TEST_DEFAULTS,

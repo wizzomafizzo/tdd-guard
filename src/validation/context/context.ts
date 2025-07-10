@@ -9,29 +9,60 @@ import {
   WriteOperation,
   Todo,
 } from '../../contracts/schemas/toolSchemas'
-import { prompts } from '../prompts/prompts'
+
+// Import core prompts (always included)
+import { ROLE_AND_CONTEXT } from '../prompts/role-and-context'
+import { TDD_CORE_PRINCIPLES } from '../prompts/tdd-core-principles'
+import { FILE_TYPE_RULES } from '../prompts/file-type-rules'
+import { RESPONSE_FORMAT } from '../prompts/response-format'
+
+// Import operation-specific analysis
+import { EDIT_ANALYSIS } from '../prompts/edit-analysis'
+import { MULTI_EDIT_ANALYSIS } from '../prompts/multi-edit-analysis'
+import { WRITE_ANALYSIS } from '../prompts/write-analysis'
 
 export function generateDynamicContext(context: Context): string {
-  const processedContext = processContext(context)
-
-  return [
-    prompts.ROLE_PROMPT,
-    prompts.TDD_INSTRUCTIONS,
-    processedContext,
-    prompts.ANSWERING_INSTRUCTIONS,
-  ].join('')
-}
-
-export function processContext(context: Context): string {
   const operation: ToolOperation = JSON.parse(context.modifications)
 
+  // Build prompt in correct order
   const sections: string[] = [
+    // 1. Core sections (always included)
+    ROLE_AND_CONTEXT,
+    TDD_CORE_PRINCIPLES,
+    FILE_TYPE_RULES,
+
+    // 2. Operation-specific analysis (only for current operation)
+    getOperationAnalysis(operation),
+
+    // 3. Changes under review
+    '\n## Changes to Review\n',
     formatOperation(operation),
+
+    // 4. Additional context
     context.test ? formatTestOutput(context.test) : '',
     context.todo ? formatTodoList(context.todo) : '',
+
+    // 5. Response format
+    RESPONSE_FORMAT,
   ]
 
-  return sections.filter(Boolean).join('')
+  return sections.filter(Boolean).join('\n')
+}
+
+function getOperationAnalysis(operation: ToolOperation): string {
+  if (isEditOperation(operation)) {
+    return EDIT_ANALYSIS
+  }
+
+  if (isMultiEditOperation(operation)) {
+    return MULTI_EDIT_ANALYSIS
+  }
+
+  if (isWriteOperation(operation)) {
+    return WRITE_ANALYSIS
+  }
+
+  return ''
 }
 
 function formatOperation(operation: ToolOperation): string {
@@ -50,15 +81,35 @@ function formatOperation(operation: ToolOperation): string {
   return ''
 }
 
+// Context section descriptions
+const EDIT_MODIFICATIONS_DESCRIPTION = `This section shows the code changes being proposed. Compare the old content with the new content to identify what's being added, removed, or modified.`
+
+const WRITE_MODIFICATIONS_DESCRIPTION = `This section shows the new file being created. Analyze the content to determine if it follows TDD principles for new file creation.`
+
+const TEST_OUTPUT_DESCRIPTION = `This section shows the output from the most recent test run BEFORE this modification.
+
+IMPORTANT: This test output is from PREVIOUS work, not from the changes being reviewed. The modification has NOT been executed yet.
+
+Use this to understand:
+- Which tests are failing and why (from previous work)
+- What error messages indicate about missing implementation
+- Whether tests are passing (indicating refactor phase may be appropriate)
+
+Note: Test output may be from unrelated features. This does NOT prevent starting new test-driven work.`
+
+const TODO_LIST_DESCRIPTION = `This section shows the developer's task list. Use this to understand:
+- What the developer is currently working on (in_progress)
+- What has been completed (completed)
+- What is planned next (pending)
+Note: Multiple pending "add test" todos don't justify adding multiple tests at once.`
+
 function formatEditOperation(operation: EditOperation): string {
   return [
-    prompts.EDIT_INSTRUCTIONS,
-    '\n## Changes to review\n',
-    '\nThis section contains the changes that the agent wants to make\n',
+    EDIT_MODIFICATIONS_DESCRIPTION,
     formatSection('File Path', operation.tool_input.file_path),
-    formatSection('Old String', operation.tool_input.old_string),
-    formatSection('New String', operation.tool_input.new_string),
-  ].join('')
+    formatSection('Old Content', operation.tool_input.old_string),
+    formatSection('New Content', operation.tool_input.new_string),
+  ].join('\n')
 }
 
 function formatMultiEditOperation(operation: MultiEditOperation): string {
@@ -67,23 +118,19 @@ function formatMultiEditOperation(operation: MultiEditOperation): string {
     .join('')
 
   return [
-    prompts.MULTI_EDIT_INSTRUCTIONS,
-    '\n## Changes to review\n',
-    '\nThis section contains the changes that the agent wants to make\n',
+    EDIT_MODIFICATIONS_DESCRIPTION,
     formatSection('File Path', operation.tool_input.file_path),
     '\n### Edits\n',
     editsFormatted,
-  ].join('')
+  ].join('\n')
 }
 
 function formatWriteOperation(operation: WriteOperation): string {
   return [
-    prompts.WRITE_INSTRUCTIONS,
-    '\n## Changes to review\n',
-    '\nThis section contains the changes that the agent wants to make\n',
+    WRITE_MODIFICATIONS_DESCRIPTION,
     formatSection('File Path', operation.tool_input.file_path),
-    formatSection('Content', operation.tool_input.content),
-  ].join('')
+    formatSection('New File Content', operation.tool_input.content),
+  ].join('\n')
 }
 
 function formatEdit(
@@ -93,13 +140,19 @@ function formatEdit(
   const fenceMarker = '```'
   return [
     `\n#### Edit ${index}:\n`,
-    `**Old String:**\n${fenceMarker}\n${edit.old_string}\n${fenceMarker}\n`,
-    `**New String:**\n${fenceMarker}\n${edit.new_string}\n${fenceMarker}\n`,
+    `**Old Content:**\n${fenceMarker}\n${edit.old_string}\n${fenceMarker}\n`,
+    `**New Content:**\n${fenceMarker}\n${edit.new_string}\n${fenceMarker}\n`,
   ].join('')
 }
 
 function formatTestOutput(testOutput: string): string {
-  return formatSection('Last Test Output', testOutput)
+  return [
+    '\n### Test Output\n',
+    TEST_OUTPUT_DESCRIPTION,
+    '\n```\n',
+    testOutput,
+    '\n```\n',
+  ].join('')
 }
 
 function formatTodoList(todoJson: string): string {
@@ -112,7 +165,7 @@ function formatTodoList(todoJson: string): string {
     )
     .join('')
 
-  return `\n### Latest Todo State${todoItems}\n`
+  return ['\n### Todo List\n', TODO_LIST_DESCRIPTION, todoItems, '\n'].join('')
 }
 
 function formatSection(title: string, content: string): string {

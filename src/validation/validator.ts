@@ -42,7 +42,32 @@ function extractJsonString(response: string): string {
     return jsonFromGenericBlock
   }
 
+  // Try to extract plain JSON from text
+  const plainJson = extractPlainJson(response)
+  if (plainJson) {
+    return plainJson
+  }
+
   return response
+}
+
+function extractPlainJson(response: string): string | null {
+  // Simple regex to find JSON objects containing both "decision" and "reason" (in any order)
+  const pattern =
+    /\{[^{}]*"decision"[^{}]*"reason"[^{}]*}|\{[^{}]*"reason"[^{}]*"decision"[^{}]*}/g
+  const matches = response.match(pattern)
+
+  if (!matches) return null
+
+  // Return the last match (most likely the final decision)
+  const lastMatch = matches[matches.length - 1]
+
+  // Validate it's proper JSON
+  if (isValidJson(lastMatch)) {
+    return lastMatch
+  }
+
+  return null
 }
 
 function extractFromJsonCodeBlock(response: string): string | null {
@@ -70,8 +95,8 @@ function extractFromGenericCodeBlock(response: string): string | null {
     return content
   }
 
-  // Remove all fence blocks and return the remaining content
-  return response.replace(/```[^`]*```/g, '').trim()
+  // Don't return content from non-JSON code blocks
+  return null
 }
 
 function isValidJson(str: string): boolean {
