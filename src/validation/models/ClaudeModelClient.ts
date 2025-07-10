@@ -37,17 +37,9 @@ export class ClaudeModelClient implements IModelClient {
       input: prompt,
       cwd: claudeDir,
     })
+
+    // Parse the Claude CLI response and extract the result field
     const response = JSON.parse(output)
-
-    // Extract the actual model response from the result field
-    const modelResponse = response.result
-
-    // The model may wrap JSON in markdown code blocks, extract it
-    const jsonMatch = modelResponse.match(/```json\s*\n?([\s\S]*?)\n?```/)
-    if (jsonMatch) {
-      return jsonMatch[1].trim()
-    }
-
-    return modelResponse
+    return response.result
   }
 }

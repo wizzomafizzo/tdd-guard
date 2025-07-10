@@ -78,39 +78,38 @@ describe('ClaudeModelClient', () => {
     })
   })
 
-  describe('response parsing', () => {
-    test('extracts JSON from markdown code blocks', async () => {
-      sut.mockResponse('```json\n{"approved": true}\n```')
+  describe('response handling', () => {
+    test('extracts and returns the result field from CLI output', async () => {
+      const modelResponse = '```json\n{"approved": true}\n```'
+      const cliOutput = JSON.stringify({ result: modelResponse })
+      mockExecFileSync.mockReturnValue(cliOutput)
 
       const result = await client.ask('test prompt')
 
-      expect(result).toBe('{"approved": true}')
+      expect(result).toBe(modelResponse)
     })
 
-    test('handles JSON code blocks with extra whitespace', async () => {
-      sut.mockResponse('```json  \n\n  {"approved": false}  \n\n```')
-
-      const result = await client.ask('test prompt')
-
-      expect(result).toBe('{"approved": false}')
-    })
-
-    test('returns raw response when no JSON code block found', async () => {
-      sut.mockResponse('Plain text response')
-
-      const result = await client.ask('test prompt')
-
-      expect(result).toBe('Plain text response')
-    })
-
-    test('handles response with text before and after JSON block', async () => {
-      sut.mockResponse(
+    test('extracts result field from complex CLI responses', async () => {
+      const modelResponse =
         'Here is the analysis:\n```json\n{"approved": true}\n```\nThat concludes the review.'
-      )
+      const cliOutput = JSON.stringify({
+        result: modelResponse,
+        metadata: { model: 'sonnet' },
+      })
+      mockExecFileSync.mockReturnValue(cliOutput)
 
       const result = await client.ask('test prompt')
 
-      expect(result).toBe('{"approved": true}')
+      expect(result).toBe(modelResponse)
+    })
+
+    test('returns undefined when result field is missing', async () => {
+      const cliOutput = JSON.stringify({ error: 'No result' })
+      mockExecFileSync.mockReturnValue(cliOutput)
+
+      const result = await client.ask('test prompt')
+
+      expect(result).toBeUndefined()
     })
   })
 
@@ -123,14 +122,9 @@ describe('ClaudeModelClient', () => {
       await expect(client.ask('test')).rejects.toThrow('Command failed')
     })
 
-    test('throws error when response is not valid JSON', async () => {
-      mockExecFileSync.mockReturnValue('invalid json')
-
-      await expect(client.ask('test')).rejects.toThrow()
-    })
-
-    test('throws error when response lacks result field', async () => {
-      mockExecFileSync.mockReturnValue(JSON.stringify({ error: 'No result' }))
+    test('throws error when CLI output is not valid JSON', async () => {
+      const rawOutput = 'invalid json or error message'
+      mockExecFileSync.mockReturnValue(rawOutput)
 
       await expect(client.ask('test')).rejects.toThrow()
     })
