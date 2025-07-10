@@ -72,7 +72,7 @@ src/
 │   ├── prompts/                  # Modular prompt system
 │   │   └── ...                   # Operation-specific instructions and prompts
 │   └── models/                   # AI model implementations
-│       ├── ClaudeModelClient.ts  # Executes Claude CLI for validation
+│       ├── ClaudeCli.ts  # Executes Claude CLI for validation
 │       └── AnthropicModelClient.ts # Uses Anthropic API for validation
 │
 ├── storage/                      # Data persistence layer

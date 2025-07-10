@@ -1,4 +1,4 @@
-import { ClaudeModelClient } from './models/ClaudeModelClient'
+import { ClaudeCli } from './models/ClaudeCli'
 import { IModelClient } from '../contracts/types/ModelClient'
 import { ValidationResult } from '../contracts/types/ValidationResult'
 import { Context } from '../contracts/types/Context'
@@ -11,7 +11,7 @@ interface ModelResponseJson {
 
 export async function validator(
   context: Context,
-  modelClient: IModelClient = new ClaudeModelClient()
+  modelClient: IModelClient = new ClaudeCli()
 ): Promise<ValidationResult> {
   try {
     const prompt = generateDynamicContext(context)

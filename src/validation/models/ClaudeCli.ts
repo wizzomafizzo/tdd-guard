@@ -4,7 +4,7 @@ import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import { Config } from '../../config/Config'
 
-export class ClaudeModelClient implements IModelClient {
+export class ClaudeCli implements IModelClient {
   private config: Config
 
   constructor(config?: Config) {

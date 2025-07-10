@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
-import { ClaudeModelClient } from './ClaudeModelClient'
+import { ClaudeCli } from './ClaudeCli'
 import { execFileSync } from 'child_process'
 import * as fs from 'fs'
 import { testData } from '../../test'
@@ -9,9 +9,9 @@ vi.mock('fs', { spy: true })
 
 const mockExecFileSync = vi.mocked(execFileSync)
 
-describe('ClaudeModelClient', () => {
+describe('ClaudeCli', () => {
   let sut: Awaited<ReturnType<typeof createSut>>
-  let client: ClaudeModelClient
+  let client: ClaudeCli
 
   beforeEach(() => {
     sut = createSut()
@@ -157,7 +157,7 @@ function createSut(overrides?: Partial<ReturnType<typeof testData.config>>) {
   vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 
   const config = testData.config(overrides)
-  const client = new ClaudeModelClient(config)
+  const client = new ClaudeCli(config)
 
   const mockResponse = (response: string | object) => {
     const jsonResponse =
