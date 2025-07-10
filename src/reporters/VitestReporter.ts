@@ -4,7 +4,7 @@ import { dirname } from 'node:path'
 import { stripVTControlCharacters } from 'node:util'
 import { Config } from '../config/Config'
 
-export class FileReporter implements Reporter {
+export class VitestReporter implements Reporter {
   private outputPath: string
 
   constructor(outputPath?: string) {

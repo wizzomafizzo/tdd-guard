@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { FileReporter } from './FileReporter'
+import { VitestReporter } from './VitestReporter'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -7,15 +7,15 @@ import { randomBytes } from 'node:crypto'
 import { stripVTControlCharacters } from 'node:util'
 import { Config } from '../config/Config'
 
-describe('FileReporter', () => {
-  let sut: Awaited<ReturnType<typeof setupFileReporter>>
+describe('VitestReporter', () => {
+  let sut: Awaited<ReturnType<typeof setupVitestReporter>>
 
   const plainText = 'Test output line 1\n'
   const textWithAnsi = '\x1b[32m✓\x1b[39m Test passed \x1b[2m(5ms)\x1b[22m\n'
   const textWithoutAnsi = '✓ Test passed (5ms)\n'
 
   beforeEach(() => {
-    sut = setupFileReporter()
+    sut = setupVitestReporter()
   })
 
   afterEach(() => {
@@ -35,14 +35,14 @@ describe('FileReporter', () => {
 
   describe('constructor behavior', () => {
     it('uses Config default path when no path provided', () => {
-      const reporter = new FileReporter()
+      const reporter = new VitestReporter()
       const config = new Config()
       expect(reporter['outputPath']).toBe(config.testReportPath)
     })
 
     it('uses provided path when specified', () => {
       const customPath = '/custom/path/test.txt'
-      const reporter = new FileReporter(customPath)
+      const reporter = new VitestReporter(customPath)
       expect(reporter['outputPath']).toBe(customPath)
     })
   })
@@ -90,10 +90,10 @@ describe('FileReporter', () => {
   })
 })
 
-function setupFileReporter() {
+function setupVitestReporter() {
   // Test file setup
   const randomId = randomBytes(8).toString('hex')
-  const testDir = join(tmpdir(), `file-reporter-test-${randomId}`)
+  const testDir = join(tmpdir(), `vitest-reporter-test-${randomId}`)
   const testFile = join(testDir, 'test-output.txt')
 
   // Console output mocking
@@ -106,7 +106,7 @@ function setupFileReporter() {
   process.stdout.write = mockWrite
 
   // Create reporter instance
-  const reporter = new FileReporter(testFile)
+  const reporter = new VitestReporter(testFile)
 
   // Test utilities
   const dirExists = () => existsSync(testDir)

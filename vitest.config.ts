@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config'
-import { FileReporter } from './src/reporters/FileReporter'
+import { VitestReporter } from './src/reporters/VitestReporter'
 import 'dotenv/config'
 
 export default defineConfig({
@@ -7,6 +7,6 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     testTimeout: 120000,
-    reporters: ['default', new FileReporter()],
+    reporters: ['default', new VitestReporter()],
   },
 })

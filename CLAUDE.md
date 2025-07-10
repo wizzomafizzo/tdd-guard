@@ -86,7 +86,7 @@ src/
 │       └── ...                   # Various operation factories and helpers
 │
 └── reporters/                    # Test output capture
-    └── FileReporter.ts           # Vitest reporter that captures test results to file
+    └── VitestReporter.ts         # Vitest reporter that captures test results to file
 ```
 
 ### Key Design Principles

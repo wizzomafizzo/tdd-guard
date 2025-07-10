@@ -64,11 +64,11 @@ ANTHROPIC_API_KEY=your-api-key-here
 3. **Test Reporter**: Configure test reporter in `vitest.config.ts`:
 
 ```javascript
-import { FileReporter } from '/path/to/tdd-guard/dist/reporters/FileReporter.js'
+import { VitestReporter } from '/path/to/tdd-guard/dist/reporters/VitestReporter.js'
 
 export default defineConfig({
   test: {
-    reporters: ['default', new FileReporter()],
+    reporters: ['default', new VitestReporter()],
   },
 })
 ```
