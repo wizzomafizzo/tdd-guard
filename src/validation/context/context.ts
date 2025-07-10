@@ -156,7 +156,8 @@ function formatTestOutput(testOutput: string): string {
 }
 
 function formatTodoList(todoJson: string): string {
-  const todos: Todo[] = JSON.parse(todoJson)
+  const todoOperation = JSON.parse(todoJson)
+  const todos: Todo[] = todoOperation.tool_input?.todos || []
 
   const todoItems = todos
     .map(

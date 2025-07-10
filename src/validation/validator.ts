@@ -32,6 +32,11 @@ function parseModelResponse(response: string): ValidationResult {
 }
 
 function extractJsonString(response: string): string {
+  // Handle undefined/null responses
+  if (!response) {
+    throw new Error('No response from model')
+  }
+
   const jsonFromCodeBlock = extractFromJsonCodeBlock(response)
   if (jsonFromCodeBlock) {
     return jsonFromCodeBlock
@@ -51,6 +56,18 @@ function extractJsonString(response: string): string {
   return response
 }
 
+function extractFromJsonCodeBlock(response: string): string | null {
+  const jsonMatches = Array.from(
+    response.matchAll(/```json\s*\n?([\s\S]*?)\n?```/g)
+  )
+
+  if (jsonMatches.length > 0) {
+    return jsonMatches[jsonMatches.length - 1][1].trim()
+  }
+
+  return null
+}
+
 function extractPlainJson(response: string): string | null {
   // Simple regex to find JSON objects containing both "decision" and "reason" (in any order)
   const pattern =
@@ -65,18 +82,6 @@ function extractPlainJson(response: string): string | null {
   // Validate it's proper JSON
   if (isValidJson(lastMatch)) {
     return lastMatch
-  }
-
-  return null
-}
-
-function extractFromJsonCodeBlock(response: string): string | null {
-  const jsonMatches = Array.from(
-    response.matchAll(/```json\s*\n?([\s\S]*?)\n?```/g)
-  )
-
-  if (jsonMatches.length > 0) {
-    return jsonMatches[jsonMatches.length - 1][1].trim()
   }
 
   return null

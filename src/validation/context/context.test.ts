@@ -129,9 +129,8 @@ describe('generateDynamicContext', () => {
   describe('when todo is provided', () => {
     test('should append todo information with description', () => {
       const editOperation = testData.editOperation()
-      const todoJson = JSON.stringify(
-        testData.todoWriteOperation().tool_input.todos
-      )
+      const todoWriteOperation = testData.todoWriteOperation()
+      const todoJson = JSON.stringify(todoWriteOperation)
       const context = {
         modifications: JSON.stringify(editOperation),
         todo: todoJson,
