@@ -10,7 +10,7 @@ This aids the agent in adhering to TDD principles without cluttering instruction
 TDD Guard uses environment variables for configuration. Copy `.env.example` to `.env` and configure as needed:
 
 - `USE_LOCAL_CLAUDE`: Set to `true` to use Claude from `~/.claude/local/claude`, or `false` to use system Claude (defaults to `false`)
-- `ANTHROPIC_API_KEY`: API key for AnthropicModelClient. Get your key from https://console.anthropic.com/
+- `ANTHROPIC_API_KEY`: API key for AnthropicApi. Get your key from https://console.anthropic.com/
 
 ## Development Workflow
 
@@ -57,7 +57,7 @@ src/
 │   ├── types/                    # TypeScript interfaces and types
 │   │   ├── Context.ts            # Data structure passed to model for validation
 │   │   ├── ModelClient.ts        # Interface for AI model implementations
-│   │   └── ValidationResult.ts      # Validation result structure (approve/block)
+│   │   └── ValidationResult.ts   # Validation result structure (approve/block)
 │   └── schemas/                  # Runtime data validation
 │       └── toolSchemas.ts        # Tool operations with discriminated unions
 │
@@ -66,14 +66,14 @@ src/
 │   └── processHookData.ts        # Orchestrates hook parsing and validation flow
 │
 ├── validation/                   # TDD principle validation
-│   ├── validator.ts           # Sends context to AI model and parses response
+│   ├── validator.ts              # Sends context to AI model and parses response
 │   ├── context/                  # Context engineering and formatting
 │   │   └── context.ts            # Formats operation data for model validation
 │   ├── prompts/                  # Modular prompt system
 │   │   └── ...                   # Operation-specific instructions and prompts
 │   └── models/                   # AI model implementations
-│       ├── ClaudeCli.ts  # Executes Claude CLI for validation
-│       └── AnthropicModelClient.ts # Uses Anthropic API for validation
+│       ├── ClaudeCli.ts          # Executes Claude CLI for validation
+│       └── AnthropicApi.ts       # Uses Anthropic API for validation
 │
 ├── storage/                      # Data persistence layer
 │   ├── Storage.ts                # Abstract interface for storage operations

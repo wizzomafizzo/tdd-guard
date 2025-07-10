@@ -1,13 +1,13 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
-import { AnthropicModelClient } from './AnthropicModelClient'
+import { AnthropicApi } from './AnthropicApi'
 import Anthropic from '@anthropic-ai/sdk'
 import { testData } from '../../test'
 
 vi.mock('@anthropic-ai/sdk')
 
-describe('AnthropicModelClient', () => {
+describe('AnthropicApi', () => {
   let sut: Awaited<ReturnType<typeof createSut>>
-  let client: AnthropicModelClient
+  let client: AnthropicApi
 
   beforeEach(() => {
     sut = createSut()
@@ -20,7 +20,7 @@ describe('AnthropicModelClient', () => {
 
   test('should accept optional Config in constructor', () => {
     const config = testData.config()
-    const client = new AnthropicModelClient(config)
+    const client = new AnthropicApi(config)
     expect(client).toBeDefined()
   })
 
@@ -95,7 +95,7 @@ function createSut(configOverrides?: Parameters<typeof testData.config>[0]) {
   )
 
   const config = testData.config(configOverrides)
-  const client = new AnthropicModelClient(config)
+  const client = new AnthropicApi(config)
 
   const mockResponse = (text: string) => {
     mockCreate.mockResolvedValue({

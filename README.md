@@ -36,7 +36,7 @@ npm run build
 USE_LOCAL_CLAUDE=false
 
 # Anthropic API Key (optional)
-# Required when using AnthropicModelClient for TDD validation
+# Required when using AnthropicApi for TDD validation
 # Get your API key from https://console.anthropic.com/
 ANTHROPIC_API_KEY=your-api-key-here
 ```

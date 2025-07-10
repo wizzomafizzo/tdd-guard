@@ -2,7 +2,7 @@ import { IModelClient } from '../../contracts/types/ModelClient'
 import { Config } from '../../config/Config'
 import Anthropic from '@anthropic-ai/sdk'
 
-export class AnthropicModelClient implements IModelClient {
+export class AnthropicApi implements IModelClient {
   private config: Config
   private client: Anthropic
 
