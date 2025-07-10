@@ -7,7 +7,7 @@ import { HookDataSchema, isTodoWriteOperation, ToolOperationSchema } from '../co
 
 export interface ProcessHookDataDeps {
   storage?: Storage
-  tddValidator?: (context: Context) => TDDValidationResult
+  tddValidator?: (context: Context) => Promise<TDDValidationResult>
 }
 
 export const defaultResult: TDDValidationResult = {
@@ -42,7 +42,7 @@ export async function processHookData(
 
   if (deps.tddValidator && deps.storage) {
     const context = await buildContext(deps.storage)
-    return deps.tddValidator(context)
+    return await deps.tddValidator(context)
   }
 
   return defaultResult

@@ -116,7 +116,7 @@ describe('processHookData', () => {
 // Test setup helper
 function createTestProcessor() {
   const storage = new MemoryStorage()
-  const mockValidator = vi.fn().mockReturnValue(BLOCK_RESULT)
+  const mockValidator = vi.fn().mockResolvedValue(BLOCK_RESULT)
   
   // Helper to process hook data
   const process = async (hookData: unknown) => {

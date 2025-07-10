@@ -17,11 +17,11 @@ describe('tddValidator with mock model', () => {
   })
 
   describe('simplified interface', () => {
-    test('should only pass prompt to model client without context', () => {
+    test('should only pass prompt to model client without context', async () => {
       const mockModelClient: IModelClient = {
         ask: vi
           .fn()
-          .mockReturnValue(JSON.stringify({ decision: null, reason: 'ok' })),
+          .mockResolvedValue(JSON.stringify({ decision: null, reason: 'ok' })),
       }
 
       const editOperation = testData.editOperation()
@@ -34,22 +34,26 @@ describe('tddValidator with mock model', () => {
         'complete prompt with all context included'
       )
 
-      tddValidator(context, mockModelClient)
+      const result = await tddValidator(context, mockModelClient)
 
       expect(mockGenerateDynamicContext).toHaveBeenCalledWith(context)
       // Should only pass the prompt, not the context
       expect(mockModelClient.ask).toHaveBeenCalledWith(
         'complete prompt with all context included'
       )
+      expect(result).toEqual({
+        decision: undefined,
+        reason: 'ok',
+      })
     })
   })
 
   describe('prompt generation for different tools', () => {
-    test('should send correct prompt for Edit operation', () => {
+    test('should send correct prompt for Edit operation', async () => {
       const mockModelClient: IModelClient = {
         ask: vi
           .fn()
-          .mockReturnValue(JSON.stringify({ decision: null, reason: 'ok' })),
+          .mockResolvedValue(JSON.stringify({ decision: null, reason: 'ok' })),
       }
 
       const editOperation = testData.editOperation()
@@ -62,12 +66,16 @@ describe('tddValidator with mock model', () => {
         'mocked prompt with Edit instructions'
       )
 
-      tddValidator(context, mockModelClient)
+      const result = await tddValidator(context, mockModelClient)
 
       expect(mockGenerateDynamicContext).toHaveBeenCalledWith(context)
       expect(mockModelClient.ask).toHaveBeenCalledWith(
         'mocked prompt with Edit instructions'
       )
+      expect(result).toEqual({
+        decision: undefined,
+        reason: 'ok',
+      })
     })
   })
 })

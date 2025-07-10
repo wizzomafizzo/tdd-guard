@@ -3,12 +3,12 @@ import { tddValidator } from './tddValidator'
 import { Context } from '../contracts/types/Context'
 
 describe('tddValidator', () => {
-  test('returns violation when content contains two tests', () => {
+  test('returns violation when content contains two tests', async () => {
     const context: Context = {
       modifications: TestDataFactory.multipleTestEdits(),
     }
 
-    const result = tddValidator(context)
+    const result = await tddValidator(context)
 
     expect(result).toEqual({
       decision: 'block',
@@ -16,12 +16,12 @@ describe('tddValidator', () => {
     })
   })
 
-  test('does not block when adding single test', () => {
+  test('does not block when adding single test', async () => {
     const context: Context = {
       modifications: TestDataFactory.singleTestEdit(),
     }
 
-    const result = tddValidator(context)
+    const result = await tddValidator(context)
 
     expect(result).toEqual({
       decision: undefined,
@@ -29,14 +29,14 @@ describe('tddValidator', () => {
     })
   })
 
-  test('returns violation when implementing more than necessary to make test pass', () => {
+  test('returns violation when implementing more than necessary to make test pass', async () => {
     const context: Context = {
       modifications: TestDataFactory.excessiveEdit(),
       todo: TestDataFactory.relevantTodo(),
       test: TestDataFactory.correctTestFailure(),
     }
 
-    const result = tddValidator(context)
+    const result = await tddValidator(context)
 
     expect(result).toEqual({
       decision: 'block',
@@ -44,14 +44,14 @@ describe('tddValidator', () => {
     })
   })
 
-  test('allows stub creation to satisfy missing imports', () => {
+  test('allows stub creation to satisfy missing imports', async () => {
     const context: Context = {
       modifications: TestDataFactory.stubCreationEdit(),
       todo: TestDataFactory.calculatorTodo(),
       test: TestDataFactory.missingImportFailure(),
     }
 
-    const result = tddValidator(context)
+    const result = await tddValidator(context)
 
     expect(result).toEqual({
       decision: undefined,
@@ -59,14 +59,14 @@ describe('tddValidator', () => {
     })
   })
 
-  test('does not block when old_string contains one of two tests in new_string', () => {
+  test('does not block when old_string contains one of two tests in new_string', async () => {
     const context: Context = {
       modifications: TestDataFactory.editWithExistingTest(),
       todo: TestDataFactory.addDivideMethodTodo(),
       test: TestDataFactory.passingTests(),
     }
 
-    const result = tddValidator(context)
+    const result = await tddValidator(context)
 
     expect(result).toEqual({
       decision: undefined,
@@ -74,14 +74,14 @@ describe('tddValidator', () => {
     })
   })
 
-  test('does not block refactoring tests with MultiEdit', () => {
+  test('does not block refactoring tests with MultiEdit', async () => {
     const context: Context = {
       modifications: TestDataFactory.batchEditFormat(),
       todo: TestDataFactory.refactoringTodo(),
       test: TestDataFactory.allTestsPassing(),
     }
 
-    const result = tddValidator(context)
+    const result = await tddValidator(context)
 
     expect(result).toEqual({
       decision: undefined,

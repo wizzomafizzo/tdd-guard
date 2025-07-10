@@ -19,13 +19,13 @@ describe('ClaudeModelClient', () => {
   })
 
   describe('command construction', () => {
-    test('uses claude command', () => {
-      const call = sut.askAndGetCall()
+    test('uses claude command', async () => {
+      const call = await sut.askAndGetCall()
       expect(call.command).toBe('claude')
     })
 
-    test('uses correct flags', () => {
-      const call = sut.askAndGetCall()
+    test('uses correct flags', async () => {
+      const call = await sut.askAndGetCall()
       expect(call.args).toEqual([
         '-',
         '--output-format',
@@ -39,34 +39,34 @@ describe('ClaudeModelClient', () => {
   })
 
   describe('subprocess configuration', () => {
-    test('passes prompt via input option', () => {
+    test('passes prompt via input option', async () => {
       const prompt = 'Does this follow TDD?'
-      const call = sut.askAndGetCall(prompt)
+      const call = await sut.askAndGetCall(prompt)
       expect(call.options.input).toBe(prompt)
     })
 
-    test('uses utf-8 encoding', () => {
-      const call = sut.askAndGetCall()
+    test('uses utf-8 encoding', async () => {
+      const call = await sut.askAndGetCall()
       expect(call.options.encoding).toBe('utf-8')
     })
 
-    test('sets timeout to 20 seconds', () => {
-      const call = sut.askAndGetCall()
+    test('sets timeout to 20 seconds', async () => {
+      const call = await sut.askAndGetCall()
       expect(call.options.timeout).toBe(20000)
     })
 
-    test('executes claude command from .claude subdirectory', () => {
-      const call = sut.askAndGetCall()
+    test('executes claude command from .claude subdirectory', async () => {
+      const call = await sut.askAndGetCall()
       expect(call.options.cwd).toContain('.claude')
     })
 
-    test('creates .claude directory if it does not exist', () => {
+    test('creates .claude directory if it does not exist', async () => {
       const mockMkdirSync = vi.spyOn(fs, 'mkdirSync')
       const mockExistsSync = vi.spyOn(fs, 'existsSync')
 
       mockExistsSync.mockReturnValue(false)
 
-      client.ask('test')
+      await client.ask('test')
 
       expect(mockMkdirSync).toHaveBeenCalledWith(
         expect.stringContaining('.claude'),
@@ -79,75 +79,75 @@ describe('ClaudeModelClient', () => {
   })
 
   describe('response parsing', () => {
-    test('extracts JSON from markdown code blocks', () => {
+    test('extracts JSON from markdown code blocks', async () => {
       sut.mockResponse('```json\n{"approved": true}\n```')
 
-      const result = client.ask('test prompt')
+      const result = await client.ask('test prompt')
 
       expect(result).toBe('{"approved": true}')
     })
 
-    test('handles JSON code blocks with extra whitespace', () => {
+    test('handles JSON code blocks with extra whitespace', async () => {
       sut.mockResponse('```json  \n\n  {"approved": false}  \n\n```')
 
-      const result = client.ask('test prompt')
+      const result = await client.ask('test prompt')
 
       expect(result).toBe('{"approved": false}')
     })
 
-    test('returns raw response when no JSON code block found', () => {
+    test('returns raw response when no JSON code block found', async () => {
       sut.mockResponse('Plain text response')
 
-      const result = client.ask('test prompt')
+      const result = await client.ask('test prompt')
 
       expect(result).toBe('Plain text response')
     })
 
-    test('handles response with text before and after JSON block', () => {
+    test('handles response with text before and after JSON block', async () => {
       sut.mockResponse(
         'Here is the analysis:\n```json\n{"approved": true}\n```\nThat concludes the review.'
       )
 
-      const result = client.ask('test prompt')
+      const result = await client.ask('test prompt')
 
       expect(result).toBe('{"approved": true}')
     })
   })
 
   describe('error handling', () => {
-    test('throws error when execFileSync fails', () => {
+    test('throws error when execFileSync fails', async () => {
       mockExecFileSync.mockImplementation(() => {
         throw new Error('Command failed')
       })
 
-      expect(() => client.ask('test')).toThrow('Command failed')
+      await expect(client.ask('test')).rejects.toThrow('Command failed')
     })
 
-    test('throws error when response is not valid JSON', () => {
+    test('throws error when response is not valid JSON', async () => {
       mockExecFileSync.mockReturnValue('invalid json')
 
-      expect(() => client.ask('test')).toThrow()
+      await expect(client.ask('test')).rejects.toThrow()
     })
 
-    test('throws error when response lacks result field', () => {
+    test('throws error when response lacks result field', async () => {
       mockExecFileSync.mockReturnValue(JSON.stringify({ error: 'No result' }))
 
-      expect(() => client.ask('test')).toThrow()
+      await expect(client.ask('test')).rejects.toThrow()
     })
   })
 
   describe('security', () => {
-    test('uses execFileSync with system claude when useLocalClaude is false', () => {
+    test('uses execFileSync with system claude when useLocalClaude is false', async () => {
       const localSut = createSut({ useLocalClaude: false })
-      localSut.client.ask('test prompt')
+      await localSut.client.ask('test prompt')
 
       const call = localSut.getLastCall()
       expect(call.command).toBe('claude')
     })
 
-    test('uses execFileSync with local claude path when useLocalClaude is true', () => {
+    test('uses execFileSync with local claude path when useLocalClaude is true', async () => {
       const localSut = createSut({ useLocalClaude: true })
-      localSut.client.ask('test prompt')
+      await localSut.client.ask('test prompt')
 
       const call = localSut.getLastCall()
       expect(call.command).toBe(`${process.env.HOME}/.claude/local/claude`)
@@ -183,8 +183,8 @@ function createSut(overrides?: Partial<ReturnType<typeof testData.config>>) {
     }
   }
 
-  const askAndGetCall = (prompt = 'test prompt') => {
-    client.ask(prompt)
+  const askAndGetCall = async (prompt = 'test prompt') => {
+    await client.ask(prompt)
     return getLastCall()
   }
 

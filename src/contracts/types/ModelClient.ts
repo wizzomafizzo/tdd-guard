@@ -1,3 +1,3 @@
 export interface IModelClient {
-  ask(prompt: string): string
+  ask(prompt: string): Promise<string>
 }

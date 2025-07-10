@@ -11,7 +11,7 @@ export class ClaudeModelClient implements IModelClient {
     this.config = config || new Config()
   }
 
-  ask(prompt: string): string {
+  async ask(prompt: string): Promise<string> {
     const claudeBinary = this.config.useLocalClaude
       ? `${process.env.HOME}/.claude/local/claude`
       : 'claude'
