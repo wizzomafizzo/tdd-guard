@@ -101,7 +101,7 @@ TDD Guard dynamically adjusts context based on operation type. Different instruc
 
 ## Customizing the System Prompt
 
-To modify TDD validation rules or adjust the AI's behavior, edit the TDD instructions at [`src/validation/prompts/tdd-instructions.ts`](https://github.com/nizos/tdd-guard/blob/main/src/validation/prompts/tdd-instructions.ts). After making changes:
+To modify TDD validation rules or adjust the AI's behavior, edit the prompt files in [`src/validation/prompts/`](https://github.com/nizos/tdd-guard/blob/main/src/validation/prompts/). The main TDD principles are defined in [`tdd-core-principles.ts`](https://github.com/nizos/tdd-guard/blob/main/src/validation/prompts/tdd-core-principles.ts). After making changes:
 
 1. Rebuild the project: `npm run build`
 2. Restart your Claude Code session to ensure changes take effect
