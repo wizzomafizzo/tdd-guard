@@ -17,10 +17,7 @@ It enriches the validation model with context from the agent's current todos and
 ### Installation
 
 ```bash
-git clone https://github.com/nizos/tdd-guard
-cd tdd-guard
-npm install
-npm run build
+npm install --save-dev tdd-guard
 ```
 
 ### Configuration
@@ -59,7 +56,7 @@ ANTHROPIC_API_KEY=your-api-key-here
         "hooks": [
           {
             "type": "command",
-            "command": "node /path/to/tdd-guard/dist/cli/tdd-guard.js"
+            "command": "node node_modules/.bin/tdd-guard"
           }
         ]
       }
@@ -71,7 +68,9 @@ ANTHROPIC_API_KEY=your-api-key-here
 3. **Test Reporter**: Configure test reporter in `vitest.config.ts`:
 
 ```javascript
-import { VitestReporter } from '/path/to/tdd-guard/dist/reporters/VitestReporter.js'
+import 'dotenv/config'
+import { defineConfig } from 'vitest/config'
+import { VitestReporter } from 'tdd-guard'
 
 export default defineConfig({
   test: {
@@ -117,12 +116,9 @@ TDD Guard dynamically adjusts context based on operation type. Different instruc
 
 ## Customizing the System Prompt
 
-To modify TDD validation rules or adjust the AI's behavior, edit the prompt files in [`src/validation/prompts/`](https://github.com/nizos/tdd-guard/blob/main/src/validation/prompts/). The main TDD principles are defined in [`tdd-core-principles.ts`](https://github.com/nizos/tdd-guard/blob/main/src/validation/prompts/tdd-core-principles.ts). After making changes:
+To modify TDD validation rules or adjust the AI's behavior, you'll need to fork the repository and modify the prompt files in [`src/validation/prompts/`](https://github.com/nizos/tdd-guard/blob/main/src/validation/prompts/). The main TDD principles are defined in [`tdd-core-principles.ts`](https://github.com/nizos/tdd-guard/blob/main/src/validation/prompts/tdd-core-principles.ts).
 
-1. Rebuild the project: `npm run build`
-2. Restart your Claude Code session to ensure changes take effect
-
-**Tip**: Use `/resume` if you want to continue your previous session after restarting.
+**Tip**: Use `/resume` if you want to continue your previous session after restarting Claude Code.
 
 ## Behaviors Flagged
 
