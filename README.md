@@ -43,7 +43,7 @@ MODEL_TYPE=claude_cli
 
 # For Anthropic API:
 # MODEL_TYPE=anthropic_api
-# ANTHROPIC_API_KEY=sk-ant-...
+# TDD_GUARD_ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 ### 2. Hook Configuration

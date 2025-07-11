@@ -55,18 +55,18 @@ describe('Config', () => {
     delete process.env.USE_LOCAL_CLAUDE
   })
 
-  test('anthropicApiKey returns value from ANTHROPIC_API_KEY env var', () => {
-    process.env.ANTHROPIC_API_KEY = 'test-api-key-123'
+  test('anthropicApiKey returns value from TDD_GUARD_ANTHROPIC_API_KEY env var', () => {
+    process.env.TDD_GUARD_ANTHROPIC_API_KEY = 'test-api-key-123'
 
     const config = new Config()
 
     expect(config.anthropicApiKey).toBe('test-api-key-123')
 
-    delete process.env.ANTHROPIC_API_KEY
+    delete process.env.TDD_GUARD_ANTHROPIC_API_KEY
   })
 
-  test('anthropicApiKey returns undefined when ANTHROPIC_API_KEY is not set', () => {
-    delete process.env.ANTHROPIC_API_KEY
+  test('anthropicApiKey returns undefined when TDD_GUARD_ANTHROPIC_API_KEY is not set', () => {
+    delete process.env.TDD_GUARD_ANTHROPIC_API_KEY
 
     const config = new Config()
 
@@ -108,7 +108,7 @@ describe('Config', () => {
 
   test('getModelClient returns AnthropicApi when modelType is anthropic_api', () => {
     process.env.MODEL_TYPE = 'anthropic_api'
-    process.env.ANTHROPIC_API_KEY = 'test-key'
+    process.env.TDD_GUARD_ANTHROPIC_API_KEY = 'test-key'
 
     const config = new Config()
     const client = config.getModelClient()
@@ -119,7 +119,7 @@ describe('Config', () => {
   test('getModelClient uses TEST_MODEL_TYPE in test mode over MODEL_TYPE', () => {
     process.env.MODEL_TYPE = 'claude_cli'
     process.env.TEST_MODEL_TYPE = 'anthropic_api'
-    process.env.ANTHROPIC_API_KEY = 'test-key'
+    process.env.TDD_GUARD_ANTHROPIC_API_KEY = 'test-key'
 
     const config = new Config()
     const client = config.getModelClient(true) // true indicates test mode

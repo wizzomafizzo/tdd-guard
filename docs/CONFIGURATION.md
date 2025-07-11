@@ -25,7 +25,7 @@ USE_LOCAL_CLAUDE=false
 # Anthropic API Key
 # Required when MODEL_TYPE or TEST_MODEL_TYPE is set to 'anthropic_api'
 # Get your API key from https://console.anthropic.com/
-ANTHROPIC_API_KEY=your-api-key-here
+TDD_GUARD_ANTHROPIC_API_KEY=your-api-key-here
 ```
 
 ## Model Configuration
@@ -41,7 +41,7 @@ The default model uses the Claude Code command-line interface:
 
 For consistent cloud-based validation:
 
-- Requires valid `ANTHROPIC_API_KEY`
+- Requires valid `TDD_GUARD_ANTHROPIC_API_KEY`
 
 ### Test-specific Configuration
 

@@ -11,7 +11,7 @@ export class Config {
   constructor() {
     this.dataDir = '.claude/tdd-guard/data'
     this.useLocalClaude = process.env.USE_LOCAL_CLAUDE === 'true'
-    this.anthropicApiKey = process.env.ANTHROPIC_API_KEY
+    this.anthropicApiKey = process.env.TDD_GUARD_ANTHROPIC_API_KEY
     this.modelType = process.env.MODEL_TYPE || 'claude_cli'
   }
 
