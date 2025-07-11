@@ -1,7 +1,29 @@
 {
   "name": "tdd-guard",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "TDD Guard enforces Test-Driven Development principles using Claude Code hooks",
+  "author": "Nizar Selander",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nizos/tdd-guard.git"
+  },
+  "keywords": [
+    "tdd",
+    "test-driven-development",
+    "claude",
+    "vitest"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "tdd-guard": "dist/cli/tdd-guard.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
