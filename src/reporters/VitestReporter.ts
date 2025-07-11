@@ -23,16 +23,26 @@ export class VitestReporter implements Reporter {
     // Create empty file
     writeFileSync(this.outputPath, '')
 
-    const originalWrite = process.stdout.write.bind(process.stdout)
-    process.stdout.write = new Proxy(originalWrite, {
-      apply: (target, thisArg, args) => {
-        const chunk = args[0]
-        const str = chunk?.toString() || ''
-        // Remove ANSI escape sequences (color codes) from text
-        const cleanStr = stripVTControlCharacters(str)
-        appendFileSync(this.outputPath, cleanStr)
-        return Reflect.apply(target, thisArg, args)
-      },
-    }) as typeof process.stdout.write
+    // Create a proxy handler that captures output to file
+    const createWriteProxy = (originalWrite: typeof process.stdout.write) => {
+      return new Proxy(originalWrite, {
+        apply: (target, thisArg, args) => {
+          const chunk = args[0]
+          const str = chunk?.toString() || ''
+          // Remove ANSI escape sequences (color codes) from text
+          const cleanStr = stripVTControlCharacters(str)
+          appendFileSync(this.outputPath, cleanStr)
+          return Reflect.apply(target, thisArg, args)
+        },
+      })
+    }
+
+    // Capture both stdout and stderr
+    process.stdout.write = createWriteProxy(
+      process.stdout.write.bind(process.stdout)
+    ) as typeof process.stdout.write
+    process.stderr.write = createWriteProxy(
+      process.stderr.write.bind(process.stderr)
+    ) as typeof process.stderr.write
   }
 }

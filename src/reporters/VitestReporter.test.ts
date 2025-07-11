@@ -87,6 +87,15 @@ describe('VitestReporter', () => {
         expect(sut.getFileContent()).toBe(textWithoutAnsi)
       })
     })
+
+    describe('stderr capture', () => {
+      it('captures and saves stderr output to file', () => {
+        const errorMessage = 'Error: Cannot find module\n'
+        sut.writeError(errorMessage)
+
+        expect(sut.getFileContent()).toContain(errorMessage)
+      })
+    })
   })
 })
 
@@ -98,12 +107,19 @@ function setupVitestReporter() {
 
   // Console output mocking
   const originalWrite = process.stdout.write.bind(process.stdout)
+  const originalErrWrite = process.stderr.write.bind(process.stderr)
   let consoleOutput = ''
+  let consoleError = ''
   const mockWrite = vi.fn((chunk: string | Uint8Array) => {
     consoleOutput = chunk?.toString() || ''
     return true
   })
+  const mockErrWrite = vi.fn((chunk: string | Uint8Array) => {
+    consoleError = chunk?.toString() || ''
+    return true
+  })
   process.stdout.write = mockWrite
+  process.stderr.write = mockErrWrite
 
   // Create reporter instance
   const reporter = new VitestReporter(testFile)
@@ -113,11 +129,14 @@ function setupVitestReporter() {
   const fileExists = () => existsSync(testFile)
   const getFileContent = () => readFileSync(testFile, 'utf-8')
   const writeOutput = (output: string) => process.stdout.write(output)
+  const writeError = (error: string) => process.stderr.write(error)
   const getConsoleOutput = () => consoleOutput
+  const getConsoleError = () => consoleError
 
   // Cleanup function
   const cleanup = () => {
     process.stdout.write = originalWrite
+    process.stderr.write = originalErrWrite
     if (existsSync(testDir)) {
       rmSync(testDir, { recursive: true, force: true })
     }
@@ -134,9 +153,11 @@ function setupVitestReporter() {
     // Reporter
     reporter,
     writeOutput,
+    writeError,
 
     // Console output
     getConsoleOutput,
+    getConsoleError,
 
     // Lifecycle
     cleanup,
