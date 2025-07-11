@@ -142,13 +142,11 @@ Agent corrects its behavior and implements minimal implementation
 
 ## Roadmap
 
-- Use/set global log/data path for persistent storage across projects
+- Encourage meaningful refactoring opportunities when tests are green
 - Simplify installation and project setup
 - Add support for other testing frameworks (Jest, Mocha, etc.)
 - Improve handling of concurrent subagents
 - Support other AI agents (Gemini CLI, etc.)
-- Expand TDD validation rules
-- Enrich context with file paths and more metadata
 
 ## Contributing
 
