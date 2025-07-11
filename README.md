@@ -28,13 +28,22 @@ npm run build
 1. **Environment Variables**: Copy `.env.example` to `.env` and configure:
 
 ```bash
+# Model selection for TDD validation
+# Options: 'claude_cli' (default) or 'anthropic_api'
+MODEL_TYPE=claude_cli
+
+# Override model type for integration tests (optional)
+# If not set, uses MODEL_TYPE value
+# TEST_MODEL_TYPE=anthropic_api
+
 # Use local Claude installation (true/false)
+# Only applies when using 'claude_cli' model type
 # Set to 'true' to use Claude from ~/.claude/local/claude
 # Set to 'false' to use system Claude (claude in PATH)
 USE_LOCAL_CLAUDE=false
 
-# Anthropic API Key (optional)
-# Required when using AnthropicApi for TDD validation
+# Anthropic API Key
+# Required when MODEL_TYPE or TEST_MODEL_TYPE is set to 'anthropic_api'
 # Get your API key from https://console.anthropic.com/
 ANTHROPIC_API_KEY=your-api-key-here
 ```
@@ -90,8 +99,17 @@ TDD Guard intercepts Claude Code operations through hooks and validates them aga
 1. **Hook Integration**: Configured as pre-execution hooks for Edit, MultiEdit, Write, and TodoWrite operations
 2. **Data Collection**: Extracts code changes, task descriptions, and test results into persistent storage
 3. **Context Building**: Aggregates recent edits, todos, and test output into a validation context
-4. **AI Validation**: Sends context to Claude CLI with TDD Guard prompt to check for violations
+4. **AI Validation**: Sends context to the configured model (Claude CLI or Anthropic API) to check for violations
 5. **Decision**: Returns `approve`, `block` (with reason), or `null` (insufficient data)
+
+### Model Selection
+
+TDD Guard supports two validation models:
+
+- **Claude CLI** (`claude_cli`): Uses the Claude command-line interface installed on your system. This is the default option and works with both system Claude and local Claude installations.
+- **Anthropic API** (`anthropic_api`): Directly calls the Anthropic API for validation. Requires an API key and provides consistent performance across different environments.
+
+You can configure different models for production use and integration tests using the `MODEL_TYPE` and `TEST_MODEL_TYPE` environment variables.
 
 ### Context Engineering
 

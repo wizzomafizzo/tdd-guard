@@ -9,10 +9,11 @@ import { Config } from '../config/Config'
 export async function run(input: string, config?: Config) {
   const appConfig = config || new Config()
   const storage = new FileStorage(appConfig.dataDir)
+  const modelClient = appConfig.getModelClient()
 
   return processHookData(input, {
     storage,
-    validator: validator,
+    validator: (context) => validator(context, modelClient),
   })
 }
 

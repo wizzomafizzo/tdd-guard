@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { validator } from './validator'
 import { Context } from '../contracts/types/Context'
-import { AnthropicApi } from './models/AnthropicApi'
+import { Config } from '../config/Config'
 import { testData } from '../test'
 const {
   createWriteOperation,
@@ -36,7 +36,8 @@ const testFile = 'src/Calculator/Calculator.test.ts'
 const implementationFile = 'src/Calculator/Calculator.ts'
 
 describe('Validator', () => {
-  const model = new AnthropicApi()
+  const config = new Config()
+  const model = config.getModelClient(true) // Use test mode
   const defaultOperations: OperationType[] = ['Edit', 'Write']
 
   describe('Valid operations', () => {

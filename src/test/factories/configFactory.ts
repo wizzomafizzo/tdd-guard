@@ -7,5 +7,15 @@ export function config(overrides: Partial<Config> = {}): Config {
     useLocalClaude: overrides.useLocalClaude ?? false,
     anthropicApiKey: overrides.anthropicApiKey,
     testReportPath: overrides.testReportPath ?? `${dataDir}/test.txt`,
+    modelType: overrides.modelType ?? 'claude_cli',
+    getModelClient:
+      overrides.getModelClient ??
+      (() => ({
+        ask: async () =>
+          JSON.stringify({
+            decision: undefined,
+            reason: 'Using mock model client',
+          }),
+      })),
   } as Config
 }
