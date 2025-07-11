@@ -15,8 +15,8 @@
     "baseUrl": ".",
     "types": ["node", "vitest/globals"],
     "sourceMap": false,
-    "declaration": false,
-    "declarationMap": false
+    "declaration": true,
+    "declarationMap": true
   },
   "include": ["src/**/*"],
   "exclude": [
