@@ -35,13 +35,13 @@ npm install --save-dev tdd-guard
 
 ### 1. Environment
 
-If you have Claude installed locally, create a `.env` file:
+If you do not have Claude installed locally, create a `.env` file:
 
 ```bash
-USE_LOCAL_CLAUDE=true
+USE_SYSTEM_CLAUDE=true
 ```
 
-This tells TDD Guard to use Claude from `~/.claude/local/claude` instead of system Claude.
+This tells TDD Guard to the System Claude from PATH instead of `~/.claude/local/claude`.
 
 ### 2. Hook Setup
 

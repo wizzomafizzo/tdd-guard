@@ -26,33 +26,33 @@ describe('Config', () => {
     expect(config.testReportPath).toBe('.claude/tdd-guard/data/test.txt')
   })
 
-  test('useLocalClaude returns true when USE_LOCAL_CLAUDE is true', () => {
-    process.env.USE_LOCAL_CLAUDE = 'true'
+  test('useSystemClaude returns true when USE_SYSTEM_CLAUDE is true', () => {
+    process.env.USE_SYSTEM_CLAUDE = 'true'
 
     const config = new Config()
 
-    expect(config.useLocalClaude).toBe(true)
+    expect(config.useSystemClaude).toBe(true)
 
-    delete process.env.USE_LOCAL_CLAUDE
+    delete process.env.USE_SYSTEM_CLAUDE
   })
 
-  test('useLocalClaude returns false when USE_LOCAL_CLAUDE is not true', () => {
+  test('useSystemClaude returns false when USE_SYSTEM_CLAUDE is not true', () => {
     // Test with 'false'
-    process.env.USE_LOCAL_CLAUDE = 'false'
+    process.env.USE_SYSTEM_CLAUDE = 'false'
     let config = new Config()
-    expect(config.useLocalClaude).toBe(false)
+    expect(config.useSystemClaude).toBe(false)
 
     // Test with undefined
-    delete process.env.USE_LOCAL_CLAUDE
+    delete process.env.USE_SYSTEM_CLAUDE
     config = new Config()
-    expect(config.useLocalClaude).toBe(false)
+    expect(config.useSystemClaude).toBe(false)
 
     // Test with empty string
-    process.env.USE_LOCAL_CLAUDE = ''
+    process.env.USE_SYSTEM_CLAUDE = ''
     config = new Config()
-    expect(config.useLocalClaude).toBe(false)
+    expect(config.useSystemClaude).toBe(false)
 
-    delete process.env.USE_LOCAL_CLAUDE
+    delete process.env.USE_SYSTEM_CLAUDE
   })
 
   test('anthropicApiKey returns value from TDD_GUARD_ANTHROPIC_API_KEY env var', () => {

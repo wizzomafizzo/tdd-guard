@@ -9,7 +9,7 @@ This aids the agent in adhering to TDD principles without cluttering instruction
 
 TDD Guard uses environment variables for configuration. Copy `.env.example` to `.env` and configure as needed:
 
-- `USE_LOCAL_CLAUDE`: Set to `true` to use Claude from `~/.claude/local/claude`, or `false` to use system Claude (defaults to `false`)
+- `USE_SYSTEM_CLAUDE`: Set to `true` to use system Claude, or `false` to use `~/.claude/local/claude` (defaults to `false`)
 - `TDD_GUARD_ANTHROPIC_API_KEY`: API key for AnthropicApi. Get your key from https://console.anthropic.com/
 
 ## Development Workflow

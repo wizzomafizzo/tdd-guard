@@ -16,11 +16,11 @@ MODEL_TYPE=claude_cli
 # If not set, uses MODEL_TYPE value
 # TEST_MODEL_TYPE=anthropic_api
 
-# Use local Claude installation (true/false)
+# Use system Claude installation
 # Only applies when using 'claude_cli' model type
-# Set to 'true' to use Claude from ~/.claude/local/claude
-# Set to 'false' to use system Claude (claude in PATH)
-USE_LOCAL_CLAUDE=false
+# Set to 'true' to use the system Claude (claude in PATH)
+# Set to 'false' to use the Claude from ~/.claude/local/claude
+USE_SYSTEM_CLAUDE=false
 
 # Anthropic API Key
 # Required when MODEL_TYPE or TEST_MODEL_TYPE is set to 'anthropic_api'
@@ -34,8 +34,8 @@ TDD_GUARD_ANTHROPIC_API_KEY=your-api-key-here
 
 The default model uses the Claude Code command-line interface:
 
-- **System Claude**: Set `USE_LOCAL_CLAUDE=false` to use Claude from your PATH
-- **Local Claude**: Set `USE_LOCAL_CLAUDE=true` to use Claude from `~/.claude/local/claude`
+- **System Claude**: Set `USE_SYSTEM_CLAUDE=true` to use Claude from your PATH
+- **Local Claude**: Set `USE_SYSTEM_CLAUDE=false` to use Claude from `~/.claude/local/claude`
 
 ### Anthropic API
 

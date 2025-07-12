@@ -21,7 +21,7 @@ describe('ClaudeCli', () => {
   describe('command construction', () => {
     test('uses claude command', async () => {
       const call = await sut.askAndGetCall()
-      expect(call.command).toBe('claude')
+      expect(call.command).toContain('claude')
     })
 
     test('uses correct flags', async () => {
@@ -131,16 +131,16 @@ describe('ClaudeCli', () => {
   })
 
   describe('security', () => {
-    test('uses execFileSync with system claude when useLocalClaude is false', async () => {
-      const localSut = createSut({ useLocalClaude: false })
+    test('uses execFileSync with system claude when useSystemClaude is true', async () => {
+      const localSut = createSut({ useSystemClaude: true })
       await localSut.client.ask('test prompt')
 
       const call = localSut.getLastCall()
       expect(call.command).toBe('claude')
     })
 
-    test('uses execFileSync with local claude path when useLocalClaude is true', async () => {
-      const localSut = createSut({ useLocalClaude: true })
+    test('uses execFileSync with local claude path when useSystemClaude is false', async () => {
+      const localSut = createSut({ useSystemClaude: false })
       await localSut.client.ask('test prompt')
 
       const call = localSut.getLastCall()

@@ -4,13 +4,13 @@ import { AnthropicApi } from '../validation/models/AnthropicApi'
 
 export class Config {
   readonly dataDir: string
-  readonly useLocalClaude: boolean
+  readonly useSystemClaude: boolean
   readonly anthropicApiKey: string | undefined
   readonly modelType: string
 
   constructor() {
     this.dataDir = '.claude/tdd-guard/data'
-    this.useLocalClaude = process.env.USE_LOCAL_CLAUDE === 'true'
+    this.useSystemClaude = process.env.USE_SYSTEM_CLAUDE === 'true'
     this.anthropicApiKey = process.env.TDD_GUARD_ANTHROPIC_API_KEY
     this.modelType = process.env.MODEL_TYPE || 'claude_cli'
   }

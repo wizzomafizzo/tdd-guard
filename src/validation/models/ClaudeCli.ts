@@ -12,9 +12,9 @@ export class ClaudeCli implements IModelClient {
   }
 
   async ask(prompt: string): Promise<string> {
-    const claudeBinary = this.config.useLocalClaude
-      ? `${process.env.HOME}/.claude/local/claude`
-      : 'claude'
+    const claudeBinary = this.config.useSystemClaude
+      ? 'claude'
+      : `${process.env.HOME}/.claude/local/claude`
 
     const args = [
       '-',
