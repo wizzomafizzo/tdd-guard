@@ -103,7 +103,6 @@ Add to `.claude/settings.json`:
 In `vitest.config.ts`:
 
 ```typescript
-import 'dotenv/config' // Load environment variables
 import { defineConfig } from 'vitest/config'
 import { VitestReporter } from 'tdd-guard'
 

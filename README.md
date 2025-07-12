@@ -60,7 +60,6 @@ Configure TDD Guard using the `/hooks` command:
 Add to your `vitest.config.ts`:
 
 ```typescript
-import 'dotenv/config' // Load environment variables
 import { VitestReporter } from 'tdd-guard'
 
 export default defineConfig({
