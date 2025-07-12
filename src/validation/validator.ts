@@ -4,6 +4,8 @@ import { ValidationResult } from '../contracts/types/ValidationResult'
 import { Context } from '../contracts/types/Context'
 import { generateDynamicContext } from './context/context'
 
+const VALIDATION_ERROR_SUFFIX =
+  'Is tdd-guard configured correctly? Check your .env file and ensure Claude CLI is installed.'
 interface ModelResponseJson {
   decision: 'block' | 'approve' | null
   reason: string
@@ -17,10 +19,10 @@ export async function validator(
     const prompt = generateDynamicContext(context)
     const response = await modelClient.ask(prompt)
     return parseModelResponse(response)
-  } catch {
+  } catch (error) {
     return {
-      decision: undefined,
-      reason: 'Error during validation',
+      decision: 'block',
+      reason: `Error during validation: ${error instanceof Error ? error.message : 'Unknown error'}. ${VALIDATION_ERROR_SUFFIX}`,
     }
   }
 }

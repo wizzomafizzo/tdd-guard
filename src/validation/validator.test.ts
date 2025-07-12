@@ -76,11 +76,6 @@ describe('validator with mock model', () => {
         expected: { decision: undefined, reason: 'ok' },
       },
       {
-        name: 'should handle invalid JSON gracefully',
-        modelResponse: `\`\`\`json\ninvalid json content\n\`\`\``,
-        expected: { decision: undefined, reason: 'Error during validation' },
-      },
-      {
         name: 'should convert null decision to undefined',
         modelResponse: '{"decision": null, "reason": "No issues found"}',
         expected: { decision: undefined, reason: 'No issues found' },
@@ -206,16 +201,42 @@ This violates TDD principles as explained in the numbered list above.
     })
   })
 
+  describe('error handling', () => {
+    test('should block when model client throws error', async () => {
+      const { result } = await runValidator(
+        new Error('Command failed: claude not found')
+      )
+
+      expect(result.decision).toBe('block')
+      expect(result.reason).toContain('Error during validation')
+      expect(result.reason).toContain('Command failed: claude not found')
+      expect(result.reason).toContain('Is tdd-guard configured correctly?')
+    })
+
+    test('should block when model returns invalid JSON', async () => {
+      const { result } = await runValidator(
+        `\`\`\`json\ninvalid json content\n\`\`\``
+      )
+
+      expect(result.decision).toBe('block')
+      expect(result.reason).toContain('Error during validation')
+      expect(result.reason).toContain('Is tdd-guard configured correctly?')
+    })
+  })
+
   // Test helper
   async function runValidator(
-    modelResponse: string,
+    modelResponse: string | Error,
     options?: {
       contextOverrides?: Partial<Context>
       prompt?: string
     }
   ) {
     const mockModelClient: IModelClient = {
-      ask: vi.fn().mockResolvedValue(modelResponse),
+      ask:
+        modelResponse instanceof Error
+          ? vi.fn().mockRejectedValue(modelResponse)
+          : vi.fn().mockResolvedValue(modelResponse),
     }
 
     const context: Context = {
