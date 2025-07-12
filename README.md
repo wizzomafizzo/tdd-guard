@@ -48,6 +48,20 @@ MODEL_TYPE=claude_cli
 
 ### 2. Hook Configuration
 
+#### Option A: Interactive Setup (Recommended)
+
+Use Claude Code's `/hooks` command:
+
+1. Type `/hooks` in Claude Code
+2. Select `PreToolUse - Before tool execution`
+3. Choose `+ Add new matcher...`
+4. Enter: `Write|Edit|MultiEdit|TodoWrite`
+5. Select `+ Add new hook...`
+6. Enter command: `tdd-guard`
+7. Choose where to save (Project settings recommended)
+
+#### Option B: Manual Configuration
+
 Add to `.claude/settings.json`:
 
 ```json
