@@ -59,7 +59,7 @@ Add to `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "node node_modules/.bin/tdd-guard"
+            "command": "tdd-guard"
           }
         ]
       }
