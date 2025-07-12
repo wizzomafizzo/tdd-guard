@@ -31,26 +31,21 @@ The tool intercepts Write, Edit, and MultiEdit operations before execution, exam
 npm install --save-dev tdd-guard
 ```
 
-## Configuration
+## Quick Start
 
-### 1. Environment Setup
+### 1. Environment
 
-Create a `.env` file:
+If you have Claude installed locally, create a `.env` file:
 
 ```bash
-# Model selection (claude_cli or anthropic_api)
-MODEL_TYPE=claude_cli
-
-# For Anthropic API:
-# MODEL_TYPE=anthropic_api
-# TDD_GUARD_ANTHROPIC_API_KEY=sk-ant-...
+USE_LOCAL_CLAUDE=true
 ```
 
-### 2. Hook Configuration
+This tells TDD Guard to use Claude from `~/.claude/local/claude` instead of system Claude.
 
-#### Option A: Interactive Setup (Recommended)
+### 2. Hook Setup
 
-Use Claude Code's `/hooks` command:
+Configure TDD Guard using the `/hooks` command:
 
 1. Type `/hooks` in Claude Code
 2. Select `PreToolUse - Before tool execution`
@@ -60,31 +55,9 @@ Use Claude Code's `/hooks` command:
 6. Enter command: `tdd-guard`
 7. Choose where to save (Project settings recommended)
 
-#### Option B: Manual Configuration
+### 3. Test Reporter
 
-Add to `.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit|TodoWrite",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tdd-guard"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-### 3. Test Reporter Setup
-
-For Vitest projects, add to `vitest.config.ts`:
+Add to your `vitest.config.ts`:
 
 ```typescript
 import 'dotenv/config' // Load environment variables
@@ -96,6 +69,8 @@ export default defineConfig({
   },
 })
 ```
+
+For advanced configuration options, see the [Configuration Guide](docs/CONFIGURATION.md).
 
 ## Security Notice
 
