@@ -17,7 +17,7 @@ import {
   isTodoWriteOperation,
   isFileModification,
 } from './toolSchemas'
-import { testData } from '../../test'
+import { testData } from '@testUtils'
 
 describe('Tool-specific schemas', () => {
   describe('TodoSchema', () => {

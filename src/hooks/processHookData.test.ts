@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { processHookData, defaultResult } from './processHookData'
 import { MemoryStorage } from '../storage/MemoryStorage'
-import { testData } from '../test'
+import { testData } from '@testUtils'
 
 const BLOCK_RESULT = {
   decision: 'block',

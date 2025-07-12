@@ -1,4 +1,4 @@
-import { Context } from '../../contracts/types/Context'
+import { Context } from '../../../src/contracts/types/Context'
 import { TEST_DEFAULTS } from './testDefaults'
 
 /**
@@ -7,7 +7,7 @@ import { TEST_DEFAULTS } from './testDefaults'
 export function context(overrides?: Partial<Context>): Context {
   return {
     modifications: TEST_DEFAULTS.modifications,
-    todo: TEST_DEFAULTS.todo,
+    todo: JSON.stringify([TEST_DEFAULTS.todo]),
     test: TEST_DEFAULTS.test,
     ...overrides,
   }

@@ -11,19 +11,22 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "baseUrl": ".",
+    "paths": {
+      "@testUtils": ["./test/utils/index.ts"]
+    },
     "types": ["node", "vitest/globals"],
     "sourceMap": false,
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/utils/**/*"],
   "exclude": [
     "dist",
     "node_modules",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
-    "src/test"
+    "test/**/*.test.ts"
   ]
 }

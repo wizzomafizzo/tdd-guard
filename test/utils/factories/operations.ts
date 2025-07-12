@@ -3,7 +3,7 @@ import type {
   Edit,
   MultiEdit,
   TodoWrite,
-} from '../../contracts/schemas/toolSchemas'
+} from '../../../src/contracts/schemas/toolSchemas'
 
 type ToolInput = Write | Edit | MultiEdit | TodoWrite
 

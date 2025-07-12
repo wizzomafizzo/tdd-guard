@@ -3,7 +3,7 @@ import { validator } from './validator'
 import { Context } from '../contracts/types/Context'
 import { IModelClient } from '../contracts/types/ModelClient'
 import { generateDynamicContext } from './context/context'
-import { testData } from '../test'
+import { testData } from '@testUtils'
 
 vi.mock('./context/context', () => ({
   generateDynamicContext: vi.fn(),

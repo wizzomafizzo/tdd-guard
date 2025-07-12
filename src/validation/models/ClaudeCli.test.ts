@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { ClaudeCli } from './ClaudeCli'
 import { execFileSync } from 'child_process'
 import * as fs from 'fs'
-import { testData } from '../../test'
+import { testData } from '@testUtils'
 
 vi.mock('child_process')
 vi.mock('fs', { spy: true })

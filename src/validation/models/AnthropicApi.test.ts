@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { AnthropicApi } from './AnthropicApi'
 import Anthropic from '@anthropic-ai/sdk'
-import { testData } from '../../test'
+import { testData } from '@testUtils'
 
 vi.mock('@anthropic-ai/sdk')
 

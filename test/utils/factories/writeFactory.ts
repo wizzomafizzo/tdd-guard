@@ -2,7 +2,10 @@
  * Factory functions for creating Write and WriteOperation test data
  */
 
-import type { Write, WriteOperation } from '../../contracts/schemas/toolSchemas'
+import type {
+  Write,
+  WriteOperation,
+} from '../../../src/contracts/schemas/toolSchemas'
 import { hookDataDefaults, omit } from './helpers'
 import { TEST_DEFAULTS } from './testDefaults'
 

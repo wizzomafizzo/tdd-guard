@@ -25,11 +25,11 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
-    "test:integration": "vitest run src/**/*.integration.test.ts",
+    "test:unit": "vitest run --exclude '**/test/integration/**'",
+    "test:integration": "vitest run test/integration",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint . --fix --report-unused-disable-directives --max-warnings 0",
     "lint:check": "eslint . --report-unused-disable-directives --max-warnings 0",

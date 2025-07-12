@@ -2,7 +2,10 @@
  * Factory functions for creating Edit and EditOperation test data
  */
 
-import type { Edit, EditOperation } from '../../contracts/schemas/toolSchemas'
+import type {
+  Edit,
+  EditOperation,
+} from '../../../src/contracts/schemas/toolSchemas'
 import { hookDataDefaults, omit } from './helpers'
 import { TEST_DEFAULTS } from './testDefaults'
 

@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { testData } from '../../test'
+import { testData } from '@testUtils'
 import { generateDynamicContext } from './context'
 import { ROLE_AND_CONTEXT } from '../prompts/role-and-context'
 import { TDD_CORE_PRINCIPLES } from '../prompts/tdd-core-principles'

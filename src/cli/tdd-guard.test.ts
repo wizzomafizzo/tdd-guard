@@ -5,7 +5,7 @@ import fs from 'fs/promises'
 import os from 'os'
 import { FileStorage } from '../storage/FileStorage'
 import { run } from './tdd-guard'
-import { testData } from '../test'
+import { testData } from '@testUtils'
 
 describe('tdd-guard CLI', () => {
   const cliPath = path.join(__dirname, 'tdd-guard.ts')

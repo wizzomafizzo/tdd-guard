@@ -1,4 +1,4 @@
-import { Config } from '../../config/Config'
+import { Config } from '../../../src/config/Config'
 
 export function config(overrides: Partial<Config> = {}): Config {
   const dataDir = overrides.dataDir ?? '.claude/tdd-guard/data'

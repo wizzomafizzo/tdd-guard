@@ -1,8 +1,8 @@
 import { describe, test, expect } from 'vitest'
-import { validator } from './validator'
-import { Context } from '../contracts/types/Context'
-import { Config } from '../config/Config'
-import { testData } from '../test'
+import { validator } from '../../src/validation/validator'
+import { Context } from '../../src/contracts/types/Context'
+import { Config } from '../../src/config/Config'
+import { testData } from '@testUtils'
 const {
   createWriteOperation,
   createEditOperation,
@@ -15,12 +15,12 @@ const {
   todos,
   testResults,
 } = testData
-import { TestData } from '../test/factories/scenarios'
+import { TestData } from '../utils/factories/scenarios'
 
 import {
   FileModificationSchema,
   type Todo,
-} from '../contracts/schemas/toolSchemas'
+} from '../../src/contracts/schemas/toolSchemas'
 
 export interface Scenario {
   filePath: string

@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { HookEvents } from './HookEvents'
 import { MemoryStorage } from '../storage/MemoryStorage'
-import { testData } from '../test'
+import { testData } from '@testUtils'
 
 describe('HookEvents', () => {
   let sut: Awaited<ReturnType<typeof setupHookEvents>>
