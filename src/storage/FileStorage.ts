@@ -12,8 +12,8 @@ export class FileStorage implements Storage {
   private readonly basePath: string
 
   constructor(config?: Config) {
-    config ??= new Config()
-    this.basePath = config.dataDir
+    const cfg = config ?? new Config()
+    this.basePath = cfg.dataDir
   }
 
   private async ensureDirectory(): Promise<void> {
