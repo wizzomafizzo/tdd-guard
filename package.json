@@ -36,6 +36,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
+    "checks": "npm run typecheck && npm run lint && npm run format && npm run test",
     "pre-commit": "npm run format:check && npm run lint:check && npm run typecheck && npm run test:unit",
     "prepare": "husky"
   },

@@ -87,6 +87,7 @@ npm run test:unit         # Fast unit tests only
 npm run test:integration  # Slow integration tests (run after major prompt changes)
 npm run lint              # Check code style and quality
 npm run format            # Auto-format code with Prettier
+npm run checks            # Run all checks: typecheck, lint, format, and test
 ```
 
 ### Key Design Principles
