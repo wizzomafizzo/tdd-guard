@@ -14,7 +14,7 @@ export class VitestReporter implements Reporter {
   > = new Map()
 
   constructor(storage?: Storage) {
-    this.storage = storage || new FileStorage()
+    this.storage = storage ?? new FileStorage()
   }
 
   onTestModuleCollected(testModule: TestModule) {

@@ -32,7 +32,7 @@ export class Config {
       options?.modelType ??
       (mode === 'test' && process.env.TEST_MODEL_TYPE
         ? process.env.TEST_MODEL_TYPE
-        : process.env.MODEL_TYPE || 'claude_cli')
+        : (process.env.MODEL_TYPE ?? 'claude_cli'))
   }
 
   get testResultsFilePath(): string {

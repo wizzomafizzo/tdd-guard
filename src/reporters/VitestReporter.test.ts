@@ -181,7 +181,7 @@ function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
 
   const getTests = async () => {
     const parsed = await getParsedData()
-    return parsed?.testModules[0]?.tests || []
+    return parsed?.testModules[0]?.tests ?? []
   }
 
   const getPassedTests = async () => {

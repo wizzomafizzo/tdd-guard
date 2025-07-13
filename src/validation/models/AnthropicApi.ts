@@ -7,7 +7,7 @@ export class AnthropicApi implements IModelClient {
   private readonly client: Anthropic
 
   constructor(config?: Config) {
-    this.config = config || new Config()
+    this.config = config ?? new Config()
     this.client = new Anthropic({
       apiKey: this.config.anthropicApiKey,
     })

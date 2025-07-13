@@ -143,7 +143,7 @@ function normalizeValidationResult(
   parsed: ModelResponseJson
 ): ValidationResult {
   return {
-    decision: parsed.decision === null ? undefined : parsed.decision,
+    decision: parsed.decision ?? undefined,
     reason: parsed.reason,
   }
 }

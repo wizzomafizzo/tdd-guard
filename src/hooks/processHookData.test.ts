@@ -145,6 +145,6 @@ function createTestProcessor() {
     
     // Validator checks
     validatorHasBeenCalled: () => mockValidator.mock.calls.length > 0,
-    getValidatorCallArgs: () => mockValidator.mock.calls[0]?.[0] || null,
+    getValidatorCallArgs: () => mockValidator.mock.calls[0]?.[0] ?? null,
   }
 }

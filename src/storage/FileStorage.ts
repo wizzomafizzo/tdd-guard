@@ -12,9 +12,7 @@ export class FileStorage implements Storage {
   private readonly basePath: string
 
   constructor(config?: Config) {
-    if (!config) {
-      config = new Config()
-    }
+    config ??= new Config()
     this.basePath = config.dataDir
   }
 

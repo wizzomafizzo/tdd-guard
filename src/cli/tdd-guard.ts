@@ -12,9 +12,9 @@ export async function run(
   config?: Config,
   provider?: ModelClientProvider
 ) {
-  const appConfig = config || new Config()
+  const appConfig = config ?? new Config()
   const storage = new FileStorage(appConfig)
-  const modelProvider = provider || new ModelClientProvider()
+  const modelProvider = provider ?? new ModelClientProvider()
   const modelClient = modelProvider.getModelClient(appConfig)
 
   return processHookData(input, {

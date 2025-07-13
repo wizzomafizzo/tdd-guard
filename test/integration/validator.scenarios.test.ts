@@ -450,7 +450,7 @@ function createContext(
   operationType: OperationType
 ): Context {
   const newString = scenario.newContent.content
-  const oldString = scenario.oldContent?.content || ''
+  const oldString = scenario.oldContent?.content ?? ''
 
   let modificationString: string
 

@@ -244,7 +244,7 @@ This violates TDD principles as explained in the numbered list above.
       ...options?.contextOverrides,
     }
 
-    mockGenerateDynamicContext.mockReturnValue(options?.prompt || 'test prompt')
+    mockGenerateDynamicContext.mockReturnValue(options?.prompt ?? 'test prompt')
 
     const result = await validator(context, mockModelClient)
 

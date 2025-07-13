@@ -8,7 +8,7 @@ export class ClaudeCli implements IModelClient {
   private readonly config: Config
 
   constructor(config?: Config) {
-    this.config = config || new Config()
+    this.config = config ?? new Config()
   }
 
   async ask(prompt: string): Promise<string> {
