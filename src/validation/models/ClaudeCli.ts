@@ -5,7 +5,7 @@ import { existsSync, mkdirSync } from 'fs'
 import { Config } from '../../config/Config'
 
 export class ClaudeCli implements IModelClient {
-  private config: Config
+  private readonly config: Config
 
   constructor(config?: Config) {
     this.config = config || new Config()

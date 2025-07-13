@@ -11,7 +11,7 @@ import { Storage } from '../storage/Storage'
 export type { HookData }
 
 export class HookEvents {
-  constructor(private storage: Storage) {}
+  constructor(private readonly storage: Storage) {}
 
   async processEvent(event: unknown): Promise<void> {
     const hookResult = HookDataSchema.safeParse(event)

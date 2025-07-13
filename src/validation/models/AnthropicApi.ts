@@ -3,8 +3,8 @@ import { Config } from '../../config/Config'
 import Anthropic from '@anthropic-ai/sdk'
 
 export class AnthropicApi implements IModelClient {
-  private config: Config
-  private client: Anthropic
+  private readonly config: Config
+  private readonly client: Anthropic
 
   constructor(config?: Config) {
     this.config = config || new Config()

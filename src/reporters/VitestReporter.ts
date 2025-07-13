@@ -3,8 +3,8 @@ import { Storage } from '../storage/Storage'
 import { FileStorage } from '../storage/FileStorage'
 
 export class VitestReporter implements Reporter {
-  private storage: Storage
-  private testModules: Map<
+  private readonly storage: Storage
+  private readonly testModules: Map<
     string,
     {
       moduleId: string

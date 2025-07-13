@@ -1,7 +1,7 @@
 import { Storage } from './Storage'
 
 export class MemoryStorage implements Storage {
-  private store = new Map<string, string>()
+  private readonly store = new Map<string, string>()
 
   async saveTest(content: string): Promise<void> {
     this.store.set('test', content)
