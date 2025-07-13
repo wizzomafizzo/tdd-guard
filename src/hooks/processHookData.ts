@@ -3,7 +3,7 @@ import { Storage } from '../storage/Storage'
 import { Context } from '../contracts/types/Context'
 import { buildContext } from '../cli/buildContext'
 import { HookEvents } from './HookEvents'
-import { HookDataSchema, isTodoWriteOperation, ToolOperationSchema } from '../contracts/schemas/toolSchemas'
+import { HookDataSchema, HookData, isTodoWriteOperation, ToolOperationSchema } from '../contracts/schemas/toolSchemas'
 
 export interface ProcessHookDataDeps {
   storage?: Storage
@@ -26,24 +26,36 @@ export async function processHookData(
     return defaultResult
   }
 
-  if (deps.storage) {
-    const hookEvents = new HookEvents(deps.storage)
-    await hookEvents.processEvent(parsedData)
-  }
+  await processHookEvent(parsedData, deps.storage)
 
-  const operationResult = ToolOperationSchema.safeParse({
-    ...hookResult.data,
-    tool_input: hookResult.data.tool_input,
-  })
-
-  if (!operationResult.success || isTodoWriteOperation(operationResult.data)) {
+  if (shouldSkipValidation(hookResult.data)) {
     return defaultResult
   }
 
+  return await performValidation(deps)
+}
+
+async function processHookEvent(parsedData: unknown, storage?: Storage): Promise<void> {
+  if (storage) {
+    const hookEvents = new HookEvents(storage)
+    await hookEvents.processEvent(parsedData)
+  }
+}
+
+function shouldSkipValidation(hookData: HookData): boolean {
+  const operationResult = ToolOperationSchema.safeParse({
+    ...hookData,
+    tool_input: hookData.tool_input,
+  })
+
+  return !operationResult.success || isTodoWriteOperation(operationResult.data)
+}
+
+async function performValidation(deps: ProcessHookDataDeps): Promise<ValidationResult> {
   if (deps.validator && deps.storage) {
     const context = await buildContext(deps.storage)
     return await deps.validator(context)
   }
-
+  
   return defaultResult
 }

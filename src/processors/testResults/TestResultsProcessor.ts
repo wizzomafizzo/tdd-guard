@@ -93,14 +93,33 @@ export class TestResultsProcessor {
     let output = ''
 
     for (const test of tests) {
-      if (isPassingTest(test)) {
-        output += `   ✓ ${test.fullName} 0ms\n`
-      } else if (isFailingTest(test)) {
-        output += `   × ${test.fullName} 0ms\n`
-        if (test.errors && test.errors.length > 0) {
-          output += `     → ${test.errors[0].message}\n`
-        }
-      }
+      output += this.formatSingleTest(test)
+    }
+
+    return output
+  }
+
+  private formatSingleTest(
+    test: TestResult['testModules'][0]['tests'][0]
+  ): string {
+    if (isPassingTest(test)) {
+      return `   ✓ ${test.fullName} 0ms\n`
+    }
+
+    if (isFailingTest(test)) {
+      return this.formatFailingTest(test)
+    }
+
+    return ''
+  }
+
+  private formatFailingTest(
+    test: TestResult['testModules'][0]['tests'][0]
+  ): string {
+    let output = `   × ${test.fullName} 0ms\n`
+
+    if (test.errors && test.errors.length > 0) {
+      output += `     → ${test.errors[0].message}\n`
     }
 
     return output

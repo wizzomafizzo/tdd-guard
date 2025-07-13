@@ -438,50 +438,51 @@ function createContext(
   scenario: Scenario,
   operationType: OperationType
 ): Context {
+  const modificationString = createModificationString(scenario, operationType)
+  validateModification(modificationString)
+
+  return {
+    modifications: modificationString,
+    todo: formatTodos(scenario.todos.content),
+    test: scenario.testResult.content,
+  }
+}
+
+function createModificationString(
+  scenario: Scenario,
+  operationType: OperationType
+): string {
   const newString = scenario.newContent.content
   const oldString = scenario.oldContent?.content ?? ''
 
-  let modificationString: string
-
-  // Create the appropriate operation
-  switch (operationType) {
-    case 'Write':
-      modificationString = createWriteOperation(scenario.filePath, newString)
-      break
-    case 'Edit':
-      modificationString = createEditOperation(
-        scenario.filePath,
-        oldString,
-        newString
-      )
-      break
-    case 'MultiEdit':
-      modificationString = createMultiEditOperation(scenario.filePath, [
+  const operationCreators: Record<OperationType, () => string> = {
+    Write: () => createWriteOperation(scenario.filePath, newString),
+    Edit: () => createEditOperation(scenario.filePath, oldString, newString),
+    MultiEdit: () =>
+      createMultiEditOperation(scenario.filePath, [
         {
           old_string: oldString,
           new_string: newString,
           replace_all: false,
         },
-      ])
-      break
+      ]),
   }
 
-  // Validate the operation against the schema
+  return operationCreators[operationType]()
+}
+
+function validateModification(modificationString: string): void {
   const validationResult = FileModificationSchema.safeParse(
     JSON.parse(modificationString)
   )
+
   if (!validationResult.success) {
     throw new Error(
       `Invalid file modification operation: ${validationResult.error.message}`
     )
   }
+}
 
-  return {
-    modifications: modificationString,
-    todo:
-      scenario.todos.content.length > 0
-        ? JSON.stringify(scenario.todos.content)
-        : undefined,
-    test: scenario.testResult.content,
-  }
+function formatTodos(todoList: unknown[]): string | undefined {
+  return todoList.length > 0 ? JSON.stringify(todoList) : undefined
 }
