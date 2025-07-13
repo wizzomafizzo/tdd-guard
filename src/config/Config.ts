@@ -21,18 +21,37 @@ export class Config {
   constructor(options?: ConfigOptions) {
     const mode = options?.mode ?? 'production'
 
-    this.dataDir = options?.dataDir ?? '.claude/tdd-guard/data'
-    this.useSystemClaude =
-      options?.useSystemClaude ?? process.env.USE_SYSTEM_CLAUDE === 'true'
-    this.anthropicApiKey =
-      options?.anthropicApiKey ?? process.env.TDD_GUARD_ANTHROPIC_API_KEY
+    this.dataDir = this.getDataDir(options)
+    this.useSystemClaude = this.getUseSystemClaude(options)
+    this.anthropicApiKey = this.getAnthropicApiKey(options)
+    this.modelType = this.getModelType(options, mode)
+  }
 
-    // Use TEST_MODEL_TYPE in test mode if available
-    this.modelType =
-      options?.modelType ??
-      (mode === 'test' && process.env.TEST_MODEL_TYPE
-        ? process.env.TEST_MODEL_TYPE
-        : (process.env.MODEL_TYPE ?? 'claude_cli'))
+  private getDataDir(options?: ConfigOptions): string {
+    return options?.dataDir ?? '.claude/tdd-guard/data'
+  }
+
+  private getUseSystemClaude(options?: ConfigOptions): boolean {
+    return options?.useSystemClaude ?? process.env.USE_SYSTEM_CLAUDE === 'true'
+  }
+
+  private getAnthropicApiKey(options?: ConfigOptions): string | undefined {
+    return options?.anthropicApiKey ?? process.env.TDD_GUARD_ANTHROPIC_API_KEY
+  }
+
+  private getModelType(
+    options: ConfigOptions | undefined,
+    mode: string
+  ): string {
+    if (options?.modelType) {
+      return options.modelType
+    }
+
+    if (mode === 'test' && process.env.TEST_MODEL_TYPE) {
+      return process.env.TEST_MODEL_TYPE
+    }
+
+    return process.env.MODEL_TYPE ?? 'claude_cli'
   }
 
   get testResultsFilePath(): string {
