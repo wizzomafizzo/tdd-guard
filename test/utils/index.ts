@@ -8,6 +8,7 @@ import * as modelClientProviderFactory from './factories/modelClientProviderFact
 import * as operations from './factories/operations'
 import * as scenarios from './factories/scenarios'
 import * as reporterFactory from './factories/reporterFactory'
+import * as testResultsFactory from './factories/testResultsFactory'
 
 /**
  * Unified test data factory that combines all individual factories
@@ -69,6 +70,20 @@ export const testData = {
   testModule: reporterFactory.testModule,
   passedTestCase: reporterFactory.passedTestCase,
   failedTestCase: reporterFactory.failedTestCase,
+
+  // JSON test results factories
+  emptyTestResults: testResultsFactory.emptyTestResults,
+  failedTestResults: testResultsFactory.failedTestResults,
+  passingTestResults: testResultsFactory.passingTestResults,
+  multipleFailedTestResults: testResultsFactory.multipleFailedTestResults,
+  mixedTestResults: testResultsFactory.mixedTestResults,
+  multipleModulesTestResults: testResultsFactory.multipleModulesTestResults,
+
+  // JSON test results base builders
+  createTestError: testResultsFactory.createTestError,
+  createTest: testResultsFactory.createTest,
+  createTestModule: testResultsFactory.createTestModule,
+  createTestResults: testResultsFactory.createTestResults,
 
   // Default test data values
   defaults: TEST_DEFAULTS,
