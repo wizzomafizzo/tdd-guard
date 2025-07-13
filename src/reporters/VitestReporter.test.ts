@@ -4,10 +4,9 @@ import { Storage } from '../storage/Storage'
 import { FileStorage } from '../storage/FileStorage'
 import { MemoryStorage } from '../storage/MemoryStorage'
 import { Config } from '../config/Config'
-import { rmSync } from 'node:fs'
+import { rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { randomBytes } from 'node:crypto'
 
 describe('VitestReporter', () => {
   let sut: Awaited<ReturnType<typeof setupVitestReporter>>
@@ -109,8 +108,7 @@ function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
   // Create storage based on options
   let storage: Storage
   if (options?.type === 'file') {
-    const randomId = randomBytes(8).toString('hex')
-    testDir = join(tmpdir(), `vitest-reporter-test-${randomId}`)
+    testDir = mkdtempSync(join(tmpdir(), 'vitest-reporter-test-'))
     const config = new Config({ dataDir: testDir })
     storage = new FileStorage(config)
   } else {
