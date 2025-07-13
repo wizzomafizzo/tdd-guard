@@ -65,10 +65,9 @@ function extractFromJsonCodeBlock(response: string): string | null {
   const blocks: string[] = []
 
   let startIndex = 0
-  while (true) {
-    const blockStart = response.indexOf(startPattern, startIndex)
-    if (blockStart === -1) break
+  let blockStart = response.indexOf(startPattern, startIndex)
 
+  while (blockStart !== -1) {
     const contentStart = blockStart + startPattern.length
     const blockEnd = response.indexOf(endPattern, contentStart)
     if (blockEnd === -1) break
@@ -76,6 +75,7 @@ function extractFromJsonCodeBlock(response: string): string | null {
     const content = response.substring(contentStart, blockEnd).trim()
     blocks.push(content)
     startIndex = blockEnd + endPattern.length
+    blockStart = response.indexOf(startPattern, startIndex)
   }
 
   if (blocks.length > 0) {

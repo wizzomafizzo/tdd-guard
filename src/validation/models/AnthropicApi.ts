@@ -34,7 +34,7 @@ interface MessageResponse {
 }
 
 function extractTextFromResponse(response: MessageResponse): string {
-  if (!response.content || response.content.length === 0) {
+  if (response.content.length === 0) {
     throw new Error('No content in response')
   }
 

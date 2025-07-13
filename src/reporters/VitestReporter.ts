@@ -50,8 +50,8 @@ export class VitestReporter implements Reporter {
           return {
             name: testCase.name,
             fullName: testCase.fullName,
-            state: result?.state,
-            errors: result?.errors,
+            state: result.state,
+            errors: result.errors,
           }
         }),
       })),
