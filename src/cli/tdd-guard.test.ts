@@ -133,8 +133,10 @@ async function runCli(
   const cliPath = path.join(__dirname, 'tdd-guard.ts')
 
   return new Promise((resolve) => {
-    const proc = spawn('npx', ['tsx', cliPath], {
+    const npxPath = process.platform === 'win32' ? 'npx.cmd' : 'npx'
+    const proc = spawn(npxPath, ['tsx', cliPath], {
       env: { ...process.env },
+      shell: false,
     })
 
     let stderr = ''
