@@ -50,7 +50,7 @@ describe('tdd-guard CLI', () => {
       tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tdd-guard-test-'))
       storagePath = path.join(tempDir, 'custom-storage')
       testConfig = new Config({ dataDir: storagePath })
-      storage = new FileStorage(storagePath)
+      storage = new FileStorage(testConfig)
       modelProvider = testData.modelClientProvider()
     })
 

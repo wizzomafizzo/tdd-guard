@@ -13,7 +13,7 @@ export async function run(
   provider?: ModelClientProvider
 ) {
   const appConfig = config || new Config()
-  const storage = new FileStorage(appConfig.dataDir)
+  const storage = new FileStorage(appConfig)
   const modelProvider = provider || new ModelClientProvider()
   const modelClient = modelProvider.getModelClient(appConfig)
 

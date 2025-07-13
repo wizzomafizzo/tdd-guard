@@ -1,3 +1,9 @@
+import path from 'path'
+
+const TEST_RESULTS_FILENAME = 'test.txt'
+const TODOS_FILENAME = 'todos.json'
+const MODIFICATIONS_FILENAME = 'modifications.json'
+
 export type ConfigOptions = {
   mode?: 'production' | 'test'
   dataDir?: string
@@ -29,7 +35,15 @@ export class Config {
         : process.env.MODEL_TYPE || 'claude_cli')
   }
 
-  get testReportPath(): string {
-    return `${this.dataDir}/test.txt`
+  get testResultsFilePath(): string {
+    return path.join(this.dataDir, TEST_RESULTS_FILENAME)
+  }
+
+  get todosFilePath(): string {
+    return path.join(this.dataDir, TODOS_FILENAME)
+  }
+
+  get modificationsFilePath(): string {
+    return path.join(this.dataDir, MODIFICATIONS_FILENAME)
   }
 }

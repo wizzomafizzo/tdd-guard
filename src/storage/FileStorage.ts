@@ -1,4 +1,5 @@
 import { Storage } from './Storage'
+import { Config } from '../config/Config'
 import fs from 'fs/promises'
 import path from 'path'
 
@@ -8,8 +9,14 @@ export class FileStorage implements Storage {
     todo: 'todo.json',
     modifications: 'modifications.json',
   } as const
+  private readonly basePath: string
 
-  constructor(private basePath: string) {}
+  constructor(config?: Config) {
+    if (!config) {
+      config = new Config()
+    }
+    this.basePath = config.dataDir
+  }
 
   private async ensureDirectory(): Promise<void> {
     await fs.mkdir(this.basePath, { recursive: true })

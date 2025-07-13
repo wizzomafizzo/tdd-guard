@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { Storage } from './Storage'
 import { MemoryStorage } from './MemoryStorage'
 import { FileStorage } from './FileStorage'
+import { Config } from '../config/Config'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
@@ -104,7 +105,7 @@ function getStorageImplementations(): Array<
           path.join(os.tmpdir(), 'storage-test-')
         )
         return {
-          storage: new FileStorage(tempDir),
+          storage: new FileStorage(new Config({ dataDir: tempDir })),
           cleanup: async () => {
             await fs.rm(tempDir, { recursive: true, force: true })
           },

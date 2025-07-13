@@ -3,6 +3,7 @@ import { Config } from './Config'
 
 describe('Config', () => {
   const originalEnv = process.env
+  const customDataDir = '/custom/data/dir'
 
   beforeEach(() => {
     process.env = { ...originalEnv }
@@ -13,23 +14,33 @@ describe('Config', () => {
   })
 
   describe('dataDir', () => {
-    test('accepts custom dataDir in options', () => {
-      const customDataDir = '/custom/data/dir'
-      const config = new Config({ dataDir: customDataDir })
+    let config: Config
 
+    beforeEach(() => {
+      config = new Config({ dataDir: customDataDir })
+    })
+
+    test('accepts custom dataDir in options', () => {
       expect(config.dataDir).toBe(customDataDir)
     })
 
     test('defaults to .claude/tdd-guard/data when not provided', () => {
-      const config = new Config()
-
-      expect(config.dataDir).toBe('.claude/tdd-guard/data')
+      const defaultConfig = new Config()
+      expect(defaultConfig.dataDir).toBe('.claude/tdd-guard/data')
     })
 
-    test('testReportPath returns test.txt path within dataDir', () => {
-      const config = new Config({ dataDir: '/test/dir' })
+    test('testResultsFilePath returns test.txt path within dataDir', () => {
+      expect(config.testResultsFilePath).toBe(`${customDataDir}/test.txt`)
+    })
 
-      expect(config.testReportPath).toBe('/test/dir/test.txt')
+    test('todosFilePath returns todos.json path within dataDir', () => {
+      expect(config.todosFilePath).toBe(`${customDataDir}/todos.json`)
+    })
+
+    test('modificationsFilePath returns modifications.json path within dataDir', () => {
+      expect(config.modificationsFilePath).toBe(
+        `${customDataDir}/modifications.json`
+      )
     })
   })
 

@@ -12,7 +12,7 @@ export class VitestReporter implements Reporter {
       this.outputPath = outputPath
     } else {
       const config = new Config()
-      this.outputPath = config.testReportPath
+      this.outputPath = config.testResultsFilePath
     }
   }
 

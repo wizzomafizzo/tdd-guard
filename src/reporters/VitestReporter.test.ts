@@ -37,7 +37,7 @@ describe('VitestReporter', () => {
     it('uses Config default path when no path provided', () => {
       const reporter = new VitestReporter()
       const config = new Config()
-      expect(reporter['outputPath']).toBe(config.testReportPath)
+      expect(reporter['outputPath']).toBe(config.testResultsFilePath)
     })
 
     it('uses provided path when specified', () => {
