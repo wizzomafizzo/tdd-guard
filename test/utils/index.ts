@@ -71,7 +71,7 @@ export const testData = {
   passedTestCase: reporterFactory.passedTestCase,
   failedTestCase: reporterFactory.failedTestCase,
 
-  // JSON test results factories
+  // Test results factories
   emptyTestResults: testResultsFactory.emptyTestResults,
   failedTestResults: testResultsFactory.failedTestResults,
   passingTestResults: testResultsFactory.passingTestResults,
@@ -79,7 +79,7 @@ export const testData = {
   mixedTestResults: testResultsFactory.mixedTestResults,
   multipleModulesTestResults: testResultsFactory.multipleModulesTestResults,
 
-  // JSON test results base builders
+  // Test results base builders
   createTestError: testResultsFactory.createTestError,
   createTest: testResultsFactory.createTest,
   createTestModule: testResultsFactory.createTestModule,

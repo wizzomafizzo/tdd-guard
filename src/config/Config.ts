@@ -1,6 +1,6 @@
 import path from 'path'
 
-const TEST_RESULTS_FILENAME = 'test.txt'
+const TEST_RESULTS_FILENAME = 'test.json'
 const TODOS_FILENAME = 'todos.json'
 const MODIFICATIONS_FILENAME = 'modifications.json'
 

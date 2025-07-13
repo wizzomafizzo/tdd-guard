@@ -15,79 +15,161 @@ export interface TestData<T = string> {
 export const testResults = {
   notDefined: {
     description: 'not defined error',
-    content: `
- ❯ src/Calculator/Calculator.test.ts (1 test | 1 failed) 3ms
-   × Calculator > it adds two numbers 2ms
-     → Calculator is not defined
-
- Test Files  1 failed (1)
-      Tests  1 failed (1)
-   Start at  19:25:41
-   Duration  273ms (transform 19ms, setup 0ms, collect 12ms, tests 3ms, environment 0ms, prepare 49ms)
-`,
+    content: JSON.stringify(
+      {
+        testModules: [
+          {
+            moduleId: 'src/Calculator/Calculator.test.ts',
+            tests: [
+              {
+                name: 'it adds two numbers',
+                fullName: 'Calculator > it adds two numbers',
+                state: 'failed',
+                errors: [
+                  {
+                    message: 'Calculator is not defined',
+                    stack:
+                      'ReferenceError: Calculator is not defined\n    at src/Calculator/Calculator.test.ts:3:21',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2
+    ),
   },
   notAConstructor: {
     description: 'not a constructor error',
-    content: `
- ❯ src/Calculator/Calculator.test.ts (1 test | 1 failed) 3ms
-   × Calculator > it adds two numbers 2ms
-     → Calculator is not a constructor
-
- Test Files  1 failed (1)
-      Tests  1 failed (1)
-   Start at  19:56:52
-   Duration  289ms (transform 22ms, setup 0ms, collect 16ms, tests 3ms, environment 0ms, prepare 44ms)
-`,
+    content: JSON.stringify(
+      {
+        testModules: [
+          {
+            moduleId: 'src/Calculator/Calculator.test.ts',
+            tests: [
+              {
+                name: 'it adds two numbers',
+                fullName: 'Calculator > it adds two numbers',
+                state: 'failed',
+                errors: [
+                  {
+                    message: 'Calculator is not a constructor',
+                    stack:
+                      'TypeError: Calculator is not a constructor\n    at src/Calculator/Calculator.test.ts:4:21',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2
+    ),
   },
   notAFunction: {
     description: 'not a function error',
-    content: `
- ❯ src/Calculator/Calculator.test.ts (1 test | 1 failed) 3ms
-   × Calculator > it adds two numbers 2ms
-     → calculator.add is not a function
-
- Test Files  1 failed (1)
-      Tests  1 failed (1)
-   Start at  19:58:00
-   Duration  303ms (transform 22ms, setup 0ms, collect 16ms, tests 3ms, environment 0ms, prepare 55ms)
-`,
+    content: JSON.stringify(
+      {
+        testModules: [
+          {
+            moduleId: 'src/Calculator/Calculator.test.ts',
+            tests: [
+              {
+                name: 'it adds two numbers',
+                fullName: 'Calculator > it adds two numbers',
+                state: 'failed',
+                errors: [
+                  {
+                    message: 'calculator.add is not a function',
+                    stack:
+                      'TypeError: calculator.add is not a function\n    at src/Calculator/Calculator.test.ts:5:30',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2
+    ),
   },
   assertionError: {
     description: 'assertion failure',
-    content: `
- ❯ src/Calculator/Calculator.test.ts (1 test | 1 failed) 4ms
-   × Calculator > it adds two numbers 4ms
-     → expected +0 to be 4 // Object.is equality
-
- Test Files  1 failed (1)
-      Tests  1 failed (1)
-   Start at  19:59:48
-   Duration  298ms (transform 26ms, setup 0ms, collect 16ms, tests 4ms, environment 0ms, prepare 46ms)
-`,
+    content: JSON.stringify(
+      {
+        testModules: [
+          {
+            moduleId: 'src/Calculator/Calculator.test.ts',
+            tests: [
+              {
+                name: 'it adds two numbers',
+                fullName: 'Calculator > it adds two numbers',
+                state: 'failed',
+                errors: [
+                  {
+                    message: 'expected +0 to be 4 // Object.is equality',
+                    stack:
+                      'AssertionError: expected +0 to be 4 // Object.is equality\n    at src/Calculator/Calculator.test.ts:6:23',
+                    expected: '4',
+                    actual: '0',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2
+    ),
   },
   passing: {
     description: 'passing tests',
-    content: `
- ✓ src/Calculator/Calculator.test.ts (1 test) 1ms
-   ✓ Calculator > it adds two numbers 1ms
-
- Test Files  1 passed (1)
-      Tests  1 passed (1)
-   Start at  20:00:50
-   Duration  298ms (transform 21ms, setup 0ms, collect 16ms, tests 1ms, environment 0ms, prepare 56ms)
-`,
+    content: JSON.stringify(
+      {
+        testModules: [
+          {
+            moduleId: 'src/Calculator/Calculator.test.ts',
+            tests: [
+              {
+                name: 'it adds two numbers',
+                fullName: 'Calculator > it adds two numbers',
+                state: 'passed',
+                errors: [],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2
+    ),
   },
   irrelevant: {
     description: 'irrelevant tests',
-    content: `
- ✓ src/Billing/Domestic.test.ts (1 test) 1ms
-   ✓ DomesticBilling > it generates xml report 1ms
-
- Test Files  1 passed (1)
-      Tests  1 passed (1)
-   Start at  20:00:50
-   Duration  298ms (transform 21ms, setup 0ms, collect 16ms, tests 1ms, environment 0ms, prepare 56ms)
-`,
+    content: JSON.stringify(
+      {
+        testModules: [
+          {
+            moduleId: 'src/Billing/Domestic.test.ts',
+            tests: [
+              {
+                name: 'it generates xml report',
+                fullName: 'DomesticBilling > it generates xml report',
+                state: 'passed',
+                errors: [],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2
+    ),
   },
   empty: {
     description: 'no test output',
@@ -615,24 +697,94 @@ describe('Calculator', () => {
 export const refactoringTestResults = {
   failing: {
     description: 'multiple tests failing',
-    content: `FAIL src/Calculator/Calculator.test.ts
-  ❯ Calculator
-    × adds two numbers
-      → expected 4 to be 5
-    × subtracts two numbers  
-      → expected 1 to be 2
-    × multiplies two numbers
-      → expected 11 to be 12
-
-Test Files  1 failed (1)
-Tests  3 failed (3)`,
+    content: JSON.stringify(
+      {
+        testModules: [
+          {
+            moduleId: 'src/Calculator/Calculator.test.ts',
+            tests: [
+              {
+                name: 'adds two numbers',
+                fullName: 'Calculator > adds two numbers',
+                state: 'failed',
+                errors: [
+                  {
+                    message: 'expected 4 to be 5',
+                    stack:
+                      'AssertionError: expected 4 to be 5\n    at src/Calculator/Calculator.test.ts:10:23',
+                    expected: '5',
+                    actual: '4',
+                  },
+                ],
+              },
+              {
+                name: 'subtracts two numbers',
+                fullName: 'Calculator > subtracts two numbers',
+                state: 'failed',
+                errors: [
+                  {
+                    message: 'expected 1 to be 2',
+                    stack:
+                      'AssertionError: expected 1 to be 2\n    at src/Calculator/Calculator.test.ts:16:23',
+                    expected: '2',
+                    actual: '1',
+                  },
+                ],
+              },
+              {
+                name: 'multiplies two numbers',
+                fullName: 'Calculator > multiplies two numbers',
+                state: 'failed',
+                errors: [
+                  {
+                    message: 'expected 11 to be 12',
+                    stack:
+                      'AssertionError: expected 11 to be 12\n    at src/Calculator/Calculator.test.ts:22:23',
+                    expected: '12',
+                    actual: '11',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2
+    ),
   },
   passing: {
     description: 'all tests passing',
-    content: `PASS src/Calculator/Calculator.test.ts
-  ✓ Calculator (3 tests)
-
-Test Files  1 passed (1)
-Tests  3 passed (3)`,
+    content: JSON.stringify(
+      {
+        testModules: [
+          {
+            moduleId: 'src/Calculator/Calculator.test.ts',
+            tests: [
+              {
+                name: 'adds two numbers',
+                fullName: 'Calculator > adds two numbers',
+                state: 'passed',
+                errors: [],
+              },
+              {
+                name: 'subtracts two numbers',
+                fullName: 'Calculator > subtracts two numbers',
+                state: 'passed',
+                errors: [],
+              },
+              {
+                name: 'multiplies two numbers',
+                fullName: 'Calculator > multiplies two numbers',
+                state: 'passed',
+                errors: [],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2
+    ),
   },
 }

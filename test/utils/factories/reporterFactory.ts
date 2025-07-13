@@ -1,6 +1,6 @@
 import type { TestModule, TestCase, TestResult } from 'vitest/node'
 
-// Minimal module - only moduleId is used by JSONReporter
+// Minimal module - only moduleId is used by VitestReporter
 const defaultModule: TestModule = {
   moduleId: '/test/example.test.ts',
 } as TestModule

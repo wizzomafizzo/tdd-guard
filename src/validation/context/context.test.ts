@@ -108,7 +108,7 @@ describe('generateDynamicContext', () => {
   describe('when test output is provided', () => {
     test('should append test information with description', () => {
       const editOperation = testData.editOperation()
-      const testOutput = 'Test failed: Expected 5 but got 4'
+      const testOutput = JSON.stringify(testData.failedTestResults())
       const context = {
         modifications: JSON.stringify(editOperation),
         test: testOutput,
@@ -122,7 +122,30 @@ describe('generateDynamicContext', () => {
       )
       expect(result).toContain('Which tests are failing and why')
       expect(result).toContain('```')
-      expect(result).toContain(testOutput)
+      // Should contain formatted output, not raw JSON
+      expect(result).toContain(' Test Files  1 failed (1)')
+    })
+
+    test('should format JSON test results using TestResultsProcessor', () => {
+      const editOperation = testData.editOperation()
+      const testResults = testData.failedTestResults()
+      const context = {
+        modifications: JSON.stringify(editOperation),
+        test: JSON.stringify(testResults),
+      }
+
+      const result = generateDynamicContext(context)
+
+      expect(result).toContain('### Test Output')
+      // Should contain formatted output from TestResultsProcessor
+      expect(result).toContain(' ❯ /src/example.test.ts (1 tests | 1 failed)')
+      expect(result).toContain('   × Calculator > should calculate sum')
+      expect(result).toContain('     → expected 5 to be 6')
+      expect(result).toContain(' Test Files  1 failed (1)')
+      expect(result).toContain('      Tests  1 failed (1)')
+      // Should NOT contain raw JSON
+      expect(result).not.toContain('"testModules"')
+      expect(result).not.toContain('"moduleId"')
     })
   })
 

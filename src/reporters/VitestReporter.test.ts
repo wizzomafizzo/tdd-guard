@@ -1,21 +1,24 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import type { TestModule, TestCase } from 'vitest/node'
 import { VitestReporter } from './VitestReporter'
-import { Storage } from '../storage/Storage'
-import { FileStorage } from '../storage/FileStorage'
 import { MemoryStorage } from '../storage/MemoryStorage'
+import { FileStorage } from '../storage/FileStorage'
+import { Storage } from '../storage/Storage'
 import { Config } from '../config/Config'
+import { testData } from '@testUtils'
+import {
+  isFailingTest,
+  isPassingTest,
+} from '../contracts/schemas/vitestSchemas'
 import { rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 describe('VitestReporter', () => {
   let sut: Awaited<ReturnType<typeof setupVitestReporter>>
-  const firstTestOutput = 'First test output'
-  const secondTestOutput = 'First test output'
-  const testOutputs = [firstTestOutput, secondTestOutput]
-  const errorMessage = 'Error: Cannot find module'
-  const textWithAnsi = '\x1b[32m✓\x1b[39m Test passed \x1b[2m(5ms)\x1b[22m\n'
-  const textWithoutAnsi = '✓ Test passed (5ms)\n'
+  const module = testData.testModule()
+  const passedTest = testData.passedTestCase()
+  const failedTest = testData.failedTestCase()
 
   beforeEach(() => {
     sut = setupVitestReporter()
@@ -25,83 +28,122 @@ describe('VitestReporter', () => {
     sut.cleanup()
   })
 
-  describe('constructor behavior', () => {
-    it('uses FileStorage when no storage provided', async () => {
-      const sut = setupVitestReporter({ type: 'file' })
+  it('uses FileStorage by default', () => {
+    const reporter = new VitestReporter()
+    expect(reporter['storage']).toBeInstanceOf(FileStorage)
+  })
 
-      expect(sut.reporter['storage']).toBeInstanceOf(FileStorage)
-      expect(await sut.writeAndGetSaved([firstTestOutput])).toBe(
-        firstTestOutput
-      )
+  it('uses FileStorage when no storage provided', async () => {
+    const sut = setupVitestReporter({ type: 'file' })
+
+    expect(sut.reporter['storage']).toBeInstanceOf(FileStorage)
+
+    const result = await sut.collectAndGetSaved([
+      testData.testModule(),
+      testData.passedTestCase(),
+    ])
+
+    expect(result).toBeTruthy()
+    expect(result).toContain('testModules')
+
+    sut.cleanup()
+  })
+
+  it('accepts Storage instance in constructor', () => {
+    const storage = new MemoryStorage()
+    const reporter = new VitestReporter(storage)
+    expect(reporter['storage']).toBe(storage)
+  })
+
+  describe('when collecting test data', () => {
+    beforeEach(async () => {
+      sut.reporter.onTestModuleCollected(module)
+      sut.reporter.onTestCaseResult(passedTest)
+      sut.reporter.onTestCaseResult(failedTest)
+      await sut.reporter.onTestRunEnd()
     })
 
-    it('accepts Storage instance in constructor', () => {
-      const storage = new MemoryStorage()
-      const reporter = new VitestReporter(storage)
-      expect(reporter['storage']).toBe(storage)
+    it('saves output as valid JSON', async () => {
+      const parsed = await sut.getParsedData()
+      expect(parsed).toBeDefined()
     })
+
+    it('includes test modules', async () => {
+      const parsed = await sut.getParsedData()
+
+      expect(parsed.testModules).toHaveLength(1)
+      expect(parsed.testModules[0].moduleId).toBe(module.moduleId)
+    })
+
+    it('includes test cases', async () => {
+      const tests = await sut.getTests()
+      expect(tests).toHaveLength(2)
+    })
+
+    it('captures test states', async () => {
+      const passedTests = await sut.getPassedTests()
+      const failedTests = await sut.getFailedTests()
+
+      expect(passedTests).toHaveLength(1)
+      expect(failedTests).toHaveLength(1)
+    })
+
+    it('includes error information for failed tests', async () => {
+      const failedTests = await sut.getFailedTests()
+      const failedTestData = failedTests[0]
+
+      expect(failedTestData).toBeDefined()
+      expect(failedTestData.state).toBe('failed')
+      expect(failedTestData.errors).toBeDefined()
+      expect(failedTestData.errors.length).toBeGreaterThan(0)
+    })
+  })
+
+  it('handles empty test runs', async () => {
+    // When no tests are collected
+    await sut.reporter.onTestRunEnd()
+
+    // Then output should be valid JSON with empty modules
+    const parsed = await sut.getParsedData()
+
+    expect(parsed).toEqual({ testModules: [] })
   })
 
   describe('storage integration', () => {
     it('saves test output to storage', async () => {
-      expect(await sut.writeAndGetSaved([firstTestOutput])).toBe(
-        firstTestOutput
-      )
+      const result = await sut.collectAndGetSaved([
+        testData.testModule(),
+        testData.passedTestCase(),
+      ])
+
+      expect(result).toBeTruthy()
+      expect(result).toContain('testModules')
+      expect(result).toContain('passed')
     })
 
-    it('accumulates multiple outputs in storage', async () => {
-      expect(await sut.writeAndGetSaved(testOutputs)).toContain(firstTestOutput)
-      expect(await sut.writeAndGetSaved(testOutputs)).toContain(
-        secondTestOutput
-      )
-    })
-  })
+    it('accumulates multiple test results in storage', async () => {
+      const result = await sut.collectAndGetSaved([
+        module,
+        passedTest,
+        failedTest,
+      ])
 
-  describe('output capture behavior', () => {
-    describe('ansi handling', () => {
-      beforeEach(async () => {
-        sut.writeOutput(textWithAnsi)
-        await sut.reporter.onTestRunEnd()
-      })
-
-      it('console output is not stripped of ansi codes', () => {
-        expect(sut.getConsoleOutput()).toBe(textWithAnsi)
-      })
-
-      it('strips ansi codes from output to file', async () => {
-        expect(await sut.storage.getTest()).toBe(textWithoutAnsi)
-      })
-    })
-
-    describe('stderr capture', () => {
-      it('captures and saves stderr output to file', async () => {
-        const saved = await sut.writeAndGetSaved([
-          { type: 'stderr', content: errorMessage },
-        ])
-
-        expect(saved).toContain(errorMessage)
-      })
+      const parsed = JSON.parse(result!)
+      expect(parsed.testModules[0].tests).toHaveLength(2)
     })
   })
 })
 
-function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
-  // Console output mocking
-  const originalWrite = process.stdout.write.bind(process.stdout)
-  const originalErrWrite = process.stderr.write.bind(process.stderr)
-  let consoleOutput = ''
-  let consoleError = ''
-  const mockWrite = vi.fn((chunk: string | Uint8Array) => {
-    consoleOutput = chunk?.toString() || ''
-    return true
-  })
-  const mockErrWrite = vi.fn((chunk: string | Uint8Array) => {
-    consoleError = chunk?.toString() || ''
-    return true
-  })
-  process.stdout.write = mockWrite
-  process.stderr.write = mockErrWrite
+// Type guards
+function isTestModule(item: TestModule | TestCase): item is TestModule {
+  return 'moduleId' in item && !('module' in item)
+}
 
+function isTestCase(item: TestModule | TestCase): item is TestCase {
+  return 'result' in item
+}
+
+function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
   // Test directory setup for FileStorage tests
   let testDir: string | undefined
 
@@ -116,53 +158,57 @@ function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
   }
 
   const reporter = new VitestReporter(storage)
-  reporter.onInit()
 
-  // Test utilities
-  const writeOutput = (output: string) => process.stdout.write(output)
-  const writeError = (error: string) => process.stderr.write(error)
-  const getConsoleOutput = () => consoleOutput
-  const getConsoleError = () => consoleError
-
-  // Helper to write outputs and get saved content
-  const writeAndGetSaved = async (
-    outputs: Array<string | { type: 'stderr'; content: string }>
-  ) => {
-    for (const output of outputs) {
-      if (typeof output === 'string') {
-        writeOutput(output)
-      } else {
-        writeError(output.content)
+  // Helper to collect test data and get saved content
+  const collectAndGetSaved = async (items: Array<TestModule | TestCase>) => {
+    for (const item of items) {
+      if (isTestModule(item)) {
+        reporter.onTestModuleCollected(item)
+      } else if (isTestCase(item)) {
+        reporter.onTestCaseResult(item)
       }
     }
+
     await reporter.onTestRunEnd()
     return storage.getTest()
   }
 
+  // Test data access helpers
+  const getParsedData = async () => {
+    const content = await storage.getTest()
+    return content ? JSON.parse(content) : null
+  }
+
+  const getTests = async () => {
+    const parsed = await getParsedData()
+    return parsed?.testModules[0]?.tests || []
+  }
+
+  const getPassedTests = async () => {
+    const tests = await getTests()
+    return tests.filter(isPassingTest)
+  }
+
+  const getFailedTests = async () => {
+    const tests = await getTests()
+    return tests.filter(isFailingTest)
+  }
+
   // Cleanup function
   const cleanup = () => {
-    process.stdout.write = originalWrite
-    process.stderr.write = originalErrWrite
     if (testDir) {
       rmSync(testDir, { recursive: true, force: true })
     }
   }
 
   return {
-    // Reporter
     reporter,
-    writeOutput,
-    writeError,
-    writeAndGetSaved,
-
-    // Storage
     storage,
-
-    // Console output
-    getConsoleOutput,
-    getConsoleError,
-
-    // Lifecycle
+    collectAndGetSaved,
+    getParsedData,
+    getTests,
+    getPassedTests,
+    getFailedTests,
     cleanup,
   }
 }

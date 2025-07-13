@@ -29,8 +29,8 @@ describe('Config', () => {
       expect(defaultConfig.dataDir).toBe('.claude/tdd-guard/data')
     })
 
-    test('testResultsFilePath returns test.txt path within dataDir', () => {
-      expect(config.testResultsFilePath).toBe(`${customDataDir}/test.txt`)
+    test('testResultsFilePath returns test.json path within dataDir', () => {
+      expect(config.testResultsFilePath).toBe(`${customDataDir}/test.json`)
     })
 
     test('todosFilePath returns todos.json path within dataDir', () => {

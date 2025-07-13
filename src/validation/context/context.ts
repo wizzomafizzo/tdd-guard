@@ -9,6 +9,7 @@ import {
   WriteOperation,
   Todo,
 } from '../../contracts/schemas/toolSchemas'
+import { TestResultsProcessor } from '../../processors'
 
 // Import core prompts (always included)
 import { ROLE_AND_CONTEXT } from '../prompts/role-and-context'
@@ -146,11 +147,14 @@ function formatEdit(
 }
 
 function formatTestOutput(testOutput: string): string {
+  const processor = new TestResultsProcessor()
+  const formattedOutput = processor.process(testOutput)
+
   return [
     '\n### Test Output\n',
     TEST_OUTPUT_DESCRIPTION,
     '\n```\n',
-    testOutput,
+    formattedOutput,
     '\n```\n',
   ].join('')
 }
