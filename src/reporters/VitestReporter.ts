@@ -1,29 +1,18 @@
 import type { Reporter } from 'vitest/node'
-import { mkdirSync, appendFileSync, writeFileSync } from 'node:fs'
-import { dirname } from 'node:path'
 import { stripVTControlCharacters } from 'node:util'
-import { Config } from '../config/Config'
+import { Storage } from '../storage/Storage'
+import { FileStorage } from '../storage/FileStorage'
 
 export class VitestReporter implements Reporter {
-  private outputPath: string
+  private storage: Storage
+  private capturedOutput: string = ''
 
-  constructor(outputPath?: string) {
-    if (outputPath) {
-      this.outputPath = outputPath
-    } else {
-      const config = new Config()
-      this.outputPath = config.testResultsFilePath
-    }
+  constructor(storage?: Storage) {
+    this.storage = storage || new FileStorage()
   }
 
   onInit() {
-    const dir = dirname(this.outputPath)
-    mkdirSync(dir, { recursive: true })
-
-    // Create empty file
-    writeFileSync(this.outputPath, '')
-
-    // Create a proxy handler that captures output to file
+    // Create a proxy handler that captures output
     const createWriteProxy = (originalWrite: typeof process.stdout.write) => {
       return new Proxy(originalWrite, {
         apply: (target, thisArg, args) => {
@@ -31,7 +20,8 @@ export class VitestReporter implements Reporter {
           const str = chunk?.toString() || ''
           // Remove ANSI escape sequences (color codes) from text
           const cleanStr = stripVTControlCharacters(str)
-          appendFileSync(this.outputPath, cleanStr)
+          // Accumulate output
+          this.capturedOutput += cleanStr
           return Reflect.apply(target, thisArg, args)
         },
       })
@@ -44,5 +34,12 @@ export class VitestReporter implements Reporter {
     process.stderr.write = createWriteProxy(
       process.stderr.write.bind(process.stderr)
     ) as typeof process.stderr.write
+  }
+
+  async onTestRunEnd() {
+    // Save accumulated output to storage
+    if (this.capturedOutput) {
+      await this.storage.saveTest(this.capturedOutput)
+    }
   }
 }

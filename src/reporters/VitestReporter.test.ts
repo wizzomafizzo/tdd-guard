@@ -1,16 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { VitestReporter } from './VitestReporter'
-import { existsSync, readFileSync, rmSync } from 'node:fs'
-import { join } from 'node:path'
-import { tmpdir } from 'node:os'
-import { randomBytes } from 'node:crypto'
-import { stripVTControlCharacters } from 'node:util'
+import { Storage } from '../storage/Storage'
+import { FileStorage } from '../storage/FileStorage'
+import { MemoryStorage } from '../storage/MemoryStorage'
 import { Config } from '../config/Config'
+import { rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { randomBytes } from 'node:crypto'
 
 describe('VitestReporter', () => {
   let sut: Awaited<ReturnType<typeof setupVitestReporter>>
-
-  const plainText = 'Test output line 1\n'
+  const firstTestOutput = 'First test output'
+  const secondTestOutput = 'First test output'
+  const testOutputs = [firstTestOutput, secondTestOutput]
+  const errorMessage = 'Error: Cannot find module'
   const textWithAnsi = '\x1b[32m✓\x1b[39m Test passed \x1b[2m(5ms)\x1b[22m\n'
   const textWithoutAnsi = '✓ Test passed (5ms)\n'
 
@@ -22,89 +26,67 @@ describe('VitestReporter', () => {
     sut.cleanup()
   })
 
-  describe('file system operations', () => {
-    it('directory does not exist before initialization', () => {
-      expect(sut.dirExists()).toBe(false)
+  describe('constructor behavior', () => {
+    it('uses FileStorage when no storage provided', async () => {
+      const sut = setupVitestReporter({ type: 'file' })
+
+      expect(sut.reporter['storage']).toBeInstanceOf(FileStorage)
+      expect(await sut.writeAndGetSaved([firstTestOutput])).toBe(
+        firstTestOutput
+      )
     })
 
-    it('creates directory on initialization', () => {
-      sut.reporter.onInit()
-      expect(sut.dirExists()).toBe(true)
+    it('accepts Storage instance in constructor', () => {
+      const storage = new MemoryStorage()
+      const reporter = new VitestReporter(storage)
+      expect(reporter['storage']).toBe(storage)
     })
   })
 
-  describe('constructor behavior', () => {
-    it('uses Config default path when no path provided', () => {
-      const reporter = new VitestReporter()
-      const config = new Config()
-      expect(reporter['outputPath']).toBe(config.testResultsFilePath)
+  describe('storage integration', () => {
+    it('saves test output to storage', async () => {
+      expect(await sut.writeAndGetSaved([firstTestOutput])).toBe(
+        firstTestOutput
+      )
     })
 
-    it('uses provided path when specified', () => {
-      const customPath = '/custom/path/test.txt'
-      const reporter = new VitestReporter(customPath)
-      expect(reporter['outputPath']).toBe(customPath)
+    it('accumulates multiple outputs in storage', async () => {
+      expect(await sut.writeAndGetSaved(testOutputs)).toContain(firstTestOutput)
+      expect(await sut.writeAndGetSaved(testOutputs)).toContain(
+        secondTestOutput
+      )
     })
   })
 
   describe('output capture behavior', () => {
-    beforeEach(() => {
-      sut.reporter.onInit()
-    })
-
-    describe('file writing', () => {
-      beforeEach(() => {
-        sut.writeOutput(plainText)
-      })
-
-      it('creates file when writing output', () => {
-        expect(sut.fileExists()).toBe(true)
-      })
-
-      it('saves exact output to file', () => {
-        expect(sut.getFileContent()).toBe(plainText)
-      })
-    })
-
     describe('ansi handling', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         sut.writeOutput(textWithAnsi)
+        await sut.reporter.onTestRunEnd()
       })
 
       it('console output is not stripped of ansi codes', () => {
         expect(sut.getConsoleOutput()).toBe(textWithAnsi)
       })
 
-      it('file content matches stripped console output', () => {
-        const strippedConsoleOutput = stripVTControlCharacters(
-          sut.getConsoleOutput()
-        )
-
-        expect(sut.getFileContent()).toBe(strippedConsoleOutput)
-      })
-
-      it('strips ansi codes from output to file', () => {
-        expect(sut.getFileContent()).toBe(textWithoutAnsi)
+      it('strips ansi codes from output to file', async () => {
+        expect(await sut.storage.getTest()).toBe(textWithoutAnsi)
       })
     })
 
     describe('stderr capture', () => {
-      it('captures and saves stderr output to file', () => {
-        const errorMessage = 'Error: Cannot find module\n'
-        sut.writeError(errorMessage)
+      it('captures and saves stderr output to file', async () => {
+        const saved = await sut.writeAndGetSaved([
+          { type: 'stderr', content: errorMessage },
+        ])
 
-        expect(sut.getFileContent()).toContain(errorMessage)
+        expect(saved).toContain(errorMessage)
       })
     })
   })
 })
 
-function setupVitestReporter() {
-  // Test file setup
-  const randomId = randomBytes(8).toString('hex')
-  const testDir = join(tmpdir(), `vitest-reporter-test-${randomId}`)
-  const testFile = join(testDir, 'test-output.txt')
-
+function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
   // Console output mocking
   const originalWrite = process.stdout.write.bind(process.stdout)
   const originalErrWrite = process.stderr.write.bind(process.stderr)
@@ -121,39 +103,62 @@ function setupVitestReporter() {
   process.stdout.write = mockWrite
   process.stderr.write = mockErrWrite
 
-  // Create reporter instance
-  const reporter = new VitestReporter(testFile)
+  // Test directory setup for FileStorage tests
+  let testDir: string | undefined
+
+  // Create storage based on options
+  let storage: Storage
+  if (options?.type === 'file') {
+    const randomId = randomBytes(8).toString('hex')
+    testDir = join(tmpdir(), `vitest-reporter-test-${randomId}`)
+    const config = new Config({ dataDir: testDir })
+    storage = new FileStorage(config)
+  } else {
+    storage = new MemoryStorage()
+  }
+
+  const reporter = new VitestReporter(storage)
+  reporter.onInit()
 
   // Test utilities
-  const dirExists = () => existsSync(testDir)
-  const fileExists = () => existsSync(testFile)
-  const getFileContent = () => readFileSync(testFile, 'utf-8')
   const writeOutput = (output: string) => process.stdout.write(output)
   const writeError = (error: string) => process.stderr.write(error)
   const getConsoleOutput = () => consoleOutput
   const getConsoleError = () => consoleError
 
+  // Helper to write outputs and get saved content
+  const writeAndGetSaved = async (
+    outputs: Array<string | { type: 'stderr'; content: string }>
+  ) => {
+    for (const output of outputs) {
+      if (typeof output === 'string') {
+        writeOutput(output)
+      } else {
+        writeError(output.content)
+      }
+    }
+    await reporter.onTestRunEnd()
+    return storage.getTest()
+  }
+
   // Cleanup function
   const cleanup = () => {
     process.stdout.write = originalWrite
     process.stderr.write = originalErrWrite
-    if (existsSync(testDir)) {
+    if (testDir) {
       rmSync(testDir, { recursive: true, force: true })
     }
   }
 
   return {
-    // File system
-    testDir,
-    testFile,
-    dirExists,
-    fileExists,
-    getFileContent,
-
     // Reporter
     reporter,
     writeOutput,
     writeError,
+    writeAndGetSaved,
+
+    // Storage
+    storage,
 
     // Console output
     getConsoleOutput,
