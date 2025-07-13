@@ -153,20 +153,7 @@ describe('ClaudeCli', () => {
 })
 
 // Test Helpers
-function createSut(options: { useSystemClaude?: boolean } = {}): {
-  client: ClaudeCli
-  mockResponse: (response: string | object) => void
-  getLastCall: () => {
-    command: string
-    args: string[]
-    options: Record<string, unknown>
-  }
-  askAndGetCall: (prompt?: string) => Promise<{
-    command: string
-    args: string[]
-    options: Record<string, unknown>
-  }>
-} {
+function createSut(options: { useSystemClaude?: boolean } = {}) {
   // Setup mocks
   vi.clearAllMocks()
   mockExecFileSync.mockReturnValue(JSON.stringify({ result: 'test' }))

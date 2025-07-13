@@ -77,7 +77,7 @@ describe('processHookData', () => {
     // Verify the context, parsing JSON to handle formatting differences
     expect({
       ...actualContext,
-      modifications: JSON.parse(actualContext.modifications),
+      modifications: JSON.parse(actualContext!.modifications),
     }).toEqual({
       modifications: EDIT_HOOK_DATA,
       test: 'existing test',
@@ -116,16 +116,7 @@ describe('processHookData', () => {
 })
 
 // Test setup helper
-function createTestProcessor(): {
-  storage: MemoryStorage
-  process: (hookData: unknown) => Promise<ValidationResult>
-  populateStorage: (data: { modifications?: string; test?: string; todo?: string }) => Promise<void>
-  getModifications: () => Promise<string | null>
-  getTest: () => Promise<string | null>
-  getTodo: () => Promise<string | null>
-  validatorHasBeenCalled: () => boolean
-  getValidatorCallArgs: () => Context | null
-} {
+function createTestProcessor() {
   const storage = new MemoryStorage()
   const mockValidator = vi.fn().mockResolvedValue(BLOCK_RESULT)
   

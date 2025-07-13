@@ -147,18 +147,7 @@ function isTestCase(item: TestModule | TestCase): item is TestCase {
   return 'result' in item
 }
 
-function setupVitestReporter(options?: { type: 'file' | 'memory' }): {
-  reporter: VitestReporter
-  storage: Storage
-  collectAndGetSaved: (
-    items: Array<TestModule | TestCase>
-  ) => Promise<string | null>
-  getParsedData: () => Promise<TestResult | null>
-  getTests: () => Promise<Test[]>
-  getPassedTests: () => Promise<(Test & { state: 'passed' })[]>
-  getFailedTests: () => Promise<(Test & { state: 'failed' })[]>
-  cleanup: () => void
-} {
+function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
   // Test directory setup for FileStorage tests
   let testDir: string | undefined
 

@@ -86,18 +86,7 @@ interface MessageCreateParams {
   messages: Array<{ role: string; content: string }>
 }
 
-function createSut(apiKey?: string): {
-  client: AnthropicApi
-  mockCreate: ReturnType<typeof vi.fn>
-  mockAnthropicConstructor: typeof Anthropic
-  config: Config
-  mockResponse: (text: string) => void
-  getLastCall: () => MessageCreateParams
-  askAndGetCall: (prompt?: string) => Promise<MessageCreateParams>
-  wasCreatedWithApiKey: (apiKey: string) => boolean
-  askWithResponse: (responseText: string) => Promise<string | undefined>
-  askWithError: (errorMessage: string) => Promise<string | undefined>
-} {
+function createSut(apiKey?: string) {
   vi.clearAllMocks()
 
   const mockCreate = vi.fn().mockResolvedValue({
