@@ -73,8 +73,9 @@ describe('VitestReporter', () => {
     it('includes test modules', async () => {
       const parsed = await sut.getParsedData()
 
-      expect(parsed.testModules).toHaveLength(1)
-      expect(parsed.testModules[0].moduleId).toBe(module.moduleId)
+      expect(parsed).not.toBeNull()
+      expect(parsed?.testModules).toHaveLength(1)
+      expect(parsed?.testModules[0].moduleId).toBe(module.moduleId)
     })
 
     it('includes test cases', async () => {
@@ -97,7 +98,7 @@ describe('VitestReporter', () => {
       expect(failedTestData).toBeDefined()
       expect(failedTestData.state).toBe('failed')
       expect(failedTestData.errors).toBeDefined()
-      expect(failedTestData.errors.length).toBeGreaterThan(0)
+      expect(failedTestData.errors?.length).toBeGreaterThan(0)
     })
   })
 
@@ -108,6 +109,7 @@ describe('VitestReporter', () => {
     // Then output should be valid JSON with empty modules
     const parsed = await sut.getParsedData()
 
+    expect(parsed).not.toBeNull()
     expect(parsed).toEqual({ testModules: [] })
   })
 
