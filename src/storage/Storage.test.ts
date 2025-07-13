@@ -7,7 +7,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
 
-describe.each(getStorageImplementations())('%s', (name, setupStorage) => {
+describe.each(getStorageImplementations())('%s', (_name, setupStorage) => {
   let storage: Storage
   let cleanup: (() => Promise<void>) | undefined
 
