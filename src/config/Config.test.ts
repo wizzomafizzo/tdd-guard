@@ -12,104 +12,160 @@ describe('Config', () => {
     process.env = originalEnv
   })
 
-  test('dataDir is hardcoded to .claude/tdd-guard/data', () => {
-    const config = new Config()
+  describe('dataDir', () => {
+    test('accepts custom dataDir in options', () => {
+      const customDataDir = '/custom/data/dir'
+      const config = new Config({ dataDir: customDataDir })
 
-    expect(config.dataDir).toBe('.claude/tdd-guard/data')
+      expect(config.dataDir).toBe(customDataDir)
+    })
+
+    test('defaults to .claude/tdd-guard/data when not provided', () => {
+      const config = new Config()
+
+      expect(config.dataDir).toBe('.claude/tdd-guard/data')
+    })
+
+    test('testReportPath returns test.txt path within dataDir', () => {
+      const config = new Config({ dataDir: '/test/dir' })
+
+      expect(config.testReportPath).toBe('/test/dir/test.txt')
+    })
   })
 
-  test('testReportPath returns test.txt path within dataDir', () => {
-    const config = new Config()
+  describe('useSystemClaude', () => {
+    test('can be set via options', () => {
+      const config = new Config({ useSystemClaude: true })
 
-    expect(config.testReportPath).toBe('.claude/tdd-guard/data/test.txt')
+      expect(config.useSystemClaude).toBe(true)
+    })
+
+    test('options take precedence over env var', () => {
+      process.env.USE_SYSTEM_CLAUDE = 'false'
+
+      const config = new Config({ useSystemClaude: true })
+
+      expect(config.useSystemClaude).toBe(true)
+    })
+
+    test('falls back to env var when not in options', () => {
+      process.env.USE_SYSTEM_CLAUDE = 'true'
+
+      const config = new Config({})
+
+      expect(config.useSystemClaude).toBe(true)
+    })
+
+    test('defaults to false when neither options nor env var are set', () => {
+      delete process.env.USE_SYSTEM_CLAUDE
+
+      const config = new Config()
+
+      expect(config.useSystemClaude).toBe(false)
+    })
+
+    test('returns false for non-true env values', () => {
+      // Test with 'false'
+      process.env.USE_SYSTEM_CLAUDE = 'false'
+      let config = new Config()
+      expect(config.useSystemClaude).toBe(false)
+
+      // Test with empty string
+      process.env.USE_SYSTEM_CLAUDE = ''
+      config = new Config()
+      expect(config.useSystemClaude).toBe(false)
+    })
   })
 
-  test('useSystemClaude returns true when USE_SYSTEM_CLAUDE is true', () => {
-    process.env.USE_SYSTEM_CLAUDE = 'true'
+  describe('anthropicApiKey', () => {
+    test('can be set via options', () => {
+      const config = new Config({ anthropicApiKey: 'options-api-key' })
 
-    const config = new Config()
+      expect(config.anthropicApiKey).toBe('options-api-key')
+    })
 
-    expect(config.useSystemClaude).toBe(true)
+    test('options take precedence over env var', () => {
+      process.env.TDD_GUARD_ANTHROPIC_API_KEY = 'env-api-key'
 
-    delete process.env.USE_SYSTEM_CLAUDE
+      const config = new Config({ anthropicApiKey: 'options-api-key' })
+
+      expect(config.anthropicApiKey).toBe('options-api-key')
+    })
+
+    test('falls back to env var when not in options', () => {
+      process.env.TDD_GUARD_ANTHROPIC_API_KEY = 'env-api-key'
+
+      const config = new Config()
+
+      expect(config.anthropicApiKey).toBe('env-api-key')
+    })
+
+    test('returns undefined when neither options nor env var are set', () => {
+      delete process.env.TDD_GUARD_ANTHROPIC_API_KEY
+
+      const config = new Config()
+
+      expect(config.anthropicApiKey).toBeUndefined()
+    })
   })
 
-  test('useSystemClaude returns false when USE_SYSTEM_CLAUDE is not true', () => {
-    // Test with 'false'
-    process.env.USE_SYSTEM_CLAUDE = 'false'
-    let config = new Config()
-    expect(config.useSystemClaude).toBe(false)
+  describe('modelType', () => {
+    test('can be set via options', () => {
+      const config = new Config({ modelType: 'anthropic_api' })
 
-    // Test with undefined
-    delete process.env.USE_SYSTEM_CLAUDE
-    config = new Config()
-    expect(config.useSystemClaude).toBe(false)
+      expect(config.modelType).toBe('anthropic_api')
+    })
 
-    // Test with empty string
-    process.env.USE_SYSTEM_CLAUDE = ''
-    config = new Config()
-    expect(config.useSystemClaude).toBe(false)
+    test('options take precedence over env vars', () => {
+      process.env.MODEL_TYPE = 'claude_cli'
 
-    delete process.env.USE_SYSTEM_CLAUDE
-  })
+      const config = new Config({ modelType: 'anthropic_api' })
 
-  test('anthropicApiKey returns value from TDD_GUARD_ANTHROPIC_API_KEY env var', () => {
-    process.env.TDD_GUARD_ANTHROPIC_API_KEY = 'test-api-key-123'
+      expect(config.modelType).toBe('anthropic_api')
+    })
 
-    const config = new Config()
+    test('options take precedence even in test mode with TEST_MODEL_TYPE', () => {
+      process.env.MODEL_TYPE = 'claude_cli'
+      process.env.TEST_MODEL_TYPE = 'test_model'
 
-    expect(config.anthropicApiKey).toBe('test-api-key-123')
+      const config = new Config({ mode: 'test', modelType: 'anthropic_api' })
 
-    delete process.env.TDD_GUARD_ANTHROPIC_API_KEY
-  })
+      expect(config.modelType).toBe('anthropic_api')
+    })
 
-  test('anthropicApiKey returns undefined when TDD_GUARD_ANTHROPIC_API_KEY is not set', () => {
-    delete process.env.TDD_GUARD_ANTHROPIC_API_KEY
+    test('falls back to MODEL_TYPE env var in production mode', () => {
+      process.env.MODEL_TYPE = 'anthropic_api'
 
-    const config = new Config()
+      const config = new Config()
 
-    expect(config.anthropicApiKey).toBeUndefined()
-  })
+      expect(config.modelType).toBe('anthropic_api')
+    })
 
-  test('modelType returns claude_cli when MODEL_TYPE is set to claude_cli', () => {
-    process.env.MODEL_TYPE = 'claude_cli'
+    test('uses TEST_MODEL_TYPE in test mode when available', () => {
+      process.env.MODEL_TYPE = 'claude_cli'
+      process.env.TEST_MODEL_TYPE = 'anthropic_api'
 
-    const config = new Config()
+      const config = new Config({ mode: 'test' })
 
-    expect(config.modelType).toBe('claude_cli')
-  })
+      expect(config.modelType).toBe('anthropic_api')
+    })
 
-  test('modelType returns anthropic_api when MODEL_TYPE is set to anthropic_api', () => {
-    process.env.MODEL_TYPE = 'anthropic_api'
+    test('falls back to MODEL_TYPE in test mode when TEST_MODEL_TYPE is not set', () => {
+      process.env.MODEL_TYPE = 'anthropic_api'
+      delete process.env.TEST_MODEL_TYPE
 
-    const config = new Config()
+      const config = new Config({ mode: 'test' })
 
-    expect(config.modelType).toBe('anthropic_api')
-  })
+      expect(config.modelType).toBe('anthropic_api')
+    })
 
-  test('modelType defaults to claude_cli when MODEL_TYPE is not set', () => {
-    delete process.env.MODEL_TYPE
+    test('defaults to claude_cli when no env vars are set', () => {
+      delete process.env.MODEL_TYPE
+      delete process.env.TEST_MODEL_TYPE
 
-    const config = new Config()
+      const config = new Config()
 
-    expect(config.modelType).toBe('claude_cli')
-  })
-
-  test('uses TEST_MODEL_TYPE when mode is test', () => {
-    process.env.MODEL_TYPE = 'claude_cli'
-    process.env.TEST_MODEL_TYPE = 'anthropic_api'
-
-    const config = new Config({ mode: 'test' })
-
-    expect(config.modelType).toBe('anthropic_api')
-
-    delete process.env.TEST_MODEL_TYPE
-  })
-
-  test('accepts custom dataDir in options', () => {
-    const customDataDir = '/custom/data/dir'
-    const config = new Config({ dataDir: customDataDir })
-
-    expect(config.dataDir).toBe(customDataDir)
+      expect(config.modelType).toBe('claude_cli')
+    })
   })
 })

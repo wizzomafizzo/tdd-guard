@@ -1,4 +1,4 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { AnthropicApi } from './AnthropicApi'
 import { Config } from '../../config/Config'
 import Anthropic from '@anthropic-ai/sdk'
@@ -8,17 +8,10 @@ vi.mock('@anthropic-ai/sdk')
 describe('AnthropicApi', () => {
   let sut: Awaited<ReturnType<typeof createSut>>
   let client: AnthropicApi
-  const originalEnv = process.env
 
   beforeEach(() => {
-    process.env = { ...originalEnv }
-    delete process.env.TDD_GUARD_ANTHROPIC_API_KEY
     sut = createSut()
     client = sut.client
-  })
-
-  afterEach(() => {
-    process.env = originalEnv
   })
 
   test('should implement IModelClient interface', () => {
@@ -101,12 +94,7 @@ function createSut(apiKey?: string) {
       }) as unknown as Anthropic
   )
 
-  // Set up environment
-  if (apiKey) {
-    process.env.TDD_GUARD_ANTHROPIC_API_KEY = apiKey
-  }
-
-  const config = new Config()
+  const config = new Config({ anthropicApiKey: apiKey })
   const client = new AnthropicApi(config)
 
   const mockResponse = (text: string) => {
