@@ -2,15 +2,16 @@
 
 ## Project Goal
 
-TDD Guard uses Claude Code hooks to intercept relevant operations and employ a separate model to judge whether they violate Test-Driven Development (TDD) principles.
-This aids the agent in adhering to TDD principles without cluttering instructions or context with repeated reminders about proper TDD practices.
+TDD Guard is a Claude Code hook that enforces Test-Driven Development by intercepting file operations.
+When Claude Code attempts to edit or write files, TDD Guard:
 
-## Configuration
+1. **Captures**: Intercepts Edit, MultiEdit, and Write operations
+2. **Analyzes**: Examines test results, file paths, and code changes
+3. **Validates**: Checks TDD compliance using an AI model
+4. **Blocks**: Prevents operations that skip tests or over-implement
+5. **Guides**: Explains violations and suggests corrections
 
-TDD Guard uses environment variables for configuration. Copy `.env.example` to `.env` and configure as needed:
-
-- `USE_SYSTEM_CLAUDE`: Set to `true` to use system Claude, or `false` to use `~/.claude/local/claude` (defaults to `false`)
-- `TDD_GUARD_ANTHROPIC_API_KEY`: API key for AnthropicApi. Get your key from https://console.anthropic.com/
+This automated enforcement maintains code quality without cluttering prompts with TDD reminders.
 
 ## Development Workflow
 
@@ -37,11 +38,7 @@ The project uses husky and lint-staged to ensure code quality before commits:
 - **Explain why, not what**: Commit messages should explain the reason for the change
 - **Conventional format**: Use prefixes to categorize changes: feat, fix, refactor, test, chore, docs
 
-**Good commit message**: `feat: add network request filtering to reduce noise in captured data`  
-**Poor commit message**: `feat: add filter function to requests.ts`
-
-The message should help future developers understand why this change was necessary, not just describe what files were modified.
-Aim for clarity and helpfulness while being concise.
+Example: `feat: add network request filtering to reduce noise in captured data` (explains why, not just what)
 
 ## Project Structure
 
@@ -49,44 +46,46 @@ The codebase follows a clean, modular architecture organized by domain and respo
 
 ```
 src/
-├── cli/                          # Command-line interface and entry points
-│   ├── tdd-guard.ts              # Main CLI executable - receives hooks from Claude Code
-│   └── buildContext.ts           # Aggregates stored data into validation context
-│
-├── contracts/                    # Shared contracts and data definitions
-│   ├── types/                    # TypeScript interfaces and types
-│   │   ├── Context.ts            # Data structure passed to model for validation
-│   │   ├── ModelClient.ts        # Interface for AI model implementations
-│   │   └── ValidationResult.ts   # Validation result structure (approve/block)
-│   └── schemas/                  # Runtime data validation
-│       └── toolSchemas.ts        # Tool operations with discriminated unions
-│
-├── hooks/                        # Hook data extraction and processing
-│   ├── HookEvents.ts             # Processes and persists tool operations
-│   └── processHookData.ts        # Orchestrates hook parsing and validation flow
-│
+├── cli/                          # Hook entry point and context builder
+├── config/                       # Environment and runtime configuration
+├── contracts/                    # Types and Zod validation schemas
+├── hooks/                        # Claude Code hook parsing and processing
+├── providers/                    # Model client factory based on config
 ├── validation/                   # TDD principle validation
 │   ├── validator.ts              # Sends context to AI model and parses response
-│   ├── context/                  # Context engineering and formatting
-│   │   └── context.ts            # Formats operation data for model validation
-│   ├── prompts/                  # Modular prompt system
-│   │   └── ...                   # Operation-specific instructions and prompts
-│   └── models/                   # AI model implementations
-│       ├── ClaudeCli.ts          # Executes Claude CLI for validation
-│       └── AnthropicApi.ts       # Uses Anthropic API for validation
-│
-├── storage/                      # Data persistence layer
-│   ├── Storage.ts                # Abstract interface for storage operations
-│   ├── FileStorage.ts            # Persists context data to files
-│   └── MemoryStorage.ts          # In-memory Map storage for testing
-│
-├── test/                         # Test utilities and factories
-│   ├── index.ts                  # Unified export for all test factories
-│   └── factories/                # Test data creation utilities
-│       └── ...                   # Various operation factories and helpers
-│
-└── reporters/                    # Test output capture
-    └── VitestReporter.ts         # Vitest reporter that captures test results to file
+│   ├── context/                  # Formats operations for AI validation
+│   ├── prompts/                  # TDD validation rules and AI instructions
+│   └── models/                   # Claude CLI and Anthropic API clients
+├── storage/                      # File and memory storage implementations
+├── reporters/                    # Vitest reporter for test result capture
+└── index.ts                      # Package entry point
+
+test/
+├── integration/                  # End-to-end validation scenario tests
+└── utils/                        # Test factories and helper utilities
+
+docs/
+├── adr/                          # Architecture Decision Records
+└── CONFIGURATION.md              # Detailed configuration guide
+```
+
+### Testing
+
+#### Guidelines
+
+- **Use test helpers**: Extract setup logic into helper functions placed at the bottom of test files
+- **Use test factories**: Always use factories from `test/utils/` instead of creating data inline
+- **Group tests effectively**: Use `describe` blocks and `beforeEach` for common setup
+- **Keep tests concise**: Keep as little logic in the tests themselves as possible
+
+#### Commands
+
+```bash
+npm run test              # All unit tests and base integration tests
+npm run test:unit         # Fast unit tests only
+npm run test:integration  # Slow integration tests (run after major prompt changes)
+npm run lint              # Check code style and quality
+npm run format            # Auto-format code with Prettier
 ```
 
 ### Key Design Principles
@@ -94,9 +93,4 @@ src/
 - **Interface-driven**: Core functionality defined by interfaces (`Storage`, `ModelClient`)
 - **Dependency injection**: Components receive dependencies as parameters
 - **Single responsibility**: Each module has one clear purpose
-- **Test coverage**: Every implementation has corresponding tests
 - **Type safety**: Comprehensive TypeScript types with runtime validation
-
-### Architecture Decision Records
-
-Important architectural decisions are documented in `docs/adr/`. These records explain the context, decision, and consequences of significant design choices.
