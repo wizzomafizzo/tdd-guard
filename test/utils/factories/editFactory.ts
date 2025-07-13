@@ -13,14 +13,25 @@ import { TEST_DEFAULTS } from './testDefaults'
  * Creates a single edit object
  * @param params - Optional parameters for the edit
  */
-export const edit = (params?: Partial<Edit>): Edit => ({
-  file_path: params?.file_path ?? TEST_DEFAULTS.edit.file_path,
-  old_string: params?.old_string ?? TEST_DEFAULTS.edit.old_string,
-  new_string: params?.new_string ?? TEST_DEFAULTS.edit.new_string,
-  ...(params?.replace_all !== undefined && {
-    replace_all: params.replace_all,
-  }),
-})
+export const edit = (params?: Partial<Edit>): Edit => {
+  const defaults = TEST_DEFAULTS.edit
+
+  if (!params) {
+    return { ...defaults }
+  }
+
+  const result: Edit = {
+    file_path: params.file_path ?? defaults.file_path,
+    old_string: params.old_string ?? defaults.old_string,
+    new_string: params.new_string ?? defaults.new_string,
+  }
+
+  if (params.replace_all !== undefined) {
+    result.replace_all = params.replace_all
+  }
+
+  return result
+}
 
 /**
  * Creates an edit object with specified properties omitted

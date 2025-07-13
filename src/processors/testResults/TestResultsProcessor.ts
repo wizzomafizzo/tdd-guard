@@ -36,18 +36,12 @@ export class TestResultsProcessor {
     let passedModuleCount = 0
 
     for (const module of data.testModules) {
-      let moduleHasFailures = false
+      const moduleCounts = this.countModuleTests(module.tests)
 
-      for (const test of module.tests) {
-        if (isFailingTest(test)) {
-          failedCount++
-          moduleHasFailures = true
-        } else if (isPassingTest(test)) {
-          passedCount++
-        }
-      }
+      failedCount += moduleCounts.failed
+      passedCount += moduleCounts.passed
 
-      if (moduleHasFailures) {
+      if (moduleCounts.failed > 0) {
         failedModuleCount++
       } else {
         passedModuleCount++
@@ -55,6 +49,24 @@ export class TestResultsProcessor {
     }
 
     return { failedCount, passedCount, failedModuleCount, passedModuleCount }
+  }
+
+  private countModuleTests(tests: TestResult['testModules'][0]['tests']): {
+    failed: number
+    passed: number
+  } {
+    let failed = 0
+    let passed = 0
+
+    for (const test of tests) {
+      if (isFailingTest(test)) {
+        failed++
+      } else if (isPassingTest(test)) {
+        passed++
+      }
+    }
+
+    return { failed, passed }
   }
 
   private formatModules(data: TestResult): string {

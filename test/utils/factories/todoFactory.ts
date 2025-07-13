@@ -14,12 +14,20 @@ import { TEST_DEFAULTS } from './testDefaults'
  * Creates a single todo object
  * @param params - Optional parameters for the todo
  */
-export const todo = (params?: Partial<Todo>): Todo => ({
-  content: params?.content ?? TEST_DEFAULTS.todo.content,
-  status: params?.status ?? TEST_DEFAULTS.todo.status,
-  priority: params?.priority ?? TEST_DEFAULTS.todo.priority,
-  id: params?.id ?? TEST_DEFAULTS.todo.id,
-})
+export const todo = (params?: Partial<Todo>): Todo => {
+  const defaults = TEST_DEFAULTS.todo
+
+  if (!params) {
+    return { ...defaults }
+  }
+
+  return {
+    content: params.content ?? defaults.content,
+    status: params.status ?? defaults.status,
+    priority: params.priority ?? defaults.priority,
+    id: params.id ?? defaults.id,
+  }
+}
 
 /**
  * Creates a todo object with specified properties omitted
