@@ -154,26 +154,38 @@ export class TestResultsProcessor {
   private parseAndValidate(
     jsonData: string
   ): { success: true; data: TestResult } | { success: false; error: string } {
-    let parsed: unknown
-    try {
-      parsed = JSON.parse(jsonData)
-    } catch {
-      return { success: false, error: 'Invalid JSON format.' }
+    const parsed = this.parseJson(jsonData)
+    if (!parsed.success) {
+      return parsed
     }
 
-    const result = TestResultSchema.safeParse(parsed)
+    const result = TestResultSchema.safeParse(parsed.data)
     if (!result.success) {
-      // Handle the specific case of empty object which should show "No test results found"
-      if (
-        typeof parsed === 'object' &&
-        parsed !== null &&
-        !('testModules' in parsed)
-      ) {
-        return { success: false, error: 'No test results found.' }
-      }
-      return { success: false, error: 'Invalid test result format.' }
+      return { success: false, error: this.getValidationError(parsed.data) }
     }
 
     return { success: true, data: result.data }
+  }
+
+  private parseJson(
+    jsonData: string
+  ): { success: true; data: unknown } | { success: false; error: string } {
+    try {
+      const data = JSON.parse(jsonData)
+      return { success: true, data }
+    } catch {
+      return { success: false, error: 'Invalid JSON format.' }
+    }
+  }
+
+  private getValidationError(parsed: unknown): string {
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      !('testModules' in parsed)
+    ) {
+      return 'No test results found.'
+    }
+    return 'Invalid test result format.'
   }
 }

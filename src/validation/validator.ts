@@ -105,29 +105,34 @@ function extractPlainJson(response: string): string | null {
 }
 
 function extractFromGenericCodeBlock(response: string): string | null {
-  // Find first code block
+  const codeBlock = findCodeBlock(response)
+  if (!codeBlock) return null
+
+  const content = codeBlock.trim()
+  return isValidJson(content) ? content : null
+}
+
+function findCodeBlock(response: string): string | null {
   const startPattern = '```'
   const blockStart = response.indexOf(startPattern)
   if (blockStart === -1) return null
 
-  const contentStart = blockStart + startPattern.length
-  // Skip any whitespace/newline after opening ```
-  let actualStart = contentStart
-  while (actualStart < response.length && /\s/.test(response[actualStart])) {
-    actualStart++
-  }
-
-  const blockEnd = response.indexOf(startPattern, actualStart)
+  const contentStart = skipWhitespace(
+    response,
+    blockStart + startPattern.length
+  )
+  const blockEnd = response.indexOf(startPattern, contentStart)
   if (blockEnd === -1) return null
 
-  const content = response.substring(actualStart, blockEnd).trim()
+  return response.substring(contentStart, blockEnd)
+}
 
-  if (isValidJson(content)) {
-    return content
+function skipWhitespace(text: string, startIndex: number): number {
+  let index = startIndex
+  while (index < text.length && /\s/.test(text[index])) {
+    index++
   }
-
-  // Don't return content from non-JSON code blocks
-  return null
+  return index
 }
 
 function isValidJson(str: string): boolean {

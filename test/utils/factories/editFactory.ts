@@ -15,19 +15,16 @@ import { TEST_DEFAULTS } from './testDefaults'
  */
 export const edit = (params?: Partial<Edit>): Edit => {
   const defaults = TEST_DEFAULTS.edit
-
-  if (!params) {
-    return { ...defaults }
-  }
+  const base = params ?? {}
 
   const result: Edit = {
-    file_path: params.file_path ?? defaults.file_path,
-    old_string: params.old_string ?? defaults.old_string,
-    new_string: params.new_string ?? defaults.new_string,
+    file_path: base.file_path ?? defaults.file_path,
+    old_string: base.old_string ?? defaults.old_string,
+    new_string: base.new_string ?? defaults.new_string,
   }
 
-  if (params.replace_all !== undefined) {
-    result.replace_all = params.replace_all
+  if (base.replace_all !== undefined) {
+    result.replace_all = base.replace_all
   }
 
   return result

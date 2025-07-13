@@ -43,15 +43,16 @@ export class Config {
     options: ConfigOptions | undefined,
     mode: string
   ): string {
-    if (options?.modelType) {
-      return options.modelType
-    }
+    return (
+      options?.modelType ?? this.getEnvironmentModelType(mode) ?? 'claude_cli'
+    )
+  }
 
+  private getEnvironmentModelType(mode: string): string | undefined {
     if (mode === 'test' && process.env.TEST_MODEL_TYPE) {
       return process.env.TEST_MODEL_TYPE
     }
-
-    return process.env.MODEL_TYPE ?? 'claude_cli'
+    return process.env.MODEL_TYPE
   }
 
   get testResultsFilePath(): string {

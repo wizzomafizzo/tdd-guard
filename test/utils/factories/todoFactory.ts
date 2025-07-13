@@ -16,16 +16,13 @@ import { TEST_DEFAULTS } from './testDefaults'
  */
 export const todo = (params?: Partial<Todo>): Todo => {
   const defaults = TEST_DEFAULTS.todo
-
-  if (!params) {
-    return { ...defaults }
-  }
+  const base = params ?? {}
 
   return {
-    content: params.content ?? defaults.content,
-    status: params.status ?? defaults.status,
-    priority: params.priority ?? defaults.priority,
-    id: params.id ?? defaults.id,
+    content: base.content ?? defaults.content,
+    status: base.status ?? defaults.status,
+    priority: base.priority ?? defaults.priority,
+    id: base.id ?? defaults.id,
   }
 }
 
