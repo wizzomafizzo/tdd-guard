@@ -13,18 +13,28 @@ export class TestResultsProcessor {
     }
 
     const data = parseResult.data
-
     if (data.testModules.length === 0) {
       return 'No test results found.'
     }
 
+    const counts = this.countTestsAndModules(data)
+    const moduleOutput = this.formatModules(data)
+    const summaryOutput = this.formatSummary(counts)
+
+    return moduleOutput + '\n' + summaryOutput
+  }
+
+  private countTestsAndModules(data: TestResult): {
+    failedCount: number
+    passedCount: number
+    failedModuleCount: number
+    passedModuleCount: number
+  } {
     let failedCount = 0
     let passedCount = 0
     let failedModuleCount = 0
     let passedModuleCount = 0
-    let output = ''
 
-    // Count tests and modules
     for (const module of data.testModules) {
       let moduleHasFailures = false
 
@@ -44,36 +54,56 @@ export class TestResultsProcessor {
       }
     }
 
-    // Start output without RUN header
+    return { failedCount, passedCount, failedModuleCount, passedModuleCount }
+  }
 
-    // Show all modules
+  private formatModules(data: TestResult): string {
+    let output = ''
+
     for (const module of data.testModules) {
       const testCount = module.tests.length
       const failedTests = module.tests.filter(isFailingTest)
 
       if (failedTests.length === 0) {
-        // All tests in this module passed
         output += ` ✓ ${module.moduleId} (${testCount} tests) 0ms\n`
       } else {
-        // Some tests in this module failed
         output += ` ❯ ${module.moduleId} (${testCount} tests | ${failedTests.length} failed) 0ms\n`
+        output += this.formatFailingModuleTests(module.tests)
+      }
+    }
 
-        // Show individual test results for failing modules
-        for (const test of module.tests) {
-          if (isPassingTest(test)) {
-            output += `   ✓ ${test.fullName} 0ms\n`
-          } else if (isFailingTest(test)) {
-            output += `   × ${test.fullName} 0ms\n`
-            if (test.errors && test.errors.length > 0) {
-              output += `     → ${test.errors[0].message}\n`
-            }
-          }
+    return output
+  }
+
+  private formatFailingModuleTests(
+    tests: TestResult['testModules'][0]['tests']
+  ): string {
+    let output = ''
+
+    for (const test of tests) {
+      if (isPassingTest(test)) {
+        output += `   ✓ ${test.fullName} 0ms\n`
+      } else if (isFailingTest(test)) {
+        output += `   × ${test.fullName} 0ms\n`
+        if (test.errors && test.errors.length > 0) {
+          output += `     → ${test.errors[0].message}\n`
         }
       }
     }
 
-    // Summary
-    output += `\n`
+    return output
+  }
+
+  private formatSummary(counts: {
+    failedCount: number
+    passedCount: number
+    failedModuleCount: number
+    passedModuleCount: number
+  }): string {
+    const { failedCount, passedCount, failedModuleCount, passedModuleCount } =
+      counts
+    let output = ''
+
     if (failedCount > 0) {
       if (passedCount > 0) {
         output += ` Test Files  ${failedModuleCount} failed | ${passedModuleCount} passed (${failedModuleCount + passedModuleCount})\n`
