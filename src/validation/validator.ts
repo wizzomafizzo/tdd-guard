@@ -59,12 +59,27 @@ function extractJsonString(response: string): string {
 }
 
 function extractFromJsonCodeBlock(response: string): string | null {
-  const jsonMatches = Array.from(
-    response.matchAll(/```json\s*\n?([\s\S]*?)\n?```/g)
-  )
+  // Find all json code blocks
+  const startPattern = '```json'
+  const endPattern = '```'
+  const blocks: string[] = []
 
-  if (jsonMatches.length > 0) {
-    return jsonMatches[jsonMatches.length - 1][1].trim()
+  let startIndex = 0
+  while (true) {
+    const blockStart = response.indexOf(startPattern, startIndex)
+    if (blockStart === -1) break
+
+    const contentStart = blockStart + startPattern.length
+    const blockEnd = response.indexOf(endPattern, contentStart)
+    if (blockEnd === -1) break
+
+    const content = response.substring(contentStart, blockEnd).trim()
+    blocks.push(content)
+    startIndex = blockEnd + endPattern.length
+  }
+
+  if (blocks.length > 0) {
+    return blocks[blocks.length - 1]
   }
 
   return null
@@ -90,13 +105,22 @@ function extractPlainJson(response: string): string | null {
 }
 
 function extractFromGenericCodeBlock(response: string): string | null {
-  const genericMatch = response.match(/```\s*\n?([\s\S]*?)\n?```/)
+  // Find first code block
+  const startPattern = '```'
+  const blockStart = response.indexOf(startPattern)
+  if (blockStart === -1) return null
 
-  if (!genericMatch) {
-    return null
+  const contentStart = blockStart + startPattern.length
+  // Skip any whitespace/newline after opening ```
+  let actualStart = contentStart
+  while (actualStart < response.length && /\s/.test(response[actualStart])) {
+    actualStart++
   }
 
-  const content = genericMatch[1].trim()
+  const blockEnd = response.indexOf(startPattern, actualStart)
+  if (blockEnd === -1) return null
+
+  const content = response.substring(actualStart, blockEnd).trim()
 
   if (isValidJson(content)) {
     return content
