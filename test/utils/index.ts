@@ -7,6 +7,7 @@ import * as contextFactory from './factories/contextFactory'
 import * as modelClientProviderFactory from './factories/modelClientProviderFactory'
 import * as operations from './factories/operations'
 import * as scenarios from './factories/scenarios'
+import * as reporterFactory from './factories/reporterFactory'
 
 /**
  * Unified test data factory that combines all individual factories
@@ -63,6 +64,11 @@ export const testData = {
   refactoringTestResults: scenarios.refactoringTestResults,
   refactoringTests: scenarios.refactoringTests,
   todos: scenarios.todos,
+
+  // Reporter factories - Vitest test modules and cases
+  testModule: reporterFactory.testModule,
+  passedTestCase: reporterFactory.passedTestCase,
+  failedTestCase: reporterFactory.failedTestCase,
 
   // Default test data values
   defaults: TEST_DEFAULTS,
