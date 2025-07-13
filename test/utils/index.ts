@@ -9,6 +9,7 @@ import * as operations from './factories/operations'
 import * as scenarios from './factories/scenarios'
 import * as reporterFactory from './factories/reporterFactory'
 import * as testResultsFactory from './factories/testResultsFactory'
+import * as lintFactory from './factories/lintFactory'
 
 /**
  * Unified test data factory that combines all individual factories
@@ -84,6 +85,12 @@ export const testData = {
   createTest: testResultsFactory.createTest,
   createTestModule: testResultsFactory.createTestModule,
   createTestResults: testResultsFactory.createTestResults,
+
+  // Lint factories
+  lintIssue: lintFactory.lintIssue,
+  lintIssueWithout: lintFactory.lintIssueWithout,
+  lintData: lintFactory.lintData,
+  lintDataWithout: lintFactory.lintDataWithout,
 
   // Default test data values
   defaults: TEST_DEFAULTS,
