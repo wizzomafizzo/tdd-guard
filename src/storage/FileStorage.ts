@@ -1,39 +1,33 @@
 import { Storage } from './Storage'
 import { Config } from '../config/Config'
 import fs from 'fs/promises'
-import path from 'path'
 
 export class FileStorage implements Storage {
-  private readonly files = {
-    test: 'test.txt',
-    todo: 'todo.json',
-    modifications: 'modifications.json',
-  } as const
-  private readonly basePath: string
+  private readonly config: Config
+  private readonly filePaths: Record<string, string>
 
   constructor(config?: Config) {
-    const cfg = config ?? new Config()
-    this.basePath = cfg.dataDir
+    this.config = config ?? new Config()
+    this.filePaths = {
+      test: this.config.testResultsFilePath,
+      todo: this.config.todosFilePath,
+      modifications: this.config.modificationsFilePath,
+      lint: this.config.lintFilePath,
+    }
   }
 
   private async ensureDirectory(): Promise<void> {
-    await fs.mkdir(this.basePath, { recursive: true })
+    await fs.mkdir(this.config.dataDir, { recursive: true })
   }
 
-  private async save(
-    type: keyof typeof this.files,
-    content: string
-  ): Promise<void> {
+  private async save(type: string, content: string): Promise<void> {
     await this.ensureDirectory()
-    await fs.writeFile(path.join(this.basePath, this.files[type]), content)
+    await fs.writeFile(this.filePaths[type], content)
   }
 
-  private async get(type: keyof typeof this.files): Promise<string | null> {
+  private async get(type: string): Promise<string | null> {
     try {
-      return await fs.readFile(
-        path.join(this.basePath, this.files[type]),
-        'utf-8'
-      )
+      return await fs.readFile(this.filePaths[type], 'utf-8')
     } catch {
       return null
     }
@@ -51,6 +45,10 @@ export class FileStorage implements Storage {
     await this.save('modifications', content)
   }
 
+  async saveLint(content: string): Promise<void> {
+    await this.save('lint', content)
+  }
+
   async getTest(): Promise<string | null> {
     return this.get('test')
   }
@@ -61,5 +59,9 @@ export class FileStorage implements Storage {
 
   async getModifications(): Promise<string | null> {
     return this.get('modifications')
+  }
+
+  async getLint(): Promise<string | null> {
+    return this.get('lint')
   }
 }
