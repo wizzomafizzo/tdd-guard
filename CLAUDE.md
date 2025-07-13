@@ -51,6 +51,7 @@ src/
 ├── contracts/                    # Types and Zod validation schemas
 ├── hooks/                        # Claude Code hook parsing and processing
 ├── providers/                    # Model client factory based on config
+├── processors/                   # Test result processing and formatting
 ├── validation/                   # TDD principle validation
 │   ├── validator.ts              # Sends context to AI model and parses response
 │   ├── context/                  # Formats operations for AI validation
