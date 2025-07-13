@@ -7,6 +7,10 @@ import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
 
+// Test content constants
+const FIRST_CONTENT = 'first content'
+const SECOND_CONTENT = 'second content'
+
 describe.each(getStorageImplementations())('%s', (_name, setupStorage) => {
   let storage: Storage
   let cleanup: (() => Promise<void>) | undefined
@@ -66,24 +70,24 @@ describe.each(getStorageImplementations())('%s', (_name, setupStorage) => {
 
   describe('save methods overwrite existing content', () => {
     beforeEach(async () => {
-      await storage.saveTest('first content')
-      await storage.saveTodo('first content')
-      await storage.saveModifications('first content')
-      await storage.saveTest('second content')
-      await storage.saveTodo('second content')
-      await storage.saveModifications('second content')
+      await storage.saveTest(FIRST_CONTENT)
+      await storage.saveTodo(FIRST_CONTENT)
+      await storage.saveModifications(FIRST_CONTENT)
+      await storage.saveTest(SECOND_CONTENT)
+      await storage.saveTodo(SECOND_CONTENT)
+      await storage.saveModifications(SECOND_CONTENT)
     })
 
     it('should overwrite existing test content', async () => {
-      expect(await storage.getTest()).toBe('second content')
+      expect(await storage.getTest()).toBe(SECOND_CONTENT)
     })
 
     it('should overwrite existing todo content', async () => {
-      expect(await storage.getTodo()).toBe('second content')
+      expect(await storage.getTodo()).toBe(SECOND_CONTENT)
     })
 
     it('should overwrite existing modifications content', async () => {
-      expect(await storage.getModifications()).toBe('second content')
+      expect(await storage.getModifications()).toBe(SECOND_CONTENT)
     })
   })
 })

@@ -5,6 +5,9 @@ import Anthropic from '@anthropic-ai/sdk'
 
 vi.mock('@anthropic-ai/sdk')
 
+// Test constants
+const DEFAULT_TEST_PROMPT = 'test prompt'
+
 describe('AnthropicApi', () => {
   let sut: Awaited<ReturnType<typeof createSut>>
   let client: AnthropicApi
@@ -66,13 +69,13 @@ describe('AnthropicApi', () => {
   test('ask method should handle empty content array', async () => {
     sut.mockCreate.mockResolvedValue({ content: [] })
 
-    await expect(client.ask('test prompt')).rejects.toThrow()
+    await expect(client.ask(DEFAULT_TEST_PROMPT)).rejects.toThrow()
   })
 
   test('ask method should handle missing text property', async () => {
     sut.mockCreate.mockResolvedValue({ content: [{ type: 'image' }] })
 
-    await expect(client.ask('test prompt')).rejects.toThrow()
+    await expect(client.ask(DEFAULT_TEST_PROMPT)).rejects.toThrow()
   })
 })
 
@@ -131,7 +134,7 @@ function createSut(apiKey?: string): {
   }
 
   const askAndGetCall = async (
-    prompt = 'test prompt'
+    prompt = DEFAULT_TEST_PROMPT
   ): Promise<MessageCreateParams> => {
     await client.ask(prompt)
     return getLastCall()
@@ -147,14 +150,14 @@ function createSut(apiKey?: string): {
     responseText: string
   ): Promise<string | undefined> => {
     mockResponse(responseText)
-    return client.ask('test prompt')
+    return client.ask(DEFAULT_TEST_PROMPT)
   }
 
   const askWithError = async (
     errorMessage: string
   ): Promise<string | undefined> => {
     mockCreate.mockRejectedValue(new Error(errorMessage))
-    return client.ask('test prompt')
+    return client.ask(DEFAULT_TEST_PROMPT)
   }
 
   return {

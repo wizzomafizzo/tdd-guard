@@ -9,6 +9,9 @@ vi.mock('fs', { spy: true })
 
 const mockExecFileSync = vi.mocked(execFileSync)
 
+// Test constants
+const DEFAULT_TEST_PROMPT = 'test prompt'
+
 describe('ClaudeCli', () => {
   let sut: Awaited<ReturnType<typeof createSut>>
   let client: ClaudeCli
@@ -84,7 +87,7 @@ describe('ClaudeCli', () => {
       const cliOutput = JSON.stringify({ result: modelResponse })
       mockExecFileSync.mockReturnValue(cliOutput)
 
-      const result = await client.ask('test prompt')
+      const result = await client.ask(DEFAULT_TEST_PROMPT)
 
       expect(result).toBe(modelResponse)
     })
@@ -98,7 +101,7 @@ describe('ClaudeCli', () => {
       })
       mockExecFileSync.mockReturnValue(cliOutput)
 
-      const result = await client.ask('test prompt')
+      const result = await client.ask(DEFAULT_TEST_PROMPT)
 
       expect(result).toBe(modelResponse)
     })
@@ -107,7 +110,7 @@ describe('ClaudeCli', () => {
       const cliOutput = JSON.stringify({ error: 'No result' })
       mockExecFileSync.mockReturnValue(cliOutput)
 
-      const result = await client.ask('test prompt')
+      const result = await client.ask(DEFAULT_TEST_PROMPT)
 
       expect(result).toBeUndefined()
     })
@@ -133,7 +136,7 @@ describe('ClaudeCli', () => {
   describe('security', () => {
     test('uses execFileSync with system claude when useSystemClaude is true', async () => {
       const localSut = createSut({ useSystemClaude: true })
-      await localSut.client.ask('test prompt')
+      await localSut.client.ask(DEFAULT_TEST_PROMPT)
 
       const call = localSut.getLastCall()
       expect(call.command).toBe('claude')
@@ -141,7 +144,7 @@ describe('ClaudeCli', () => {
 
     test('uses execFileSync with local claude path when useSystemClaude is false', async () => {
       const localSut = createSut({ useSystemClaude: false })
-      await localSut.client.ask('test prompt')
+      await localSut.client.ask(DEFAULT_TEST_PROMPT)
 
       const call = localSut.getLastCall()
       expect(call.command).toBe(`${process.env.HOME}/.claude/local/claude`)
@@ -195,7 +198,7 @@ function createSut(options: { useSystemClaude?: boolean } = {}): {
   }
 
   const askAndGetCall = async (
-    prompt = 'test prompt'
+    prompt = DEFAULT_TEST_PROMPT
   ): Promise<{
     command: string
     args: string[]
