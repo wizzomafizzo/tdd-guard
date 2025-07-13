@@ -52,6 +52,6 @@ export function createMultiEditOperation(
 ): string {
   return createOperation('MultiEdit', {
     file_path: filePath,
-    edits: edits,
+    edits,
   })
 }
