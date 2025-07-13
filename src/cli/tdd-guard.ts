@@ -5,11 +5,17 @@ import { processHookData } from '../hooks/processHookData'
 import { FileStorage } from '../storage/FileStorage'
 import { validator } from '../validation/validator'
 import { Config } from '../config/Config'
+import { ModelClientProvider } from '../providers/ModelClientProvider'
 
-export async function run(input: string, config?: Config) {
+export async function run(
+  input: string,
+  config?: Config,
+  provider?: ModelClientProvider
+) {
   const appConfig = config || new Config()
   const storage = new FileStorage(appConfig.dataDir)
-  const modelClient = appConfig.getModelClient()
+  const modelProvider = provider || new ModelClientProvider()
+  const modelClient = modelProvider.getModelClient(appConfig)
 
   return processHookData(input, {
     storage,

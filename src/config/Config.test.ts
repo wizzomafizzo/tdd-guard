@@ -1,7 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest'
 import { Config } from './Config'
-import { ClaudeCli } from '../validation/models/ClaudeCli'
-import { AnthropicApi } from '../validation/models/AnthropicApi'
 
 describe('Config', () => {
   const originalEnv = process.env
@@ -97,33 +95,21 @@ describe('Config', () => {
     expect(config.modelType).toBe('claude_cli')
   })
 
-  test('getModelClient returns ClaudeCli when modelType is claude_cli', () => {
-    process.env.MODEL_TYPE = 'claude_cli'
-
-    const config = new Config()
-    const client = config.getModelClient()
-
-    expect(client).toBeInstanceOf(ClaudeCli)
-  })
-
-  test('getModelClient returns AnthropicApi when modelType is anthropic_api', () => {
-    process.env.MODEL_TYPE = 'anthropic_api'
-    process.env.TDD_GUARD_ANTHROPIC_API_KEY = 'test-key'
-
-    const config = new Config()
-    const client = config.getModelClient()
-
-    expect(client).toBeInstanceOf(AnthropicApi)
-  })
-
-  test('getModelClient uses TEST_MODEL_TYPE in test mode over MODEL_TYPE', () => {
+  test('uses TEST_MODEL_TYPE when mode is test', () => {
     process.env.MODEL_TYPE = 'claude_cli'
     process.env.TEST_MODEL_TYPE = 'anthropic_api'
-    process.env.TDD_GUARD_ANTHROPIC_API_KEY = 'test-key'
 
-    const config = new Config()
-    const client = config.getModelClient(true) // true indicates test mode
+    const config = new Config({ mode: 'test' })
 
-    expect(client).toBeInstanceOf(AnthropicApi)
+    expect(config.modelType).toBe('anthropic_api')
+
+    delete process.env.TEST_MODEL_TYPE
+  })
+
+  test('accepts custom dataDir in options', () => {
+    const customDataDir = '/custom/data/dir'
+    const config = new Config({ dataDir: customDataDir })
+
+    expect(config.dataDir).toBe(customDataDir)
   })
 })

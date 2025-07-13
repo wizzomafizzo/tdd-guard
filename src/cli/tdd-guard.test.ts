@@ -4,6 +4,8 @@ import path from 'path'
 import fs from 'fs/promises'
 import os from 'os'
 import { FileStorage } from '../storage/FileStorage'
+import { Config } from '../config/Config'
+import { ModelClientProvider } from '../providers/ModelClientProvider'
 import { run } from './tdd-guard'
 import { testData } from '@testUtils'
 
@@ -39,15 +41,17 @@ describe('tdd-guard CLI', () => {
     let tempDir: string
     let storagePath: string
     let storage: FileStorage
-    let testConfig: ReturnType<typeof testData.config>
+    let testConfig: Config
+    let modelProvider: ModelClientProvider
     const originalEnv = process.env
 
     beforeEach(async () => {
       process.env = { ...originalEnv }
       tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tdd-guard-test-'))
       storagePath = path.join(tempDir, 'custom-storage')
-      testConfig = testData.config({ dataDir: storagePath })
+      testConfig = new Config({ dataDir: storagePath })
       storage = new FileStorage(storagePath)
+      modelProvider = testData.modelClientProvider()
     })
 
     afterEach(async () => {
@@ -57,7 +61,7 @@ describe('tdd-guard CLI', () => {
 
     test('uses custom dataDir from Config', async () => {
       const hookData = testData.editOperation()
-      await run(JSON.stringify(hookData), testConfig)
+      await run(JSON.stringify(hookData), testConfig, modelProvider)
 
       expect(await pathExists(storagePath)).toBe(true)
     })
@@ -65,7 +69,7 @@ describe('tdd-guard CLI', () => {
     test('saves Edit data', async () => {
       const hookData = testData.editOperation()
 
-      await run(JSON.stringify(hookData), testConfig)
+      await run(JSON.stringify(hookData), testConfig, modelProvider)
 
       const savedModifications = await storage.getModifications()
       expect(JSON.parse(savedModifications!)).toStrictEqual(hookData)
@@ -74,7 +78,7 @@ describe('tdd-guard CLI', () => {
     test('saves Write data', async () => {
       const hookData = testData.writeOperation()
 
-      await run(JSON.stringify(hookData), testConfig)
+      await run(JSON.stringify(hookData), testConfig, modelProvider)
 
       const savedModifications = await storage.getModifications()
       expect(JSON.parse(savedModifications!)).toStrictEqual(hookData)
@@ -83,7 +87,7 @@ describe('tdd-guard CLI', () => {
     test('saves TodoWrite data', async () => {
       const hookData = testData.todoWriteOperation()
 
-      await run(JSON.stringify(hookData), testConfig)
+      await run(JSON.stringify(hookData), testConfig, modelProvider)
 
       const savedTodos = await storage.getTodo()
       expect(JSON.parse(savedTodos!)).toStrictEqual(hookData)
@@ -92,10 +96,24 @@ describe('tdd-guard CLI', () => {
     test('saves MultiEdit data', async () => {
       const hookData = testData.multiEditOperation()
 
-      await run(JSON.stringify(hookData), testConfig)
+      await run(JSON.stringify(hookData), testConfig, modelProvider)
 
       const savedModifications = await storage.getModifications()
       expect(JSON.parse(savedModifications!)).toStrictEqual(hookData)
+    })
+
+    test('uses provided ModelClientProvider', async () => {
+      const hookData = testData.editOperation()
+
+      const result = await run(
+        JSON.stringify(hookData),
+        testConfig,
+        modelProvider
+      )
+
+      // The mock provider always returns undefined decision
+      expect(result.decision).toBe(undefined)
+      expect(result.reason).toContain('Using mock model client')
     })
   })
 })

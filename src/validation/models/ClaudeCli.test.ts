@@ -1,8 +1,8 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest'
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ClaudeCli } from './ClaudeCli'
+import { Config } from '../../config/Config'
 import { execFileSync } from 'child_process'
 import * as fs from 'fs'
-import { testData } from '@testUtils'
 
 vi.mock('child_process')
 vi.mock('fs', { spy: true })
@@ -12,10 +12,17 @@ const mockExecFileSync = vi.mocked(execFileSync)
 describe('ClaudeCli', () => {
   let sut: Awaited<ReturnType<typeof createSut>>
   let client: ClaudeCli
+  const originalEnv = process.env
 
   beforeEach(() => {
+    process.env = { ...originalEnv }
+    delete process.env.USE_SYSTEM_CLAUDE
     sut = createSut()
     client = sut.client
+  })
+
+  afterEach(() => {
+    process.env = originalEnv
   })
 
   describe('command construction', () => {
@@ -150,13 +157,18 @@ describe('ClaudeCli', () => {
 })
 
 // Test Helpers
-function createSut(overrides?: Partial<ReturnType<typeof testData.config>>) {
+function createSut(options: { useSystemClaude?: boolean } = {}) {
   // Setup mocks
   vi.clearAllMocks()
   mockExecFileSync.mockReturnValue(JSON.stringify({ result: 'test' }))
   vi.spyOn(fs, 'existsSync').mockReturnValue(true)
 
-  const config = testData.config(overrides)
+  // Set up environment
+  if (options.useSystemClaude) {
+    process.env.USE_SYSTEM_CLAUDE = 'true'
+  }
+
+  const config = new Config()
   const client = new ClaudeCli(config)
 
   const mockResponse = (response: string | object) => {

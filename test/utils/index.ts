@@ -3,8 +3,8 @@ import * as editFactory from './factories/editFactory'
 import * as multiEditFactory from './factories/multiEditFactory'
 import * as writeFactory from './factories/writeFactory'
 import { TEST_DEFAULTS } from './factories/testDefaults'
-import * as configFactory from './factories/configFactory'
 import * as contextFactory from './factories/contextFactory'
+import * as modelClientProviderFactory from './factories/modelClientProviderFactory'
 import * as operations from './factories/operations'
 import * as scenarios from './factories/scenarios'
 
@@ -43,8 +43,8 @@ export const testData = {
   writeOperationWithout: writeFactory.writeOperationWithout,
   invalidWriteOperation: writeFactory.invalidWriteOperation,
 
-  // Config factories
-  config: configFactory.config,
+  // ModelClientProvider factories
+  modelClientProvider: modelClientProviderFactory.modelClientProvider,
 
   // Context factories
   context: contextFactory.context,

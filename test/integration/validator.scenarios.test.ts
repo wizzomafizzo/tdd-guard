@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest'
 import { validator } from '../../src/validation/validator'
 import { Context } from '../../src/contracts/types/Context'
 import { Config } from '../../src/config/Config'
+import { ModelClientProvider } from '../../src/providers/ModelClientProvider'
 import { testData } from '@testUtils'
 const {
   createWriteOperation,
@@ -36,8 +37,9 @@ const testFile = 'src/Calculator/Calculator.test.ts'
 const implementationFile = 'src/Calculator/Calculator.ts'
 
 describe('Validator', () => {
-  const config = new Config()
-  const model = config.getModelClient(true) // Use test mode
+  const config = new Config({ mode: 'test' })
+  const provider = new ModelClientProvider()
+  const model = provider.getModelClient(config)
   const defaultOperations: OperationType[] = ['Edit', 'Write']
 
   describe('Valid operations', () => {
