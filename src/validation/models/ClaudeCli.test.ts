@@ -158,9 +158,7 @@ function createSut(options: { useSystemClaude?: boolean } = {}): {
     args: string[]
     options: Record<string, unknown>
   }
-  askAndGetCall: (
-    prompt?: string
-  ) => Promise<{
+  askAndGetCall: (prompt?: string) => Promise<{
     command: string
     args: string[]
     options: Record<string, unknown>

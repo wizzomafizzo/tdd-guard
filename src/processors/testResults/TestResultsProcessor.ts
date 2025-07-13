@@ -21,7 +21,7 @@ export class TestResultsProcessor {
     const moduleOutput = this.formatModules(data)
     const summaryOutput = this.formatSummary(counts)
 
-    return moduleOutput + '\n' + summaryOutput
+    return `${moduleOutput}\n${summaryOutput}`
   }
 
   private countTestsAndModules(data: TestResult): {

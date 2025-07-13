@@ -335,8 +335,7 @@ export class Calculator {
   },
   overEngineered: {
     description: 'over-engineering implementation',
-    content:
-      String.raw`
+    content: String.raw`
 import { Logger } from '../utils/Logger';
 import { MetricsCollector } from '../utils/MetricsCollector';
 import { ValidationService } from '../services/ValidationService';
@@ -353,27 +352,15 @@ export class Calculator {
   }
 
   add(a: number, b: number): number {
-    this.logger.debug(` +
-      '`' +
-      `Adding \${a} + \${b}` +
-      '`' +
-      `);
+    this.logger.debug(\`Adding \${a} + \${b}\`);
     
     // Validate inputs
     if (!this.validationService.isValidNumber(a)) {
-      this.logger.error(` +
-      '`' +
-      `Invalid input: \${a}` +
-      '`' +
-      `);
+      this.logger.error(\`Invalid input: \${a}\`);
       throw new Error('First argument must be a valid number');
     }
     if (!this.validationService.isValidNumber(b)) {
-      this.logger.error(` +
-      '`' +
-      `Invalid input: \${b}` +
-      '`' +
-      `);
+      this.logger.error(\`Invalid input: \${b}\`);
       throw new Error('Second argument must be a valid number');
     }
     
@@ -389,11 +376,7 @@ export class Calculator {
     this.metrics.recordTiming('add_operation_duration', endTime - startTime);
     
     // Log result
-    this.logger.info(` +
-      '`' +
-      `Addition result: \${result}` +
-      '`' +
-      `);
+    this.logger.info(\`Addition result: \${result}\`);
     
     // Check for overflow
     if (!Number.isFinite(result)) {
