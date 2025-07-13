@@ -3,6 +3,7 @@ import path from 'path'
 const TEST_RESULTS_FILENAME = 'test.json'
 const TODOS_FILENAME = 'todos.json'
 const MODIFICATIONS_FILENAME = 'modifications.json'
+const LINT_FILENAME = 'lint.json'
 
 export type ConfigOptions = {
   mode?: 'production' | 'test'
@@ -65,5 +66,9 @@ export class Config {
 
   get modificationsFilePath(): string {
     return path.join(this.dataDir, MODIFICATIONS_FILENAME)
+  }
+
+  get lintFilePath(): string {
+    return path.join(this.dataDir, LINT_FILENAME)
   }
 }

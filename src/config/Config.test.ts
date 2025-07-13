@@ -42,6 +42,10 @@ describe('Config', () => {
         `${customDataDir}/modifications.json`
       )
     })
+
+    test('lintFilePath returns lint.json path within dataDir', () => {
+      expect(config.lintFilePath).toBe(`${customDataDir}/lint.json`)
+    })
   })
 
   describe('useSystemClaude', () => {
