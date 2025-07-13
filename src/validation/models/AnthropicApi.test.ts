@@ -20,8 +20,8 @@ describe('AnthropicApi', () => {
 
   test('should accept optional Config in constructor', () => {
     const config = new Config()
-    const client = new AnthropicApi(config)
-    expect(client).toBeDefined()
+    const apiClient = new AnthropicApi(config)
+    expect(apiClient).toBeDefined()
   })
 
   test('should create Anthropic client with API key from config', () => {
@@ -137,9 +137,9 @@ function createSut(apiKey?: string): {
     return getLastCall()
   }
 
-  const wasCreatedWithApiKey = (apiKey: string): boolean => {
+  const wasCreatedWithApiKey = (key: string): boolean => {
     return mockAnthropicConstructor.mock.calls.some(
-      (call) => call[0]?.apiKey === apiKey
+      (call) => call[0]?.apiKey === key
     )
   }
 

@@ -72,12 +72,12 @@ describe('Vitest schemas', () => {
         }),
         expectedSuccess: true,
       },
-    ])('$description', ({ test, expectedSuccess }) => {
-      const result = TestSchema.safeParse(test)
+    ])('$description', ({ test: testCase, expectedSuccess }) => {
+      const result = TestSchema.safeParse(testCase)
       expect(result.success).toBe(expectedSuccess)
 
       if (expectedSuccess && result.success) {
-        expect(result.data).toEqual(test)
+        expect(result.data).toEqual(testCase)
       }
     })
   })

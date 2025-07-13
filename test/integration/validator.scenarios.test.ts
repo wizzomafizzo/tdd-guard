@@ -44,7 +44,6 @@ describe('Validator', () => {
 
   describe('Valid operations', () => {
     const violation = false
-    const filePath = testFile
 
     describe('Creating new test', () => {
       const oldContent = testModifications.emptyDescribeWithImports
@@ -65,7 +64,7 @@ describe('Validator', () => {
           resultVariations.forEach((resultData) => {
             describe(`and ${resultData.description}`, () => {
               testOperations({
-                filePath,
+                filePath: testFile,
                 oldContent,
                 newContent,
                 todos: todoData,
@@ -79,7 +78,6 @@ describe('Validator', () => {
     })
 
     describe('Creating implementation to pass failing test', () => {
-      const filePath = implementationFile
       const oldContent = implementationModifications.methodStubReturning0
       const newContent = implementationModifications.methodImplementation
 
@@ -99,7 +97,7 @@ describe('Validator', () => {
             describe(`and ${resultData.description}`, () => {
               testOperations(
                 {
-                  filePath,
+                  filePath: implementationFile,
                   oldContent,
                   newContent,
                   todos: todoData,
@@ -115,7 +113,6 @@ describe('Validator', () => {
     })
 
     describe('Refactoring existing tests regardless of todo as long as relevant tests are passing', () => {
-      const filePath = testFile
       const oldContent = testModifications.multipleTests
       const newContent = testModifications.refactoredTests
 
@@ -134,7 +131,7 @@ describe('Validator', () => {
           describe(`with ${todoData.description} and ${resultData.description}`, () => {
             testOperations(
               {
-                filePath,
+                filePath: testFile,
                 oldContent,
                 newContent,
                 todos: todoData,
@@ -149,7 +146,6 @@ describe('Validator', () => {
     })
 
     describe('Edit operation with one existing test and one new test', () => {
-      const filePath = testFile
       const oldContent = testModifications.singleTest
       const newContent = testModifications.multipleTests // Contains both the existing test and a new one
 
@@ -160,7 +156,7 @@ describe('Validator', () => {
         describe(`with ${todoData.description}`, () => {
           testOperations(
             {
-              filePath,
+              filePath: testFile,
               oldContent,
               newContent,
               todos: todoData,
@@ -174,8 +170,6 @@ describe('Validator', () => {
     })
 
     describe('Refactoring implementation code', () => {
-      const filePath = implementationFile
-
       describe('Allowed when tests have been run and are passing', () => {
         const oldContent = refactoringImplementation.beforeRefactor
         const newContent = refactoringImplementation.afterRefactor
@@ -195,7 +189,7 @@ describe('Validator', () => {
             describe(`with ${todoData.description} and ${resultData.description}`, () => {
               testOperations(
                 {
-                  filePath,
+                  filePath: implementationFile,
                   oldContent,
                   newContent,
                   todos: todoData,
@@ -231,7 +225,7 @@ describe('Validator', () => {
             describe(`with ${todoData.description} and ${resultData.description}`, () => {
               testOperations(
                 {
-                  filePath,
+                  filePath: implementationFile,
                   oldContent,
                   newContent,
                   todos: todoData,
@@ -247,8 +241,6 @@ describe('Validator', () => {
     })
 
     describe('Refactoring test code', () => {
-      const filePath = testFile
-
       describe('Allowed when relevant tests are passing', () => {
         const oldContent = refactoringTests.beforeRefactor
         const newContent = refactoringTests.afterRefactor
@@ -266,7 +258,7 @@ describe('Validator', () => {
             describe(`with ${todoData.description} and ${resultData.description}`, () => {
               testOperations(
                 {
-                  filePath,
+                  filePath: testFile,
                   oldContent,
                   newContent,
                   todos: todoData,
@@ -301,7 +293,7 @@ describe('Validator', () => {
             describe(`with ${todoData.description} and ${resultData.description}`, () => {
               testOperations(
                 {
-                  filePath,
+                  filePath: testFile,
                   oldContent,
                   newContent,
                   todos: todoData,
@@ -321,7 +313,6 @@ describe('Validator', () => {
     const violation = true
 
     describe('Adding multiple tests at once', () => {
-      const filePath = testFile
       const oldContent = testModifications.emptyDescribeWithImports
       const newContent = testModifications.multipleTestsWithImports
 
@@ -346,7 +337,7 @@ describe('Validator', () => {
           resultVariations.forEach((resultData) => {
             describe(`and ${resultData.description}`, () => {
               testOperations({
-                filePath,
+                filePath: testFile,
                 oldContent,
                 newContent,
                 todos: todoData,
@@ -360,7 +351,6 @@ describe('Validator', () => {
     })
 
     describe('Implementing without proper test failure', () => {
-      const filePath = implementationFile
       const oldContent = implementationModifications.empty
       const newContent = implementationModifications.methodImplementation
 
@@ -384,7 +374,7 @@ describe('Validator', () => {
           invalidTestResults.forEach((resultData) => {
             describe(`and ${resultData.description}`, () => {
               testOperations({
-                filePath,
+                filePath: implementationFile,
                 oldContent,
                 newContent,
                 todos: todoData,
@@ -398,13 +388,12 @@ describe('Validator', () => {
     })
 
     describe('Implementing entire class when only one method test is failing', () => {
-      const filePath = implementationFile
       const oldContent = implementationModifications.empty
       const newContent = implementationModifications.completeClass // Full class with multiple methods
 
       // Test is only for add method, but implementation adds everything
       testOperations({
-        filePath,
+        filePath: implementationFile,
         oldContent,
         newContent,
         todos: todos.methodInProgress,

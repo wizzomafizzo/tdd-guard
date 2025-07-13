@@ -36,11 +36,11 @@ describe('VitestReporter', () => {
   })
 
   it('uses FileStorage when no storage provided', async () => {
-    const sut = setupVitestReporter({ type: 'file' })
+    const localSut = setupVitestReporter({ type: 'file' })
 
-    expect(sut.reporter['storage']).toBeInstanceOf(FileStorage)
+    expect(localSut.reporter['storage']).toBeInstanceOf(FileStorage)
 
-    const result = await sut.collectAndGetSaved([
+    const result = await localSut.collectAndGetSaved([
       testData.testModule(),
       testData.passedTestCase(),
     ])
@@ -48,7 +48,7 @@ describe('VitestReporter', () => {
     expect(result).toBeTruthy()
     expect(result).toContain('testModules')
 
-    sut.cleanup()
+    localSut.cleanup()
   })
 
   it('accepts Storage instance in constructor', () => {
