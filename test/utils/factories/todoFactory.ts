@@ -38,7 +38,7 @@ export const todoWithout = <K extends keyof Todo>(
  * Creates a single todo write object
  * @param params - Optional parameters for the todo write
  */
-export const todoWrite = (params?: { todos?: Todo[] }) => ({
+export const todoWrite = (params?: { todos?: Todo[] }): TodoWrite => ({
   todos: params?.todos ?? [todo()],
 })
 
@@ -87,7 +87,7 @@ export const todoWriteOperationWithout = <K extends keyof TodoWriteOperation>(
 export const invalidTodoWriteOperation = (params: {
   tool_name?: string
   tool_input?: unknown
-}) => ({
+}): Record<string, unknown> => ({
   ...hookDataDefaults(),
   tool_name: params.tool_name ?? 'TodoWrite',
   tool_input: params.tool_input ?? todoWrite(),

@@ -6,12 +6,13 @@ import { FileStorage } from '../storage/FileStorage'
 import { validator } from '../validation/validator'
 import { Config } from '../config/Config'
 import { ModelClientProvider } from '../providers/ModelClientProvider'
+import { ValidationResult } from '../contracts/types/ValidationResult'
 
 export async function run(
   input: string,
   config?: Config,
   provider?: ModelClientProvider
-) {
+): Promise<ValidationResult> {
   const appConfig = config ?? new Config()
   const storage = new FileStorage(appConfig)
   const modelProvider = provider ?? new ModelClientProvider()

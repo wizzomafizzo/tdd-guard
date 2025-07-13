@@ -55,7 +55,7 @@ describe('Core Validator Scenarios', () => {
 function expectDecision(
   result: ValidationResult,
   expectedDecision: ValidationResult['decision']
-) {
+): void {
   if (result.decision !== expectedDecision) {
     console.error(
       `\nTest failed - expected decision: ${expectedDecision}, but got: ${result.decision}`

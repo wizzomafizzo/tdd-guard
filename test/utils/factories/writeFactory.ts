@@ -63,7 +63,7 @@ export const writeOperationWithout = <K extends keyof WriteOperation>(
 export const invalidWriteOperation = (params: {
   tool_name?: string
   tool_input?: unknown
-}) => ({
+}): Record<string, unknown> => ({
   ...hookDataDefaults(),
   tool_name: params.tool_name ?? 'Write',
   tool_input: params.tool_input ?? write(),

@@ -9,6 +9,8 @@ import { testData } from '@testUtils'
 import {
   isFailingTest,
   isPassingTest,
+  TestResult,
+  Test,
 } from '../contracts/schemas/vitestSchemas'
 import { rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -143,7 +145,18 @@ function isTestCase(item: TestModule | TestCase): item is TestCase {
   return 'result' in item
 }
 
-function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
+function setupVitestReporter(options?: { type: 'file' | 'memory' }): {
+  reporter: VitestReporter
+  storage: Storage
+  collectAndGetSaved: (
+    items: Array<TestModule | TestCase>
+  ) => Promise<string | null>
+  getParsedData: () => Promise<TestResult | null>
+  getTests: () => Promise<Test[]>
+  getPassedTests: () => Promise<(Test & { state: 'passed' })[]>
+  getFailedTests: () => Promise<(Test & { state: 'failed' })[]>
+  cleanup: () => void
+} {
   // Test directory setup for FileStorage tests
   let testDir: string | undefined
 
@@ -160,7 +173,9 @@ function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
   const reporter = new VitestReporter(storage)
 
   // Helper to collect test data and get saved content
-  const collectAndGetSaved = async (items: Array<TestModule | TestCase>) => {
+  const collectAndGetSaved = async (
+    items: Array<TestModule | TestCase>
+  ): Promise<string | null> => {
     for (const item of items) {
       if (isTestModule(item)) {
         reporter.onTestModuleCollected(item)
@@ -174,28 +189,28 @@ function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
   }
 
   // Test data access helpers
-  const getParsedData = async () => {
+  const getParsedData = async (): Promise<TestResult | null> => {
     const content = await storage.getTest()
     return content ? JSON.parse(content) : null
   }
 
-  const getTests = async () => {
+  const getTests = async (): Promise<Test[]> => {
     const parsed = await getParsedData()
     return parsed?.testModules[0]?.tests ?? []
   }
 
-  const getPassedTests = async () => {
+  const getPassedTests = async (): Promise<(Test & { state: 'passed' })[]> => {
     const tests = await getTests()
     return tests.filter(isPassingTest)
   }
 
-  const getFailedTests = async () => {
+  const getFailedTests = async (): Promise<(Test & { state: 'failed' })[]> => {
     const tests = await getTests()
     return tests.filter(isFailingTest)
   }
 
   // Cleanup function
-  const cleanup = () => {
+  const cleanup = (): void => {
     if (testDir) {
       rmSync(testDir, { recursive: true, force: true })
     }

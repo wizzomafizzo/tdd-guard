@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { processHookData, defaultResult } from './processHookData'
 import { MemoryStorage } from '../storage/MemoryStorage'
 import { testData } from '@testUtils'
+import { ValidationResult } from '../contracts/types/ValidationResult'
+import { Context } from '../contracts/types/Context'
 
 const BLOCK_RESULT = {
   decision: 'block',
@@ -114,12 +116,21 @@ describe('processHookData', () => {
 })
 
 // Test setup helper
-function createTestProcessor() {
+function createTestProcessor(): {
+  storage: MemoryStorage
+  process: (hookData: unknown) => Promise<ValidationResult>
+  populateStorage: (data: { modifications?: string; test?: string; todo?: string }) => Promise<void>
+  getModifications: () => Promise<string | null>
+  getTest: () => Promise<string | null>
+  getTodo: () => Promise<string | null>
+  validatorHasBeenCalled: () => boolean
+  getValidatorCallArgs: () => Context | null
+} {
   const storage = new MemoryStorage()
   const mockValidator = vi.fn().mockResolvedValue(BLOCK_RESULT)
   
   // Helper to process hook data
-  const process = async (hookData: unknown) => {
+  const process = async (hookData: unknown): Promise<ValidationResult> => {
     return processHookData(JSON.stringify(hookData), {
       storage, 
       validator: mockValidator
@@ -127,7 +138,7 @@ function createTestProcessor() {
   }
   
   // Pre-populate storage helper
-  const populateStorage = async (data: { modifications?: string; test?: string; todo?: string }) => {
+  const populateStorage = async (data: { modifications?: string; test?: string; todo?: string }): Promise<void> => {
     if (data.modifications) await storage.saveModifications(data.modifications)
     if (data.test) await storage.saveTest(data.test)
     if (data.todo) await storage.saveTodo(data.todo)
@@ -139,12 +150,12 @@ function createTestProcessor() {
     populateStorage,
     
     // Storage accessors
-    getModifications: () => storage.getModifications(),
-    getTest: () => storage.getTest(),
-    getTodo: () => storage.getTodo(),
+    getModifications: (): Promise<string | null> => storage.getModifications(),
+    getTest: (): Promise<string | null> => storage.getTest(),
+    getTodo: (): Promise<string | null> => storage.getTodo(),
     
     // Validator checks
-    validatorHasBeenCalled: () => mockValidator.mock.calls.length > 0,
-    getValidatorCallArgs: () => mockValidator.mock.calls[0]?.[0] ?? null,
+    validatorHasBeenCalled: (): boolean => mockValidator.mock.calls.length > 0,
+    getValidatorCallArgs: (): Context | null => mockValidator.mock.calls[0]?.[0] ?? null,
   }
 }

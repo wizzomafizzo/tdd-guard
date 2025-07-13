@@ -72,7 +72,7 @@ export const multiEditOperationWithout = <K extends keyof MultiEditOperation>(
 export const invalidMultiEditOperation = (params: {
   tool_name?: string
   tool_input?: unknown
-}) => ({
+}): Record<string, unknown> => ({
   ...hookDataDefaults(),
   tool_name: params.tool_name ?? 'MultiEdit',
   tool_input: params.tool_input ?? multiEdit(),

@@ -150,7 +150,22 @@ describe('ClaudeCli', () => {
 })
 
 // Test Helpers
-function createSut(options: { useSystemClaude?: boolean } = {}) {
+function createSut(options: { useSystemClaude?: boolean } = {}): {
+  client: ClaudeCli
+  mockResponse: (response: string | object) => void
+  getLastCall: () => {
+    command: string
+    args: string[]
+    options: Record<string, unknown>
+  }
+  askAndGetCall: (
+    prompt?: string
+  ) => Promise<{
+    command: string
+    args: string[]
+    options: Record<string, unknown>
+  }>
+} {
   // Setup mocks
   vi.clearAllMocks()
   mockExecFileSync.mockReturnValue(JSON.stringify({ result: 'test' }))
@@ -159,7 +174,7 @@ function createSut(options: { useSystemClaude?: boolean } = {}) {
   const config = new Config({ useSystemClaude: options.useSystemClaude })
   const client = new ClaudeCli(config)
 
-  const mockResponse = (response: string | object) => {
+  const mockResponse = (response: string | object): void => {
     const jsonResponse =
       typeof response === 'string'
         ? JSON.stringify({ result: response })
@@ -167,7 +182,11 @@ function createSut(options: { useSystemClaude?: boolean } = {}) {
     mockExecFileSync.mockReturnValue(jsonResponse)
   }
 
-  const getLastCall = () => {
+  const getLastCall = (): {
+    command: string
+    args: string[]
+    options: Record<string, unknown>
+  } => {
     const lastCall =
       mockExecFileSync.mock.calls[mockExecFileSync.mock.calls.length - 1]
     return {
@@ -177,7 +196,13 @@ function createSut(options: { useSystemClaude?: boolean } = {}) {
     }
   }
 
-  const askAndGetCall = async (prompt = 'test prompt') => {
+  const askAndGetCall = async (
+    prompt = 'test prompt'
+  ): Promise<{
+    command: string
+    args: string[]
+    options: Record<string, unknown>
+  }> => {
     await client.ask(prompt)
     return getLastCall()
   }

@@ -2,6 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { validator } from './validator'
 import { Context } from '../contracts/types/Context'
 import { IModelClient } from '../contracts/types/ModelClient'
+import { ValidationResult } from '../contracts/types/ValidationResult'
 import { generateDynamicContext } from './context/context'
 import { testData } from '@testUtils'
 
@@ -231,7 +232,11 @@ This violates TDD principles as explained in the numbered list above.
       contextOverrides?: Partial<Context>
       prompt?: string
     }
-  ) {
+  ): Promise<{
+    result: ValidationResult
+    mockModelClient: IModelClient
+    context: Context
+  }> {
     const mockModelClient: IModelClient = {
       ask:
         modelResponse instanceof Error

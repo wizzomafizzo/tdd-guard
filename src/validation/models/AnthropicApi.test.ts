@@ -77,7 +77,24 @@ describe('AnthropicApi', () => {
 })
 
 // Test Helpers
-function createSut(apiKey?: string) {
+interface MessageCreateParams {
+  model: string
+  max_tokens: number
+  messages: Array<{ role: string; content: string }>
+}
+
+function createSut(apiKey?: string): {
+  client: AnthropicApi
+  mockCreate: ReturnType<typeof vi.fn>
+  mockAnthropicConstructor: typeof Anthropic
+  config: Config
+  mockResponse: (text: string) => void
+  getLastCall: () => MessageCreateParams
+  askAndGetCall: (prompt?: string) => Promise<MessageCreateParams>
+  wasCreatedWithApiKey: (apiKey: string) => boolean
+  askWithResponse: (responseText: string) => Promise<string | undefined>
+  askWithError: (errorMessage: string) => Promise<string | undefined>
+} {
   vi.clearAllMocks()
 
   const mockCreate = vi.fn().mockResolvedValue({
@@ -97,13 +114,13 @@ function createSut(apiKey?: string) {
   const config = new Config({ anthropicApiKey: apiKey })
   const client = new AnthropicApi(config)
 
-  const mockResponse = (text: string) => {
+  const mockResponse = (text: string): void => {
     mockCreate.mockResolvedValue({
       content: [{ text }],
     })
   }
 
-  const getLastCall = () => {
+  const getLastCall = (): MessageCreateParams => {
     const lastCall = mockCreate.mock.calls[mockCreate.mock.calls.length - 1]
     const params = lastCall[0]
     return {
@@ -113,23 +130,29 @@ function createSut(apiKey?: string) {
     }
   }
 
-  const askAndGetCall = async (prompt = 'test prompt') => {
+  const askAndGetCall = async (
+    prompt = 'test prompt'
+  ): Promise<MessageCreateParams> => {
     await client.ask(prompt)
     return getLastCall()
   }
 
-  const wasCreatedWithApiKey = (apiKey: string) => {
+  const wasCreatedWithApiKey = (apiKey: string): boolean => {
     return mockAnthropicConstructor.mock.calls.some(
       (call) => call[0]?.apiKey === apiKey
     )
   }
 
-  const askWithResponse = async (responseText: string) => {
+  const askWithResponse = async (
+    responseText: string
+  ): Promise<string | undefined> => {
     mockResponse(responseText)
     return client.ask('test prompt')
   }
 
-  const askWithError = async (errorMessage: string) => {
+  const askWithError = async (
+    errorMessage: string
+  ): Promise<string | undefined> => {
     mockCreate.mockRejectedValue(new Error(errorMessage))
     return client.ask('test prompt')
   }

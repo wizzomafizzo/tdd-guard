@@ -67,7 +67,7 @@ export const editOperationWithout = <K extends keyof EditOperation>(
 export const invalidEditOperation = (params: {
   tool_name?: string
   tool_input?: unknown
-}) => ({
+}): Record<string, unknown> => ({
   ...hookDataDefaults(),
   tool_name: params.tool_name ?? 'Edit',
   tool_input: params.tool_input ?? edit(),

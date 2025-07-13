@@ -433,7 +433,7 @@ describe('Validator', () => {
   function testOperations(
     scenario: Scenario,
     operations: OperationType[] = defaultOperations
-  ) {
+  ): void {
     operations.forEach((operation) => {
       test(`${operation} should ${scenario.violation ? 'block' : 'allow'}`, async () => {
         const context = createContext(scenario, operation)

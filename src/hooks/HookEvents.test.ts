@@ -78,17 +78,21 @@ describe('HookEvents', () => {
   })
 
   // Test helper
-  async function setupHookEvents() {
+  async function setupHookEvents(): Promise<{
+    readModifications: () => Promise<string>
+    readTodos: () => Promise<string>
+    processEvent: (data: unknown) => Promise<void>
+  }> {
     const storage = new MemoryStorage()
     const hookEvents = new HookEvents(storage)
 
-    const readModifications = async () => {
+    const readModifications = async (): Promise<string> => {
       const modifications = await storage.getModifications()
       if (modifications === null) throw new Error('No modifications content')
       return modifications
     }
 
-    const readTodos = async () => {
+    const readTodos = async (): Promise<string> => {
       const todo = await storage.getTodo()
       if (todo === null) throw new Error('No todo content')
       return todo
@@ -97,7 +101,7 @@ describe('HookEvents', () => {
     return {
       readModifications,
       readTodos,
-      processEvent: (data: unknown) => hookEvents.processEvent(data),
+      processEvent: (data: unknown): Promise<void> => hookEvents.processEvent(data),
     }
   }
 })

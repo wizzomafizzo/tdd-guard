@@ -17,7 +17,7 @@ export class VitestReporter implements Reporter {
     this.storage = storage ?? new FileStorage()
   }
 
-  onTestModuleCollected(testModule: TestModule) {
+  onTestModuleCollected(testModule: TestModule): void {
     // Use moduleId as the identifier
     const moduleId = testModule.moduleId
 
@@ -28,7 +28,7 @@ export class VitestReporter implements Reporter {
     })
   }
 
-  onTestCaseResult(testCase: TestCase) {
+  onTestCaseResult(testCase: TestCase): void {
     // Get the module id from the test case
     const moduleId = testCase.module.moduleId
     if (!moduleId) return
@@ -39,7 +39,7 @@ export class VitestReporter implements Reporter {
     }
   }
 
-  async onTestRunEnd() {
+  async onTestRunEnd(): Promise<void> {
     const output = {
       testModules: Array.from(this.testModules.values()).map((moduleData) => ({
         moduleId: moduleData.moduleId,

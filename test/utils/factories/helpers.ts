@@ -7,7 +7,11 @@ import { TEST_DEFAULTS } from './testDefaults'
 /**
  * Default hook data fields for all operations
  */
-export const hookDataDefaults = () => ({
+export const hookDataDefaults = (): {
+  session_id: string
+  transcript_path: string
+  hook_event_name: string
+} => ({
   session_id: TEST_DEFAULTS.hookData.session_id,
   transcript_path: TEST_DEFAULTS.hookData.transcript_path,
   hook_event_name: TEST_DEFAULTS.hookData.hook_event_name,
