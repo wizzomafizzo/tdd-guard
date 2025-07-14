@@ -4,11 +4,6 @@ import { promisify } from 'util'
 
 const execAsync = promisify(exec)
 
-export interface RunESLintOptions {
-  hasBlocked?: boolean
-  configPath?: string
-}
-
 const buildCommand = (files: string[], configPath?: string): string => 
   ['npx eslint', files.join(' '), '--format json', configPath && `-c "${configPath}"`]
     .filter(Boolean)
@@ -40,17 +35,15 @@ const countBySeverity = (issues: LintIssue[], severity: 'error' | 'warning'): nu
 const createLintData = (
   timestamp: string,
   files: string[],
-  results: ESLintResult[],
-  hasBlocked: boolean
-): LintData => {
+  results: ESLintResult[]
+): Omit<LintData, 'hasNotifiedAboutLintIssues'> => {
   const issues = extractIssues(results)
   return {
     timestamp,
     files,
     issues,
     errorCount: countBySeverity(issues, 'error'),
-    warningCount: countBySeverity(issues, 'warning'),
-    hasBlocked
+    warningCount: countBySeverity(issues, 'warning')
   }
 }
 
@@ -59,19 +52,18 @@ const isExecError = (error: unknown): error is Error & { stdout?: string } =>
 
 export async function runESLint(
   filePaths: string[], 
-  options: RunESLintOptions = {}
-): Promise<LintData> {
-  const { hasBlocked = false, configPath } = options
+  configPath?: string
+): Promise<Omit<LintData, 'hasNotifiedAboutLintIssues'>> {
   const timestamp = new Date().toISOString()
   const command = buildCommand(filePaths, configPath)
   
   try {
     await execAsync(command)
-    return createLintData(timestamp, filePaths, [], hasBlocked)
+    return createLintData(timestamp, filePaths, [])
   } catch (error) {
     if (!isExecError(error)) throw error
     
     const results = parseResults(error.stdout)
-    return createLintData(timestamp, filePaths, results, hasBlocked)
+    return createLintData(timestamp, filePaths, results)
   }
 }

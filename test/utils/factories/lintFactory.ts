@@ -54,7 +54,7 @@ export const lintData = (params?: Partial<LintData>): LintData => {
     issues: [lintIssue()],
     errorCount: 1,
     warningCount: 0,
-    hasBlocked: false,
+    hasNotifiedAboutLintIssues: false,
   }
 
   return {

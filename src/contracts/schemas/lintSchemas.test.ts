@@ -72,7 +72,7 @@ describe('LintDataSchema', () => {
     {
       description: 'valid lint data with issues',
       lintData: testData.lintData({
-        hasBlocked: true,
+        hasNotifiedAboutLintIssues: true,
       }),
       expectedSuccess: true,
     },
@@ -82,8 +82,8 @@ describe('LintDataSchema', () => {
       expectedSuccess: false,
     },
     {
-      description: 'without hasBlocked',
-      lintData: testData.lintDataWithout(['hasBlocked']),
+      description: 'without hasNotifiedAboutLintIssues',
+      lintData: testData.lintDataWithout(['hasNotifiedAboutLintIssues']),
       expectedSuccess: false,
     },
     {

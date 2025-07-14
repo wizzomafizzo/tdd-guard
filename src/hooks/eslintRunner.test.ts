@@ -18,7 +18,8 @@ describe('runESLint', () => {
   })
 
   describe('with single file', () => {
-    let result: LintData
+    // TODO: Create separate schema for ESLint runner output (without hasNotifiedAboutLintIssues flag)
+    let result: Omit<LintData, 'hasNotifiedAboutLintIssues'>
     
     beforeEach(async () => {
       result = await runESLint(['src/file.ts'])
@@ -35,16 +36,6 @@ describe('runESLint', () => {
     test('returns zero warning count', () => {
       expect(result.warningCount).toBe(0)
     })
-
-    test('returns hasBlocked as false by default', () => {
-      expect(result.hasBlocked).toBe(false)
-    })
-  })
-
-  test('returns hasBlocked as true when passed as parameter', async () => {
-    const result = await runESLint(['src/file.ts'], { hasBlocked: true })
-    
-    expect(result.hasBlocked).toBe(true)
   })
 })
 
@@ -54,7 +45,7 @@ describe('runESLint with artifact files', () => {
   
   test('detects issues in file with lint problems', async () => {
     const filePath = join(artifactsDir, 'file-with-issues.js')
-    const result = await runESLint([filePath], { configPath })
+    const result = await runESLint([filePath], configPath)
     
     expect(result.issues.length).toBeGreaterThan(0)
     expect(result.errorCount).toBeGreaterThan(0)
@@ -70,7 +61,7 @@ describe('runESLint with artifact files', () => {
   
   test('finds no issues in clean file', async () => {
     const filePath = join(artifactsDir, 'file-without-issues.js')
-    const result = await runESLint([filePath], { configPath })
+    const result = await runESLint([filePath], configPath)
     
     expect(result.issues.length).toBe(0)
     expect(result.errorCount).toBe(0)
@@ -82,7 +73,7 @@ describe('runESLint with artifact files', () => {
       join(artifactsDir, 'file-with-issues.js'),
       join(artifactsDir, 'file-without-issues.js')
     ]
-    const result = await runESLint(files, { configPath })
+    const result = await runESLint(files, configPath)
     
     expect(result.files).toEqual(files)
     expect(result.issues.length).toBeGreaterThan(0)

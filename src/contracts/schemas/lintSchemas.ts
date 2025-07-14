@@ -15,7 +15,7 @@ export const LintDataSchema = z.object({
   issues: z.array(LintIssueSchema),
   errorCount: z.number(),
   warningCount: z.number(),
-  hasBlocked: z.boolean(),
+  hasNotifiedAboutLintIssues: z.boolean(),
 })
 
 export const ESLintMessageSchema = z.object({
