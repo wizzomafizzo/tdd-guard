@@ -91,6 +91,10 @@ export const testData = {
   lintIssueWithout: lintFactory.lintIssueWithout,
   lintData: lintFactory.lintData,
   lintDataWithout: lintFactory.lintDataWithout,
+  eslintMessage: lintFactory.eslintMessage,
+  eslintMessageWithout: lintFactory.eslintMessageWithout,
+  eslintResult: lintFactory.eslintResult,
+  eslintResultWithout: lintFactory.eslintResultWithout,
 
   // Default test data values
   defaults: TEST_DEFAULTS,

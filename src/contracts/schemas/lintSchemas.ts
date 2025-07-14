@@ -9,8 +9,6 @@ export const LintIssueSchema = z.object({
   rule: z.string().optional(),
 })
 
-export type LintIssue = z.infer<typeof LintIssueSchema>
-
 export const LintDataSchema = z.object({
   timestamp: z.string(),
   files: z.array(z.string()),
@@ -20,4 +18,20 @@ export const LintDataSchema = z.object({
   hasBlocked: z.boolean(),
 })
 
+export const ESLintMessageSchema = z.object({
+  line: z.number().optional(),
+  column: z.number().optional(),
+  severity: z.number(),
+  message: z.string(),
+  ruleId: z.string().optional(),
+})
+
+export const ESLintResultSchema = z.object({
+  filePath: z.string(),
+  messages: z.array(ESLintMessageSchema).optional(),
+})
+
+export type LintIssue = z.infer<typeof LintIssueSchema>
 export type LintData = z.infer<typeof LintDataSchema>
+export type ESLintMessage = z.infer<typeof ESLintMessageSchema>
+export type ESLintResult = z.infer<typeof ESLintResultSchema>

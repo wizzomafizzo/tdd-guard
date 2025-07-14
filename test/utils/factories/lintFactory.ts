@@ -5,6 +5,8 @@
 import type {
   LintIssue,
   LintData,
+  ESLintMessage,
+  ESLintResult,
 } from '../../../src/contracts/schemas/lintSchemas'
 import { omit } from './helpers'
 
@@ -72,4 +74,67 @@ export const lintDataWithout = <K extends keyof LintData>(
 ): Omit<LintData, K> => {
   const fullLintData = lintData(params)
   return omit(fullLintData, keys)
+}
+
+/**
+ * Creates an ESLint message object
+ * @param params - Optional parameters for the ESLint message
+ */
+export const eslintMessage = (
+  params?: Partial<ESLintMessage>
+): ESLintMessage => {
+  const defaults: ESLintMessage = {
+    line: 10,
+    column: 5,
+    severity: 2,
+    message: 'Unexpected var, use let or const instead',
+    ruleId: 'no-var',
+  }
+
+  return {
+    ...defaults,
+    ...params,
+  }
+}
+
+/**
+ * Creates an ESLint message object with specified properties omitted
+ * @param keys - Array of property keys to omit
+ * @param params - Optional parameters for the ESLint message
+ */
+export const eslintMessageWithout = <K extends keyof ESLintMessage>(
+  keys: K[],
+  params?: Partial<ESLintMessage>
+): Omit<ESLintMessage, K> => {
+  const fullMessage = eslintMessage(params)
+  return omit(fullMessage, keys)
+}
+
+/**
+ * Creates an ESLint result object
+ * @param params - Optional parameters for the ESLint result
+ */
+export const eslintResult = (params?: Partial<ESLintResult>): ESLintResult => {
+  const defaults: ESLintResult = {
+    filePath: '/src/example.ts',
+    messages: [eslintMessage()],
+  }
+
+  return {
+    ...defaults,
+    ...params,
+  }
+}
+
+/**
+ * Creates an ESLint result object with specified properties omitted
+ * @param keys - Array of property keys to omit
+ * @param params - Optional parameters for the ESLint result
+ */
+export const eslintResultWithout = <K extends keyof ESLintResult>(
+  keys: K[],
+  params?: Partial<ESLintResult>
+): Omit<ESLintResult, K> => {
+  const fullResult = eslintResult(params)
+  return omit(fullResult, keys)
 }

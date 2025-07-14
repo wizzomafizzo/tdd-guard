@@ -1,5 +1,10 @@
 import { describe, test, expect } from 'vitest'
-import { LintIssueSchema, LintDataSchema } from './lintSchemas'
+import {
+  LintIssueSchema,
+  LintDataSchema,
+  ESLintMessageSchema,
+  ESLintResultSchema,
+} from './lintSchemas'
 import { testData } from '@testUtils'
 
 describe('LintIssueSchema', () => {
@@ -104,5 +109,87 @@ describe('LintDataSchema', () => {
   ])('$description', ({ lintData, expectedSuccess }) => {
     const result = LintDataSchema.safeParse(lintData)
     expect(result.success).toBe(expectedSuccess)
+  })
+})
+
+describe('ESLintMessageSchema', () => {
+  test.each([
+    {
+      description: 'valid ESLint message with all fields',
+      message: testData.eslintMessage(),
+      expectedSuccess: true,
+    },
+    {
+      description: 'valid without optional line',
+      message: testData.eslintMessageWithout(['line']),
+      expectedSuccess: true,
+    },
+    {
+      description: 'valid without optional column',
+      message: testData.eslintMessageWithout(['column']),
+      expectedSuccess: true,
+    },
+    {
+      description: 'valid without optional ruleId',
+      message: testData.eslintMessageWithout(['ruleId']),
+      expectedSuccess: true,
+    },
+    {
+      description: 'without required severity',
+      message: testData.eslintMessageWithout(['severity']),
+      expectedSuccess: false,
+    },
+    {
+      description: 'without required message',
+      message: testData.eslintMessageWithout(['message']),
+      expectedSuccess: false,
+    },
+    {
+      description: 'with invalid severity type',
+      message: {
+        ...testData.eslintMessage(),
+        severity: 'error',
+      },
+      expectedSuccess: false,
+    },
+  ])('$description', ({ message, expectedSuccess }) => {
+    const result = ESLintMessageSchema.safeParse(message)
+    expect(result.success).toBe(expectedSuccess)
+  })
+})
+
+describe('ESLintResultSchema', () => {
+  test.each([
+    {
+      description: 'valid ESLint result with messages',
+      result: testData.eslintResult(),
+      expectedSuccess: true,
+    },
+    {
+      description: 'valid without optional messages',
+      result: testData.eslintResultWithout(['messages']),
+      expectedSuccess: true,
+    },
+    {
+      description: 'valid with empty messages array',
+      result: testData.eslintResult({ messages: [] }),
+      expectedSuccess: true,
+    },
+    {
+      description: 'without required filePath',
+      result: testData.eslintResultWithout(['filePath']),
+      expectedSuccess: false,
+    },
+    {
+      description: 'with invalid messages type',
+      result: {
+        ...testData.eslintResult(),
+        messages: 'not-an-array',
+      },
+      expectedSuccess: false,
+    },
+  ])('$description', ({ result, expectedSuccess }) => {
+    const parseResult = ESLintResultSchema.safeParse(result)
+    expect(parseResult.success).toBe(expectedSuccess)
   })
 })
