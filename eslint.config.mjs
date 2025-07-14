@@ -124,6 +124,12 @@ export default [
     },
   },
   {
-    ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'hooks/**'],
+    ignores: [
+      'dist/**',
+      'coverage/**',
+      'node_modules/**',
+      'hooks/**',
+      'test/artifacts/**',
+    ],
   },
 ]

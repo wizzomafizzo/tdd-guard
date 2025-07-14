@@ -11,3 +11,4 @@ out/
 .cache/
 public/
 hooks/
+test/artifacts/
