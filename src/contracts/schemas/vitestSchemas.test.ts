@@ -8,6 +8,7 @@ import {
   isTestCase,
   isFailingTest,
   isPassingTest,
+  isTestPassing,
 } from './vitestSchemas'
 import { testData } from '@testUtils'
 
@@ -238,6 +239,58 @@ describe('Vitest schemas', () => {
     test('returns false for non-test values', () => {
       expect(isPassingTest('string')).toBe(false)
       expect(isPassingTest(null)).toBe(false)
+    })
+  })
+
+  describe('isTestPassing', () => {
+    describe('with test arrays', () => {
+      const passingTest = testData.createTest({ state: 'passed' })
+      const failingTest = testData.createTest({ state: 'failed' })
+
+      test.each([
+        {
+          description: 'returns true when all tests pass',
+          tests: [passingTest, passingTest],
+          expected: true,
+        },
+        {
+          description: 'returns false when any test fails',
+          tests: [passingTest, failingTest],
+          expected: false,
+        },
+        {
+          description: 'returns true when single test passes',
+          tests: [passingTest],
+          expected: true,
+        },
+        {
+          description: 'returns false when single test fails',
+          tests: [failingTest],
+          expected: false,
+        },
+        {
+          description: 'returns false when multiple tests fail',
+          tests: [failingTest, failingTest],
+          expected: false,
+        },
+        {
+          description: 'returns false when test modules have no tests',
+          tests: [],
+          expected: false,
+        },
+      ])('$description', ({ tests, expected }) => {
+        const testResult = testData.createTestResults({
+          testModules: [testData.createTestModule({ tests })],
+        })
+        expect(isTestPassing(testResult)).toBe(expected)
+      })
+    })
+
+    test('returns false when there are no test modules', () => {
+      const testResult = testData.createTestResults({
+        testModules: [],
+      })
+      expect(isTestPassing(testResult)).toBe(false)
     })
   })
 })

@@ -45,3 +45,22 @@ export function isPassingTest(
 ): value is Test & { state: 'passed' } {
   return isTestCase(value) && value.state === 'passed'
 }
+
+export function isTestPassing(testResult: TestResult): boolean {
+  // No tests means the test suite is not passing
+  if (testResult.testModules.length === 0) {
+    return false
+  }
+
+  // Check if any tests exist
+  const hasTests = testResult.testModules.some(
+    (module) => module.tests.length > 0
+  )
+  if (!hasTests) {
+    return false
+  }
+
+  return testResult.testModules.every((module) =>
+    module.tests.every((test) => test.state !== 'failed')
+  )
+}
