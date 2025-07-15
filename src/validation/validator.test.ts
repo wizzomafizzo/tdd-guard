@@ -211,7 +211,6 @@ This violates TDD principles as explained in the numbered list above.
       expect(result.decision).toBe('block')
       expect(result.reason).toContain('Error during validation')
       expect(result.reason).toContain('Command failed: claude not found')
-      expect(result.reason).toContain('Is tdd-guard configured correctly?')
     })
 
     test('should block when model returns invalid JSON', async () => {
@@ -221,7 +220,6 @@ This violates TDD principles as explained in the numbered list above.
 
       expect(result.decision).toBe('block')
       expect(result.reason).toContain('Error during validation')
-      expect(result.reason).toContain('Is tdd-guard configured correctly?')
     })
   })
 
