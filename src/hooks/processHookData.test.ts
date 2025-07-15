@@ -82,6 +82,14 @@ describe('processHookData', () => {
       modifications: EDIT_HOOK_DATA,
       test: 'existing test',
       todo: 'existing todo',
+      lint: {
+        errorCount: 0,
+        warningCount: 0,
+        hasIssues: false,
+        totalIssues: 0,
+        issuesByFile: new Map(),
+        summary: 'No lint data available'
+      }
     })
     expect(result).toEqual(BLOCK_RESULT)
   })
@@ -112,6 +120,123 @@ describe('processHookData', () => {
     // Should return default result without calling validator
     expect(sut.validatorHasBeenCalled()).toBe(false)
     expect(result).toEqual(defaultResult)
+  })
+
+  describe('PostToolUse hook handling', () => {
+    it('should delegate to handlePostToolLint for PostToolUse events', async () => {
+      const postToolUseHook = {
+        ...EDIT_HOOK_DATA,
+        hook_event_name: 'PostToolUse',
+        tool_output: { success: true }
+      }
+
+      const result = await sut.process(postToolUseHook)
+
+      // Should not call the validator
+      expect(sut.validatorHasBeenCalled()).toBe(false)
+      // Result depends on lint state, but should return a valid result
+      expect(result).toHaveProperty('decision')
+      expect(result).toHaveProperty('reason')
+    })
+  })
+
+  describe('PreToolUse lint notification', () => {
+    it('should block when tests pass, lint issues exist, and not yet notified', async () => {
+      // Setup: passing tests
+      await sut.populateStorage({
+        test: JSON.stringify(testData.passingTestResults())
+      })
+      
+      // Setup: lint issues with notification flag false
+      await sut.storage.saveLint(JSON.stringify({
+        ...testData.lintDataWithError(),
+        hasNotifiedAboutLintIssues: false
+      }))
+
+      const result = await sut.process(EDIT_HOOK_DATA)
+
+      expect(result.decision).toBe('block')
+      expect(result.reason).toContain('Code quality issues detected')
+      // Should not call the main validator
+      expect(sut.validatorHasBeenCalled()).toBe(false)
+    })
+
+    it('should not block when tests are failing (red phase)', async () => {
+      // Setup: failing tests
+      await sut.populateStorage({
+        test: JSON.stringify(testData.failedTestResults())
+      })
+      
+      // Setup: lint issues with notification flag false
+      await sut.storage.saveLint(JSON.stringify({
+        ...testData.lintDataWithError(),
+        hasNotifiedAboutLintIssues: false
+      }))
+
+      const result = await sut.process(EDIT_HOOK_DATA)
+
+      // Should proceed to normal validation
+      expect(result).toEqual(BLOCK_RESULT)
+      expect(sut.validatorHasBeenCalled()).toBe(true)
+    })
+
+    it('should not block when no lint issues exist', async () => {
+      // Setup: passing tests
+      await sut.populateStorage({
+        test: JSON.stringify(testData.passingTestResults())
+      })
+      
+      // Setup: no lint issues
+      await sut.storage.saveLint(JSON.stringify({
+        ...testData.lintDataWithoutErrors(),
+        hasNotifiedAboutLintIssues: false
+      }))
+
+      const result = await sut.process(EDIT_HOOK_DATA)
+
+      // Should proceed to normal validation
+      expect(result).toEqual(BLOCK_RESULT)
+      expect(sut.validatorHasBeenCalled()).toBe(true)
+    })
+
+    it('should not block when already notified', async () => {
+      // Setup: passing tests
+      await sut.populateStorage({
+        test: JSON.stringify(testData.passingTestResults())
+      })
+      
+      // Setup: lint issues with notification flag true
+      await sut.storage.saveLint(JSON.stringify({
+        ...testData.lintDataWithError(),
+        hasNotifiedAboutLintIssues: true
+      }))
+
+      const result = await sut.process(EDIT_HOOK_DATA)
+
+      // Should proceed to normal validation
+      expect(result).toEqual(BLOCK_RESULT)
+      expect(sut.validatorHasBeenCalled()).toBe(true)
+    })
+
+    it('should set notification flag after blocking', async () => {
+      // Setup: passing tests
+      await sut.populateStorage({
+        test: JSON.stringify(testData.passingTestResults())
+      })
+      
+      // Setup: lint issues with notification flag false
+      await sut.storage.saveLint(JSON.stringify({
+        ...testData.lintDataWithError(),
+        hasNotifiedAboutLintIssues: false
+      }))
+
+      await sut.process(EDIT_HOOK_DATA)
+
+      // Check that the flag was updated
+      const savedLint = await sut.storage.getLint()
+      const parsedLint = JSON.parse(savedLint!)
+      expect(parsedLint.hasNotifiedAboutLintIssues).toBe(true)
+    })
   })
 })
 

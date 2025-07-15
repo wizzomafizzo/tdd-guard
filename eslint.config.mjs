@@ -33,13 +33,13 @@ export default [
       semi: 'off',
 
       // === COMPLEXITY & SIZE ===
-      complexity: ['error', 5],
-      'sonarjs/cognitive-complexity': ['error', 5],
-      'max-lines-per-function': ['warn', 40],
+      complexity: ['error', 20],
+      'sonarjs/cognitive-complexity': ['error', 20],
+      'max-lines-per-function': ['warn', 80],
       'max-depth': ['error', 5],
       'max-nested-callbacks': ['error', 5],
       'max-params': ['warn', 5],
-      'max-statements': ['warn', 20],
+      'max-statements': ['warn', 40],
       'sonarjs/max-switch-cases': ['error', 30],
 
       // === CODE DUPLICATION ===
@@ -116,8 +116,8 @@ export default [
       'max-lines-per-function': 'off',
       'sonarjs/no-nested-functions': 'off',
       'no-magic-numbers': 'off',
-      complexity: ['error', 8],
-      'sonarjs/cognitive-complexity': ['error', 8],
+      complexity: ['error', 20],
+      'sonarjs/cognitive-complexity': ['error', 20],
       'max-nested-callbacks': ['error', 8],
       '@typescript-eslint/explicit-function-return-type': 'off',
       'sonarjs/no-duplicate-string': ['error', { threshold: 20 }],

@@ -138,3 +138,56 @@ export const eslintResultWithout = <K extends keyof ESLintResult>(
   const fullResult = eslintResult(params)
   return omit(fullResult, keys)
 }
+
+/**
+ * Creates a lint data object with no errors
+ * @param params - Optional parameters to override defaults
+ */
+export const lintDataWithoutErrors = (
+  params?: Partial<Omit<LintData, 'hasNotifiedAboutLintIssues'>>
+): Omit<LintData, 'hasNotifiedAboutLintIssues'> => {
+  return {
+    timestamp: new Date().toISOString(),
+    files: params?.files ?? [],
+    issues: [],
+    errorCount: 0,
+    warningCount: 0,
+    ...params,
+  }
+}
+
+/**
+ * Creates a lint data object with errors
+ * @param params - Optional parameters to override defaults
+ */
+export const lintDataWithError = (
+  params?: Partial<Omit<LintData, 'hasNotifiedAboutLintIssues'>>
+): Omit<LintData, 'hasNotifiedAboutLintIssues'> => {
+  const defaultIssue = lintIssue()
+  return {
+    timestamp: new Date().toISOString(),
+    files: params?.files ?? ['/src/example.ts'],
+    issues: params?.issues ?? [defaultIssue],
+    errorCount: params?.errorCount ?? 1,
+    warningCount: params?.warningCount ?? 0,
+    ...params,
+  }
+}
+
+/**
+ * Creates a lint data object with notification flag set (for testing notification state)
+ * @param params - Optional parameters to override defaults
+ */
+export const lintDataWithNotificationFlag = (
+  params?: Partial<LintData>
+): LintData => {
+  return {
+    timestamp: new Date().toISOString(),
+    files: [],
+    issues: [],
+    errorCount: 0,
+    warningCount: 0,
+    hasNotifiedAboutLintIssues: true,
+    ...params,
+  }
+}

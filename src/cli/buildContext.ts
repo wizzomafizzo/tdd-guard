@@ -1,17 +1,33 @@
 import { Storage } from '../storage/Storage'
 import { Context } from '../contracts/types/Context'
+import { LintDataSchema } from '../contracts/schemas/lintSchemas'
+import { processLintData } from '../processors/lintProcessor'
 
 export async function buildContext(storage: Storage): Promise<Context> {
-  const [modifications, test, todo] = await Promise.all([
+  const [modifications, test, todo, lint] = await Promise.all([
     storage.getModifications(),
     storage.getTest(),
     storage.getTodo(),
+    storage.getLint(),
   ])
+
+  let processedLintData
+  try {
+    if (lint) {
+      const rawLintData = LintDataSchema.parse(JSON.parse(lint))
+      processedLintData = processLintData(rawLintData)
+    } else {
+      processedLintData = processLintData()
+    }
+  } catch {
+    processedLintData = processLintData()
+  }
 
   return {
     modifications: formatModifications(modifications ?? ''),
     test: test ?? '',
     todo: todo ?? '',
+    lint: processedLintData,
   }
 }
 

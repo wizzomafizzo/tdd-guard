@@ -10,6 +10,10 @@ import {
   Todo,
 } from '../../contracts/schemas/toolSchemas'
 import { TestResultsProcessor } from '../../processors'
+import {
+  formatLintDataForContext,
+  ProcessedLintData,
+} from '../../processors/lintProcessor'
 
 // Import core prompts (always included)
 import { ROLE_AND_CONTEXT } from '../prompts/role-and-context'
@@ -42,6 +46,7 @@ export function generateDynamicContext(context: Context): string {
     // 4. Additional context
     context.test ? formatTestOutput(context.test) : '',
     context.todo ? formatTodoList(context.todo) : '',
+    context.lint ? formatLintOutput(context.lint) : '',
 
     // 5. Response format
     RESPONSE_FORMAT,
@@ -103,6 +108,18 @@ const TODO_LIST_DESCRIPTION = `This section shows the developer's task list. Use
 - What has been completed (completed)
 - What is planned next (pending)
 Note: Multiple pending "add test" todos don't justify adding multiple tests at once.`
+
+const LINT_OUTPUT_DESCRIPTION = `This section shows the current code quality status from static analysis.
+
+IMPORTANT: This lint output reflects the CURRENT state of the codebase BEFORE the proposed modification.
+
+Use this to understand:
+- Current code quality issues that need attention
+- Whether code quality should be addressed before new features
+- Patterns of issues that may indicate architectural concerns
+
+Note: During TDD red phase (failing tests), focus on making tests pass before addressing lint issues.
+During green phase (passing tests), lint issues should be addressed before proceeding to new features.`
 
 function formatEditOperation(operation: EditOperation): string {
   return [
@@ -171,6 +188,18 @@ function formatTodoList(todoJson: string): string {
     .join('')
 
   return ['\n### Todo List\n', TODO_LIST_DESCRIPTION, todoItems, '\n'].join('')
+}
+
+function formatLintOutput(lintData: ProcessedLintData): string {
+  const formattedLintData = formatLintDataForContext(lintData)
+
+  return [
+    '\n### Code Quality Status\n',
+    LINT_OUTPUT_DESCRIPTION,
+    '\n```\n',
+    formattedLintData,
+    '\n```\n',
+  ].join('')
 }
 
 function formatSection(title: string, content: string): string {

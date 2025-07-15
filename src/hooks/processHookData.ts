@@ -4,6 +4,9 @@ import { Context } from '../contracts/types/Context'
 import { buildContext } from '../cli/buildContext'
 import { HookEvents } from './HookEvents'
 import { HookDataSchema, HookData, isTodoWriteOperation, ToolOperationSchema } from '../contracts/schemas/toolSchemas'
+import { handlePostToolLint } from './postToolLint'
+import { LintDataSchema } from '../contracts/schemas/lintSchemas'
+import { TestResultSchema, isTestPassing } from '../contracts/schemas/vitestSchemas'
 
 export interface ProcessHookDataDeps {
   storage?: Storage
@@ -28,8 +31,21 @@ export async function processHookData(
 
   await processHookEvent(parsedData, deps.storage)
 
+  // Check if this is a PostToolUse event
+  if (hookResult.data.hook_event_name === 'PostToolUse' && deps.storage) {
+    return await handlePostToolLint(inputData, deps.storage)
+  }
+
   if (shouldSkipValidation(hookResult.data)) {
     return defaultResult
+  }
+
+  // For PreToolUse, check if we should notify about lint issues
+  if (hookResult.data.hook_event_name === 'PreToolUse' && deps.storage) {
+    const lintNotification = await checkLintNotification(deps.storage)
+    if (lintNotification.decision === 'block') {
+      return lintNotification
+    }
   }
 
   return await performValidation(deps)
@@ -57,5 +73,62 @@ async function performValidation(deps: ProcessHookDataDeps): Promise<ValidationR
     return await deps.validator(context)
   }
   
+  return defaultResult
+}
+
+async function checkLintNotification(storage: Storage): Promise<ValidationResult> {
+  // Get test results to check if tests are passing
+  let testsPassing = false
+  try {
+    const testStr = await storage.getTest()
+    if (testStr) {
+      const testResult = TestResultSchema.parse(JSON.parse(testStr))
+      testsPassing = isTestPassing(testResult)
+    }
+  } catch {
+    testsPassing = false
+  }
+
+  // Only proceed if tests are passing
+  if (!testsPassing) {
+    return defaultResult
+  }
+
+  // Get lint data
+  let lintData
+  try {
+    const lintStr = await storage.getLint()
+    if (lintStr) {
+      lintData = LintDataSchema.parse(JSON.parse(lintStr))
+    }
+  } catch {
+    return defaultResult
+  }
+
+  // Only proceed if lint data exists
+  if (!lintData) {
+    return defaultResult
+  }
+
+  const hasIssues = lintData.errorCount > 0 || lintData.warningCount > 0
+
+  // Block if:
+  // 1. Tests are passing (already checked)
+  // 2. There are lint issues
+  // 3. hasNotifiedAboutLintIssues is false (not yet notified)
+  if (hasIssues && !lintData.hasNotifiedAboutLintIssues) {
+    // Update the notification flag and save
+    const updatedLintData = {
+      ...lintData,
+      hasNotifiedAboutLintIssues: true
+    }
+    await storage.saveLint(JSON.stringify(updatedLintData))
+
+    return {
+      decision: 'block',
+      reason: 'Code quality issues detected. You need to fix those first before making any other changes. Remember to exercise system thinking and design awareness to ensure continuous architectural improvements. Consider: design patterns, SOLID principles, DRY, types and interfaces, and architectural improvements. Apply equally to implementation and test code. Use test data factories, helpers, and beforeEach to better organize tests.'
+    }
+  }
+
   return defaultResult
 }

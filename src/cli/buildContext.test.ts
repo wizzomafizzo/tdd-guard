@@ -16,6 +16,14 @@ describe('buildContext', () => {
       modifications: '',
       test: '',
       todo: '',
+      lint: {
+        hasIssues: false,
+        summary: 'No lint data available',
+        issuesByFile: new Map(),
+        totalIssues: 0,
+        errorCount: 0,
+        warningCount: 0,
+      },
     })
   })
 
@@ -30,6 +38,14 @@ describe('buildContext', () => {
       modifications: 'some modifications content',
       test: 'test code',
       todo: 'pending: implement feature',
+      lint: {
+        hasIssues: false,
+        summary: 'No lint data available',
+        issuesByFile: new Map(),
+        totalIssues: 0,
+        errorCount: 0,
+        warningCount: 0,
+      },
     })
   })
 
@@ -49,6 +65,14 @@ describe('buildContext', () => {
       modifications: JSON.stringify(modificationsData, null, 2),
       test: 'test code',
       todo: 'pending: implement feature',
+      lint: {
+        hasIssues: false,
+        summary: 'No lint data available',
+        issuesByFile: new Map(),
+        totalIssues: 0,
+        errorCount: 0,
+        warningCount: 0,
+      },
     })
   })
 
@@ -68,5 +92,99 @@ describe('buildContext', () => {
     expect(context.modifications).toBe(
       JSON.stringify(modificationsData, null, 2)
     )
+  })
+
+  it('should process valid lint data when stored', async () => {
+    const lintData = {
+      timestamp: '2024-01-01T00:00:00Z',
+      files: ['/src/example.ts'],
+      issues: [
+        {
+          file: '/src/example.ts',
+          line: 10,
+          column: 5,
+          severity: 'error',
+          message: 'Missing semicolon',
+          rule: 'semi',
+        },
+      ],
+      errorCount: 1,
+      warningCount: 0,
+      hasNotifiedAboutLintIssues: false,
+    }
+    await storage.saveLint(JSON.stringify(lintData))
+
+    const context = await buildContext(storage)
+
+    expect(context.lint).toEqual({
+      hasIssues: true,
+      summary: '1 lint issue found (1 error, 0 warnings)',
+      issuesByFile: new Map([
+        ['/src/example.ts', ['  Line 10:5 - error: Missing semicolon (semi)']],
+      ]),
+      totalIssues: 1,
+      errorCount: 1,
+      warningCount: 0,
+    })
+  })
+
+  it('should handle invalid lint JSON gracefully', async () => {
+    await storage.saveLint('invalid json')
+
+    const context = await buildContext(storage)
+
+    // Should fall back to default lint data
+    expect(context.lint).toEqual({
+      hasIssues: false,
+      summary: 'No lint data available',
+      issuesByFile: new Map(),
+      totalIssues: 0,
+      errorCount: 0,
+      warningCount: 0,
+    })
+  })
+
+  it('should handle lint data that fails schema validation', async () => {
+    // Missing required fields
+    const invalidLintData = {
+      timestamp: '2024-01-01T00:00:00Z',
+      // Missing: files, issues, errorCount, warningCount, hasNotifiedAboutLintIssues
+    }
+    await storage.saveLint(JSON.stringify(invalidLintData))
+
+    const context = await buildContext(storage)
+
+    // Should fall back to default lint data
+    expect(context.lint).toEqual({
+      hasIssues: false,
+      summary: 'No lint data available',
+      issuesByFile: new Map(),
+      totalIssues: 0,
+      errorCount: 0,
+      warningCount: 0,
+    })
+  })
+
+  it('should handle lint data with no issues', async () => {
+    const lintData = {
+      timestamp: '2024-01-01T00:00:00Z',
+      files: ['/src/example.ts'],
+      issues: [],
+      errorCount: 0,
+      warningCount: 0,
+      hasNotifiedAboutLintIssues: false,
+    }
+    await storage.saveLint(JSON.stringify(lintData))
+
+    const context = await buildContext(storage)
+
+    expect(context.lint).toEqual({
+      hasIssues: false,
+      summary: 'No lint issues found',
+      issuesByFile: new Map(),
+      totalIssues: 0,
+      errorCount: 0,
+      warningCount: 0,
+    })
   })
 })
