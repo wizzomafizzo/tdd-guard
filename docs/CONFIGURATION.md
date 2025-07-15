@@ -100,7 +100,13 @@ Add to `.claude/settings.json`:
 
 ### Vitest
 
-In `vitest.config.ts`:
+First, ensure Vitest is installed in your project:
+
+```bash
+npm install --save-dev vitest
+```
+
+Then configure it in `vitest.config.ts`:
 
 ```typescript
 import { defineConfig } from 'vitest/config'
@@ -113,6 +119,29 @@ export default defineConfig({
 })
 ```
 
+### ESLint
+
+For refactoring phase support, install ESLint in your project:
+
+```bash
+npm install --save-dev eslint
+```
+
+TDD Guard uses ESLint to check for code issues during the refactoring phase.
+Having the latest version ensures the lint results are provided in the format that tdd-guard expects.
+
+### NPM Scripts
+
+Ensure your `package.json` has a `test` script that runs Vitest:
+
+```json
+{
+  "scripts": {
+    "test": "vitest run"
+  }
+}
+```
+
 ## Data Storage
 
 TDD Guard stores context data in `.claude/tdd-guard-data/`:
@@ -122,6 +151,72 @@ TDD Guard stores context data in `.claude/tdd-guard-data/`:
 - `todo-context.json` - Current todo state
 
 This directory is created automatically and should be added to `.gitignore`.
+
+## Troubleshooting
+
+### Claude CLI Issues
+
+#### Finding Your Claude Installation
+
+To determine which Claude installation you're using:
+
+```bash
+# Check global Claude
+which claude
+
+# Check local Claude
+ls ~/.claude/local/claude
+```
+
+#### Testing Claude CLI
+
+Test if Claude is working correctly:
+
+```bash
+# For system Claude
+claude -p "which directory are we in?"
+
+# For local Claude
+~/.claude/local/claude -p "which directory are we in?"
+```
+
+#### API Key Conflicts
+
+When using Claude CLI (not the API), ensure no `ANTHROPIC_API_KEY` environment variable is set. The Claude binary may attempt to use this key instead of your authenticated session:
+
+```bash
+# Check if API key is set
+echo $ANTHROPIC_API_KEY
+
+# Temporarily unset it
+unset ANTHROPIC_API_KEY
+```
+
+### Dependency Versions
+
+#### ESLint
+
+Install the latest ESLint for better refactoring support during green phases:
+
+```bash
+npm install --save-dev eslint@latest
+```
+
+#### Vitest
+
+Use the latest Vitest version to ensure correct test output format for TDD Guard:
+
+```bash
+npm install --save-dev vitest@latest
+```
+
+### Common Issues
+
+1. **TDD Guard not triggering**: Check that hooks are properly configured in `.claude/settings.json`
+2. **Test results not captured**: Ensure `VitestReporter` is added to your Vitest config
+3. **Claude CLI failures**: Verify Claude installation and check for API key conflicts
+4. **"Command not found" errors**: Make sure `tdd-guard` is installed as a dev dependency
+5. **Changes not taking effect**: Restart your Claude session after modifying hooks or environment variables
 
 ## Advanced Configuration
 

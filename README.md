@@ -25,6 +25,12 @@ The tool intercepts Write, Edit, and MultiEdit operations before execution, exam
 - **Context Aggregation**: Combines file modifications, todo states, and test results for accurate validation
 - **Dynamic Instructions**: Tailored prompts for Write, Edit, and MultiEdit operations
 
+## Requirements
+
+- **Node.js**: Version 18 or higher
+- **Vitest**: Test runner (required)
+- **ESLint**: Latest version recommended for refactoring phase support
+
 ## Installation
 
 ```bash
@@ -57,7 +63,7 @@ Configure TDD Guard using the `/hooks` command:
 
 ### 3. Test Reporter
 
-Add to your `vitest.config.ts`:
+Add the TDD Guard reporter to your `vitest.config.ts`:
 
 ```typescript
 import { VitestReporter } from 'tdd-guard'
@@ -69,7 +75,9 @@ export default defineConfig({
 })
 ```
 
-For advanced configuration options, see the [Configuration Guide](docs/CONFIGURATION.md).
+Make sure your `package.json` test scripts are configured to use Vitest.
+
+For troubleshooting and configuration options, see the [Configuration Guide](docs/CONFIGURATION.md).
 
 ## Security Notice
 
