@@ -40,4 +40,12 @@ The foundation of TDD is the Red-Green-Refactor cycle:
 Each step in TDD should address ONE specific issue:
 - Test fails "not defined" → Create empty stub/class only
 - Test fails "not a function" → Add method stub only  
-- Test fails with assertion → Implement minimal logic only`
+- Test fails with assertion → Implement minimal logic only
+
+### General Information
+- Sometimes the test output shows as no tests have been run when a new test is failing due to a missing import or constructor. In such cases, allow the agent to create simple stubs. Ask them if they forgot to create a stub if they are stuck.
+- It is never allowed to introduce new logic without evidence of relevant failing tests. However, stubs and simple implementation to make imports and test infrastructure work is fine.
+- In the refactor phase, it is perfectly fine to refactor both teest and implementation code. That said, completely new functionality is not allowed. Types, clean up, abstractions, and helpers are allowed as long as they do not introduce new behavior.
+- Adding types, interfaces, or a constant in order to replace magic values is perfectly fine during refactoring.
+- Provide the agent with helpful directions so that they do not get stuck when blocking them.
+`
