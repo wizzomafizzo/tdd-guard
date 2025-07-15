@@ -33,7 +33,7 @@ export class ClaudeCli implements IModelClient {
 
     const output = execFileSync(claudeBinary, args, {
       encoding: 'utf-8',
-      timeout: 20000,
+      timeout: 60000,
       input: prompt,
       cwd: claudeDir,
     })

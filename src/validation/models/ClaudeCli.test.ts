@@ -53,9 +53,9 @@ describe('ClaudeCli', () => {
       expect(call.options.encoding).toBe('utf-8')
     })
 
-    test('sets timeout to 20 seconds', async () => {
+    test('sets timeout to 60 seconds', async () => {
       const call = await sut.askAndGetCall()
-      expect(call.options.timeout).toBe(20000)
+      expect(call.options.timeout).toBe(60000)
     })
 
     test('executes claude command from .claude subdirectory', async () => {
