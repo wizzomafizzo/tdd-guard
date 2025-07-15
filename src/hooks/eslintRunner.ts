@@ -1,13 +1,16 @@
 import { LintData, LintIssue, ESLintResult, ESLintMessage } from '../contracts/schemas/lintSchemas'
-import { exec } from 'child_process'
+import { execFile } from 'child_process'
 import { promisify } from 'util'
 
-const execAsync = promisify(exec)
+const execFileAsync = promisify(execFile)
 
-const buildCommand = (files: string[], configPath?: string): string => 
-  ['npx eslint', files.join(' '), '--format json', configPath && `-c "${configPath}"`]
-    .filter(Boolean)
-    .join(' ')
+const buildArgs = (files: string[], configPath?: string): string[] => {
+  const args = ['eslint', ...files, '--format', 'json']
+  if (configPath) {
+    args.push('-c', configPath)
+  }
+  return args
+}
 
 const parseResults = (stdout?: string): ESLintResult[] => {
   try {
@@ -55,10 +58,10 @@ export async function runESLint(
   configPath?: string
 ): Promise<Omit<LintData, 'hasNotifiedAboutLintIssues'>> {
   const timestamp = new Date().toISOString()
-  const command = buildCommand(filePaths, configPath)
+  const args = buildArgs(filePaths, configPath)
   
   try {
-    await execAsync(command)
+    await execFileAsync('npx', args)
     return createLintData(timestamp, filePaths, [])
   } catch (error) {
     if (!isExecError(error)) throw error

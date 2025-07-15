@@ -37,6 +37,38 @@ describe('runESLint', () => {
       expect(result.warningCount).toBe(0)
     })
   })
+
+  describe('with files containing special characters', () => {
+    test.each([
+      ['spaces', 'src/my file with spaces.ts'],
+      ['quotes', 'src/file"with"quotes.ts'],
+      ['semicolons', 'src/file;name.ts'],
+      ['backticks', 'src/file`with`backticks.ts'],
+      ['dollar signs', 'src/file$with$dollar.ts'],
+      ['pipes', 'src/file|with|pipes.ts'],
+      ['ampersands', 'src/file&with&ampersands.ts'],
+      ['parentheses', 'src/file(with)parentheses.ts'],
+      ['command injection attempt', 'file.js"; cat /etc/passwd; echo "'],
+      ['newlines', 'src/file\nwith\nnewlines.ts'],
+      ['tabs', 'src/file\twith\ttabs.ts']
+    ])('handles file paths with %s correctly', async (_, filePath) => {
+      const result = await runESLint([filePath])
+      
+      expect(result.files).toEqual([filePath])
+      expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
+    })
+
+    test.each([
+      ['spaces', '/path with spaces/eslint.config.js'],
+      ['quotes', '/path"with"quotes/eslint.config.js'],
+      ['special chars', '/path;with&special|chars/eslint.config.js']
+    ])('handles config paths with %s correctly', async (_, configPath) => {
+      const result = await runESLint(['src/file.ts'], configPath)
+      
+      expect(result.files).toEqual(['src/file.ts'])
+      expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
+    })
+  })
 })
 
 describe('runESLint with artifact files', () => {
