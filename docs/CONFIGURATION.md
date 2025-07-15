@@ -144,11 +144,12 @@ Ensure your `package.json` has a `test` script that runs Vitest:
 
 ## Data Storage
 
-TDD Guard stores context data in `.claude/tdd-guard-data/`:
+TDD Guard stores context data in `.claude/tdd-guard/data/`:
 
-- `operations/` - Individual operation data
-- `test-output.json` - Latest test results
-- `todo-context.json` - Current todo state
+- `test.json` - Latest test results from Vitest
+- `todos.json` - Current todo state
+- `modifications.json` - File modification history
+- `lint.json` - ESLint results for refactoring phase
 
 This directory is created automatically and should be added to `.gitignore`.
 
