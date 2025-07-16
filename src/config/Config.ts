@@ -11,6 +11,7 @@ export type ConfigOptions = {
   useSystemClaude?: boolean
   anthropicApiKey?: string
   modelType?: string
+  linterType?: string
 }
 
 export class Config {
@@ -18,6 +19,7 @@ export class Config {
   readonly useSystemClaude: boolean
   readonly anthropicApiKey: string | undefined
   readonly modelType: string
+  readonly linterType: string | undefined
 
   constructor(options?: ConfigOptions) {
     const mode = options?.mode ?? 'production'
@@ -26,6 +28,7 @@ export class Config {
     this.useSystemClaude = this.getUseSystemClaude(options)
     this.anthropicApiKey = this.getAnthropicApiKey(options)
     this.modelType = this.getModelType(options, mode)
+    this.linterType = this.getLinterType(options)
   }
 
   private getDataDir(options?: ConfigOptions): string {
@@ -70,5 +73,13 @@ export class Config {
 
   get lintFilePath(): string {
     return path.join(this.dataDir, LINT_FILENAME)
+  }
+
+  private getLinterType(options?: ConfigOptions): string | undefined {
+    if (options?.linterType) {
+      return options.linterType.toLowerCase()
+    }
+    const envValue = process.env.LINTER_TYPE?.toLowerCase()
+    return envValue && envValue.trim() !== '' ? envValue : undefined
   }
 }

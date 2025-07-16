@@ -183,4 +183,67 @@ describe('Config', () => {
       expect(config.modelType).toBe('claude_cli')
     })
   })
+
+  describe('linterType', () => {
+    test('returns undefined when no configuration provided', () => {
+      delete process.env.LINTER_TYPE
+
+      const config = new Config()
+
+      expect(config.linterType).toBeUndefined()
+    })
+
+    test('returns eslint when LINTER_TYPE env var is set to eslint', () => {
+      process.env.LINTER_TYPE = 'eslint'
+
+      const config = new Config()
+
+      expect(config.linterType).toBe('eslint')
+    })
+
+    test('returns value from ConfigOptions when linterType is provided', () => {
+      const config = new Config({ linterType: 'eslint' })
+
+      expect(config.linterType).toBe('eslint')
+    })
+
+    test('ConfigOptions takes precedence over env var', () => {
+      process.env.LINTER_TYPE = 'pylint'
+
+      const config = new Config({ linterType: 'eslint' })
+
+      expect(config.linterType).toBe('eslint')
+    })
+
+    test('returns undefined for empty string env var', () => {
+      process.env.LINTER_TYPE = ''
+
+      const config = new Config()
+
+      expect(config.linterType).toBeUndefined()
+    })
+
+    test('returns future linter types when configured', () => {
+      // Test that the system is extensible for future linter types
+      process.env.LINTER_TYPE = 'pylint'
+
+      const config = new Config()
+
+      expect(config.linterType).toBe('pylint')
+    })
+
+    test('returns linterType in lowercase when env var is uppercase', () => {
+      process.env.LINTER_TYPE = 'ESLINT'
+
+      const config = new Config()
+
+      expect(config.linterType).toBe('eslint')
+    })
+
+    test('returns linterType in lowercase when ConfigOptions is uppercase', () => {
+      const config = new Config({ linterType: 'ESLINT' })
+
+      expect(config.linterType).toBe('eslint')
+    })
+  })
 })
