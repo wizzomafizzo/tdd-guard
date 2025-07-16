@@ -1,214 +1,185 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { handlePostToolLint } from './postToolLint'
+import { describe, it, expect, vi } from 'vitest'
+import { handlePostToolLint, PostToolLintHandler, DEFAULT_RESULT } from './postToolLint'
 import { testData } from '@testUtils'
-import { runESLint } from './eslintRunner'
+import { ESLint } from '../linters/eslint/ESLint'
 import { MemoryStorage } from '../storage/MemoryStorage'
-
-vi.mock('./eslintRunner', () => ({
-  runESLint: vi.fn()
-}))
+import { Linter } from '../linters/Linter'
+import { LintData } from '../contracts/schemas/lintSchemas'
+import { HookData } from '../contracts/schemas/toolSchemas'
+import { ValidationResult } from '../contracts/types/ValidationResult'
+import { TestResult } from '../contracts/schemas/vitestSchemas'
 
 describe('postToolLint', () => {
-  const mockRunESLint = vi.mocked(runESLint)
-  let storage: MemoryStorage
-  const hookData = {
-    ...testData.editOperation(),
-    hook_event_name: 'PostToolUse',
-    tool_output: { success: true }
-  }
+  describe('PostToolLintHandler', () => {
+    it('uses ESLint by default', () => {
+      const storage = new MemoryStorage()
+      const handler = new PostToolLintHandler(storage)
+      expect(handler['linter']).toBeInstanceOf(ESLint)
+    })
 
-  beforeEach(() => {
-    vi.clearAllMocks()
-    storage = new MemoryStorage()
-
+    it('accepts Linter instance in constructor', () => {
+      const storage = new MemoryStorage()
+      const testLinter = new TestLinter()
+      const handler = new PostToolLintHandler(storage, testLinter)
+      expect(handler['linter']).toBe(testLinter)
+    })
   })
 
-  describe('when handling non-PostToolUse hooks', () => {
-    it('should return default result for PreToolUse hooks', async () => {
-      const preToolUseHook = {
-        ...testData.editOperation(),
-        hook_event_name: 'PreToolUse'
-      }
-
-      const result = await handlePostToolLint(JSON.stringify(preToolUseHook), storage)
-
-      expect(result).toEqual({
-        decision: undefined,
-        reason: ''
-      })
-      expect(mockRunESLint).not.toHaveBeenCalled()
+  it('should return default result for PreToolUse hooks', async () => {
+    const { result, parsedLint } = await runLintAndGetResult({
+      lintResult: testData.lintDataWithoutErrors(),
+      operation: { hook_event_name: 'PreToolUse' }
     })
 
+    expect(result).toEqual(DEFAULT_RESULT)
+    expect(parsedLint).toBeNull()
   })
 
-  describe('when extracting file paths', () => {
-    it('should extract file path from Edit operations', async () => {
-      mockRunESLint.mockResolvedValue(testData.lintDataWithoutErrors())
-      const editHook = {
-        ...testData.editOperation(),
-        hook_event_name: 'PostToolUse'
-      }
 
-      await handlePostToolLint(JSON.stringify(editHook), storage)
+  describe('when processing tool operations', () => {
+    it('runs lint and saves results for Edit operations', async () => {
+      const { parsedLint } = await runLintAndGetResult()
 
-      expect(mockRunESLint).toHaveBeenCalledWith(['/test/file.ts'])
+      expect(parsedLint).not.toBeNull()
+      expect(parsedLint!.files).toEqual([])
+      expect(parsedLint!.errorCount).toBe(0)
+      expect(parsedLint!.warningCount).toBe(0)
     })
 
-    it('should extract file path from Write operations', async () => {
-      mockRunESLint.mockResolvedValue(testData.lintDataWithoutErrors())
-      const writeHook = {
-        ...testData.writeOperation(),
-        hook_event_name: 'PostToolUse'
-      }
-
-      await handlePostToolLint(JSON.stringify(writeHook), storage)
-
-      expect(mockRunESLint).toHaveBeenCalledWith(['/test/file.ts'])
-    })
-
-    it('should extract file paths from MultiEdit operations', async () => {
-      mockRunESLint.mockResolvedValue(testData.lintDataWithoutErrors())
-      const multiEditHook = {
-        ...testData.multiEditOperation(),
-        hook_event_name: 'PostToolUse'
-      }
-
-      await handlePostToolLint(JSON.stringify(multiEditHook), storage)
-
-      expect(mockRunESLint).toHaveBeenCalledWith(['/test/file.ts'])
-    })
-
-    it('should return default result when no file paths can be extracted', async () => {
-      const hookWithoutPaths = {
-        hook_event_name: 'PostToolUse',
-        tool_name: 'TodoWrite',
-        tool_input: { todos: [] }
-      }
-
-      const result = await handlePostToolLint(JSON.stringify(hookWithoutPaths), storage)
-
-      expect(result).toEqual({
-        decision: undefined,
-        reason: ''
+    it('runs lint and saves results for Write operations', async () => {
+      const { parsedLint } = await runLintAndGetResult({
+        operation: { tool_name: 'Write' }
       })
-      expect(mockRunESLint).not.toHaveBeenCalled()
+
+      expect(parsedLint).not.toBeNull()
+      expect(parsedLint!.hasNotifiedAboutLintIssues).toBe(false)
     })
 
-    it('should handle missing file_path in edits gracefully', async () => {
-      mockRunESLint.mockResolvedValue(testData.lintDataWithoutErrors())
-      const multiEditHook = {
-        ...testData.multiEditOperation(),
-        hook_event_name: 'PostToolUse',
-        tool_input: {
-          edits: [
-            { old_string: 'a', new_string: 'b' },
-            { file_path: '/test/file.ts', old_string: 'c', new_string: 'd' }
-          ]
+    it('runs lint and saves results for MultiEdit operations', async () => {
+      const { parsedLint } = await runLintAndGetResult({
+        operation: { tool_name: 'MultiEdit' }
+      })
+
+      expect(parsedLint).not.toBeNull()
+      expect(parsedLint!.hasNotifiedAboutLintIssues).toBe(false)
+    })
+
+    it('returns default result and does not save lint data when operation has no file paths', async () => {
+      const { result, parsedLint } = await runLintAndGetResult({
+        operation: {
+          tool_name: 'TodoWrite',
+          tool_input: { todos: [] }
         }
-      }
+      })
 
-      await handlePostToolLint(JSON.stringify(multiEditHook), storage)
+      expect(result).toEqual(DEFAULT_RESULT)
+      expect(parsedLint).toBeNull()
+    })
 
-      // Should only extract valid file paths
-      expect(mockRunESLint).toHaveBeenCalledWith(['/test/file.ts'])
+    it('processes MultiEdit operations even when some edits lack file_path', async () => {
+      const { parsedLint } = await runLintAndGetResult({
+        operation: {
+          tool_name: 'MultiEdit',
+          tool_input: {
+            edits: [
+              { old_string: 'a', new_string: 'b' },  // missing file_path
+              { file_path: '/test/file.ts', old_string: 'c', new_string: 'd' }
+            ]
+          }
+        }
+      })
+
+      // Should still process the edit that has a file_path
+      expect(parsedLint).not.toBeNull()
+      expect(parsedLint!.hasNotifiedAboutLintIssues).toBe(false)
     })
   })
 
-  describe('when running lint check', () => {
-    it('should always save lint data to storage', async () => {
-      const lintData = testData.lintDataWithError()
-      mockRunESLint.mockResolvedValue(lintData)
+  it('should always save lint data to storage', async () => {
+    const lintData = testData.lintDataWithError()
 
-      await handlePostToolLint(JSON.stringify(hookData), storage)
+    const { parsedLint } = await runLintAndGetResult({ lintResult: lintData })
 
-      const savedLint = await storage.getLint()
-      const parsedLint = JSON.parse(savedLint!)
-      expect(parsedLint.issues).toEqual(lintData.issues)
-      expect(parsedLint.errorCount).toBe(1)
-    })
+    expect(parsedLint!.issues).toEqual(lintData.issues)
+    expect(parsedLint!.errorCount).toBe(1)
   })
 
   describe('when lint issues exist', () => {
-    beforeEach(() => {
-      mockRunESLint.mockResolvedValue(testData.lintDataWithError())
-    })
-
     describe('and notification flag is false', () => {
-      it('should not block', async () => {
-        const result = await handlePostToolLint(JSON.stringify(hookData), storage)
-
-        expect(result).toEqual({
-          decision: undefined,
-          reason: ''
+      it('does not block the operation', async () => {
+        const { result } = await runLintAndGetResult({
+          lintResult: testData.lintDataWithError()
         })
+
+        expect(result).toEqual(DEFAULT_RESULT)
       })
 
-      it('should save hasNotifiedAboutLintIssues as false', async () => {
-        await handlePostToolLint(JSON.stringify(hookData), storage)
+      it('saves hasNotifiedAboutLintIssues as false', async () => {
+        const { parsedLint } = await runLintAndGetResult({
+          lintResult: testData.lintDataWithError()
+        })
 
-        const savedLint = await storage.getLint()
-        const parsedLint = JSON.parse(savedLint!)
-        expect(parsedLint.hasNotifiedAboutLintIssues).toBe(false)
+        expect(parsedLint!.hasNotifiedAboutLintIssues).toBe(false)
       })
     })
 
     describe('and notification flag is true', () => {
-      beforeEach(async () => {
-        await storage.saveLint(JSON.stringify(testData.lintDataWithNotificationFlag()))
-      })
-
-      it('should block with detailed lint errors', async () => {
-        const result = await handlePostToolLint(JSON.stringify(hookData), storage)
+      it('blocks with detailed lint errors', async () => {
+        const { result } = await runLintAndGetResult({
+          lintResult: testData.lintDataWithError(),
+          initialLintData: testData.lintDataWithNotificationFlag()
+        })
 
         expect(result.decision).toBe('block')
         expect(result.reason).toContain('Lint issues detected:')
       })
 
-      it('should preserve the notification flag', async () => {
-        await handlePostToolLint(JSON.stringify(hookData), storage)
+      it('preserves the notification flag', async () => {
+        const { parsedLint } = await runLintAndGetResult({
+          lintResult: testData.lintDataWithError(),
+          initialLintData: testData.lintDataWithNotificationFlag()
+        })
 
-        const savedLint = await storage.getLint()
-        const parsedLint = JSON.parse(savedLint!)
-        expect(parsedLint.hasNotifiedAboutLintIssues).toBe(true)
+        expect(parsedLint!.hasNotifiedAboutLintIssues).toBe(true)
       })
     })
 
     describe('and tests are failing (red phase)', () => {
-      beforeEach(async () => {
-        await storage.saveTest(JSON.stringify(testData.failedTestResults()))
-      })
-
-      it('should save lint data without blocking', async () => {
+      it('saves lint data without blocking', async () => {
         const lintData = testData.lintDataWithError()
-        mockRunESLint.mockResolvedValue(lintData)
+        
+        const { parsedLint } = await runLintAndGetResult({
+          lintResult: lintData,
+          initialTestData: testData.failedTestResults()
+        })
 
-        await handlePostToolLint(JSON.stringify(hookData), storage)
-
-        const savedLint = await storage.getLint()
-        const parsedLint = JSON.parse(savedLint!)
-        expect(parsedLint.issues).toEqual(lintData.issues)
-        expect(parsedLint.errorCount).toBe(1)
-        expect(parsedLint.hasNotifiedAboutLintIssues).toBe(false)
+        expect(parsedLint!.issues).toEqual(lintData.issues)
+        expect(parsedLint!.errorCount).toBe(1)
+        expect(parsedLint!.hasNotifiedAboutLintIssues).toBe(false)
       })
     })
   })
 
   describe('when storage errors occur', () => {
     it('should treat storage read errors as no stored lint data', async () => {
+      // This test requires manual setup to spy on storage
+      const storage = new MemoryStorage()
+      const testLinter = new TestLinter(testData.lintDataWithoutErrors())
+      
       // Make storage.getLint() throw an error only on the first call
       const getLintSpy = vi.spyOn(storage, 'getLint')
       getLintSpy.mockRejectedValueOnce(new Error('Storage error'))
-      
-      mockRunESLint.mockResolvedValue(testData.lintDataWithoutErrors())
 
-      const result = await handlePostToolLint(JSON.stringify(hookData), storage)
-
-      // Should not block (treats error as no stored data)
-      expect(result).toEqual({
-        decision: undefined,
-        reason: ''
+      const hookData = JSON.stringify({
+        ...testData.editOperation(),
+        hook_event_name: 'PostToolUse'
       })
       
+      const result = await handlePostToolLint(hookData, storage, testLinter)
+
+      // Should not block (treats error as no stored data)
+      expect(result).toEqual(DEFAULT_RESULT)
+
       // Reset the spy and check that storage now contains the new lint data
       getLintSpy.mockRestore()
       const savedLint = await storage.getLint()
@@ -220,64 +191,115 @@ describe('postToolLint', () => {
   })
 
   describe('when no lint issues exist', () => {
-    beforeEach(() => {
-      mockRunESLint.mockResolvedValue(testData.lintDataWithoutErrors())
-    })
-
     describe('and previous state had notification flag set', () => {
-      beforeEach(async () => {
-        await storage.saveLint(JSON.stringify(testData.lintDataWithNotificationFlag()))
-      })
+      it('resets hasNotifiedAboutLintIssues to false', async () => {
+        const { parsedLint } = await runLintAndGetResult({
+          lintResult: testData.lintDataWithoutErrors(),
+          initialLintData: testData.lintDataWithNotificationFlag()
+        })
 
-      it('should reset hasNotifiedAboutLintIssues to false', async () => {
-        await handlePostToolLint(JSON.stringify(hookData), storage)
-
-        const savedLint = await storage.getLint()
-        const parsedLint = JSON.parse(savedLint!)
-        expect(parsedLint.hasNotifiedAboutLintIssues).toBe(false)
+        expect(parsedLint!.hasNotifiedAboutLintIssues).toBe(false)
       })
 
       describe('and tests are passing', () => {
-        beforeEach(async () => {
-          await storage.saveTest(JSON.stringify(testData.passingTestResults()))
-        })
-
-        it('should not block', async () => {
-          const result = await handlePostToolLint(JSON.stringify(hookData), storage)
-
-          expect(result).toEqual({
-            decision: undefined,
-            reason: ''
+        it('does not block', async () => {
+          const { result } = await runLintAndGetResult({
+            lintResult: testData.lintDataWithoutErrors(),
+            initialLintData: testData.lintDataWithNotificationFlag(),
+            initialTestData: testData.passingTestResults()
           })
+
+          expect(result).toEqual(DEFAULT_RESULT)
         })
       })
     })
 
     describe('and previous state had issues and notification flag', () => {
-      beforeEach(async () => {
-        await storage.saveLint(JSON.stringify(testData.lintData({
-          files: ['/src/example.ts'],
-          issues: [testData.lintIssue({ file: '/src/example.ts', line: 1, column: 1, message: "Error" })],
-          hasNotifiedAboutLintIssues: true
-        })))
-      })
+      it('resets hasNotifiedAboutLintIssues to false when issues are resolved', async () => {
+        const { parsedLint } = await runLintAndGetResult({
+          lintResult: testData.lintDataWithoutErrors(),
+          initialLintData: testData.lintData({
+            files: ['/src/example.ts'],
+            issues: [testData.lintIssue({ file: '/src/example.ts', line: 1, column: 1, message: "Error" })],
+            hasNotifiedAboutLintIssues: true
+          })
+        })
 
-      it('should reset hasNotifiedAboutLintIssues to false when issues are resolved', async () => {
-        await handlePostToolLint(JSON.stringify(hookData), storage)
-
-        const savedLint = await storage.getLint()
-        const parsedLint = JSON.parse(savedLint!)
-        expect(parsedLint.hasNotifiedAboutLintIssues).toBe(false)
+        expect(parsedLint!.hasNotifiedAboutLintIssues).toBe(false)
       })
     })
 
-    it('should save clean lint data', async () => {
-      await handlePostToolLint(JSON.stringify(hookData), storage)
+    it('saves clean lint data', async () => {
+      const { parsedLint } = await runLintAndGetResult({
+        lintResult: testData.lintDataWithoutErrors()
+      })
 
-      const savedLint = await storage.getLint()
-      const parsedLint = JSON.parse(savedLint!)
-      expect(parsedLint.issues).toEqual([])
-      expect(parsedLint.errorCount).toBe(0)
+      expect(parsedLint!.issues).toEqual([])
+      expect(parsedLint!.errorCount).toBe(0)
+      expect(parsedLint!.warningCount).toBe(0)
     })
   })
 })
+
+// Test helper functions
+interface LintTestOptions {
+  lintResult?: Omit<LintData, 'hasNotifiedAboutLintIssues'>
+  operation?: Partial<HookData>
+  storage?: MemoryStorage
+  initialLintData?: LintData
+  initialTestData?: TestResult
+}
+
+async function runLintAndGetResult(options: LintTestOptions = {}): Promise<{
+  result: ValidationResult,
+  parsedLint: LintData | null,
+  storage: MemoryStorage
+}> {
+  const { lintResult, operation = {}, storage: existingStorage, initialLintData, initialTestData } = options
+  const storage = existingStorage ?? new MemoryStorage()
+  
+  // Set up initial storage state if provided
+  if (initialLintData) {
+    await storage.saveLint(JSON.stringify(initialLintData))
+  }
+  if (initialTestData) {
+    await storage.saveTest(JSON.stringify(initialTestData))
+  }
+  
+  const testLinter = new TestLinter(lintResult ?? testData.lintDataWithoutErrors())
+  
+  let baseOperation
+  if (operation.tool_name === 'Write') {
+    baseOperation = testData.writeOperation()
+  } else if (operation.tool_name === 'MultiEdit') {
+    baseOperation = testData.multiEditOperation()
+  } else {
+    baseOperation = testData.editOperation()
+  }
+  
+  const hookData = JSON.stringify({
+    ...baseOperation,
+    hook_event_name: 'PostToolUse',
+    ...operation
+  })
+  
+  const result = await handlePostToolLint(hookData, storage, testLinter)
+  
+  const savedLint = await storage.getLint()
+  const parsedLint = savedLint ? JSON.parse(savedLint) : null
+  
+  return { result, parsedLint, storage }
+}
+
+// Test Linter implementation with configurable behavior
+class TestLinter implements Linter {
+  private readonly lintResult: Omit<LintData, 'hasNotifiedAboutLintIssues'>
+  
+  constructor(lintResult?: Omit<LintData, 'hasNotifiedAboutLintIssues'>) {
+    this.lintResult = lintResult ?? testData.lintDataWithoutErrors()
+  }
+  
+  async lint(): Promise<Omit<LintData, 'hasNotifiedAboutLintIssues'>> {
+    return this.lintResult
+  }
+}

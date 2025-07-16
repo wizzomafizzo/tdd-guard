@@ -2,88 +2,139 @@ import { ValidationResult } from '../contracts/types/ValidationResult'
 import { LintData, LintDataSchema } from '../contracts/schemas/lintSchemas'
 import { HookDataSchema, HookData } from '../contracts/schemas/toolSchemas'
 import { Storage } from '../storage/Storage'
-import { runESLint } from './eslintRunner'
+import { Linter } from '../linters/Linter'
+import { ESLint } from '../linters/eslint/ESLint'
 
-const DEFAULT_RESULT: ValidationResult = {
+export const DEFAULT_RESULT: ValidationResult = {
   decision: undefined,
   reason: ''
 }
 
-export async function handlePostToolLint(
-  hookData: string,
-  storage: Storage
-): Promise<ValidationResult> {
-  const parsedData = JSON.parse(hookData)
+export class PostToolLintHandler {
+  private readonly linter: Linter
+  private readonly storage: Storage
 
-  const hookResult = HookDataSchema.safeParse(parsedData)
-  if (!hookResult.success) {
-    return DEFAULT_RESULT
+  constructor(storage: Storage, linter?: Linter) {
+    this.storage = storage
+    this.linter = linter ?? new ESLint()
   }
 
-  // Only process PostToolUse hooks
-  if (hookResult.data.hook_event_name !== 'PostToolUse') {
-    return DEFAULT_RESULT
+  async handle(hookData: string): Promise<ValidationResult> {
+    return handlePostToolLint(hookData, this.storage, this.linter)
   }
+}
 
-  // Extract file paths from tool operation
-  const filePaths = extractFilePaths(hookResult.data)
-  if (filePaths.length === 0) {
-    return DEFAULT_RESULT
+function parseAndValidateHookData(hookData: string): HookData | null {
+  try {
+    const parsedData = JSON.parse(hookData)
+    const hookResult = HookDataSchema.safeParse(parsedData)
+    
+    if (!hookResult.success) {
+      return null
+    }
+    
+    // Only process PostToolUse hooks
+    if (hookResult.data.hook_event_name !== 'PostToolUse') {
+      return null
+    }
+    
+    return hookResult.data
+  } catch {
+    return null
   }
+}
 
-  // Get current lint data to check hasNotifiedAboutLintIssues state
-  let storedLintData
+async function getStoredLintData(storage: Storage): Promise<LintData | null> {
   try {
     const lintDataStr = await storage.getLint()
     if (lintDataStr) {
-      storedLintData = LintDataSchema.parse(JSON.parse(lintDataStr))
+      return LintDataSchema.parse(JSON.parse(lintDataStr))
     }
   } catch {
-    storedLintData = null
+    // Treat any error as no stored data
   }
+  return null
+}
 
-  // Run ESLint on the files
-  const lintResults = await runESLint(filePaths)
+function createLintData(
+  lintResults: Omit<LintData, 'hasNotifiedAboutLintIssues'>,
+  storedLintData: LintData | null
+): LintData {
   const hasIssues = lintResults.errorCount > 0 || lintResults.warningCount > 0
-
-  // Update lint data with new results
-  const lintData: LintData = {
+  
+  return {
     ...lintResults,
     hasNotifiedAboutLintIssues: hasIssues 
       ? (storedLintData?.hasNotifiedAboutLintIssues ?? false)  // Preserve flag when issues exist
       : false  // Reset flag when no issues
   }
+}
 
-  // Always save lint data
+function createBlockResult(lintData: LintData): ValidationResult {
+  const formattedIssues = formatLintIssues(lintData.issues)
+  const summary = `\n✖ ${lintData.errorCount + lintData.warningCount} problems (${lintData.errorCount} errors, ${lintData.warningCount} warnings)`
+  
+  return {
+    decision: 'block',
+    reason: `Lint issues detected:${formattedIssues}\n${summary}\n\nPlease fix these issues before proceeding.`
+  }
+}
+
+function formatLintIssues(issues: LintData['issues']): string {
+  const issuesByFile = new Map<string, string[]>()
+  
+  for (const issue of issues) {
+    if (!issuesByFile.has(issue.file)) {
+      issuesByFile.set(issue.file, [])
+    }
+    const ruleInfo = issue.rule ? `  ${issue.rule}` : ''
+    issuesByFile.get(issue.file)!.push(
+      `  ${issue.line}:${issue.column}  ${issue.severity}  ${issue.message}${ruleInfo}`
+    )
+  }
+
+  let formattedIssues = ''
+  for (const [file, fileIssues] of issuesByFile) {
+    formattedIssues += `\n${file}\n${fileIssues.join('\n')}`
+  }
+  
+  return formattedIssues
+}
+
+export async function handlePostToolLint(
+  hookData: string,
+  storage: Storage,
+  linter?: Linter
+): Promise<ValidationResult> {
+  const validatedHookData = parseAndValidateHookData(hookData)
+  if (!validatedHookData) {
+    return DEFAULT_RESULT
+  }
+
+  // Extract file paths from tool operation
+  const filePaths = extractFilePaths(validatedHookData)
+  if (filePaths.length === 0) {
+    return DEFAULT_RESULT
+  }
+
+  // Get current lint data to check hasNotifiedAboutLintIssues state
+  const storedLintData = await getStoredLintData(storage)
+
+  // Run ESLint on the files
+  const activeLinter = linter ?? new ESLint()
+  const lintResults = await activeLinter.lint(filePaths)
+  
+  // Create and save lint data
+  const lintData = createLintData(lintResults, storedLintData)
   await storage.saveLint(JSON.stringify(lintData))
+  
+  const hasIssues = lintResults.errorCount > 0 || lintResults.warningCount > 0
 
   // Block if:
   // 1. PreToolUse has notified (flag is true)
   // 2. There are still issues
   if (storedLintData?.hasNotifiedAboutLintIssues && hasIssues) {
-    // Format the lint issues for display
-    const issuesByFile = new Map<string, string[]>()
-    for (const issue of lintData.issues) {
-      if (!issuesByFile.has(issue.file)) {
-        issuesByFile.set(issue.file, [])
-      }
-      const ruleInfo = issue.rule ? `  ${issue.rule}` : ''
-      issuesByFile.get(issue.file)!.push(
-        `  ${issue.line}:${issue.column}  ${issue.severity}  ${issue.message}${ruleInfo}`
-      )
-    }
-
-    let formattedIssues = ''
-    for (const [file, issues] of issuesByFile) {
-      formattedIssues += `\n${file}\n${issues.join('\n')}`
-    }
-
-    const summary = `\n✖ ${lintData.errorCount + lintData.warningCount} problems (${lintData.errorCount} errors, ${lintData.warningCount} warnings)`
-
-    return {
-      decision: 'block',
-      reason: `Lint issues detected:${formattedIssues}\n${summary}\n\nPlease fix these issues before proceeding.`
-    }
+    return createBlockResult(lintData)
   }
 
   return DEFAULT_RESULT

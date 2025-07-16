@@ -1,16 +1,18 @@
 import { ValidationResult } from '../contracts/types/ValidationResult'
 import { Storage } from '../storage/Storage'
+import { FileStorage } from '../storage/FileStorage'
 import { Context } from '../contracts/types/Context'
 import { buildContext } from '../cli/buildContext'
 import { HookEvents } from './HookEvents'
 import { HookDataSchema, HookData, isTodoWriteOperation, ToolOperationSchema } from '../contracts/schemas/toolSchemas'
-import { handlePostToolLint } from './postToolLint'
+import { PostToolLintHandler } from './postToolLint'
 import { LintDataSchema } from '../contracts/schemas/lintSchemas'
 import { TestResultSchema, isTestPassing } from '../contracts/schemas/vitestSchemas'
 
 export interface ProcessHookDataDeps {
   storage?: Storage
   validator?: (context: Context) => Promise<ValidationResult>
+  lintHandler?: PostToolLintHandler
 }
 
 export const defaultResult: ValidationResult = {
@@ -24,16 +26,20 @@ export async function processHookData(
 ): Promise<ValidationResult> {
   const parsedData = JSON.parse(inputData)
   
+  // Initialize storage and lintHandler if not provided
+  const storage = deps.storage ?? new FileStorage()
+  const lintHandler = deps.lintHandler ?? new PostToolLintHandler(storage)
+  
   const hookResult = HookDataSchema.safeParse(parsedData)
   if (!hookResult.success) {
     return defaultResult
   }
 
-  await processHookEvent(parsedData, deps.storage)
+  await processHookEvent(parsedData, storage)
 
   // Check if this is a PostToolUse event
-  if (hookResult.data.hook_event_name === 'PostToolUse' && deps.storage) {
-    return await handlePostToolLint(inputData, deps.storage)
+  if (hookResult.data.hook_event_name === 'PostToolUse') {
+    return await lintHandler.handle(inputData)
   }
 
   if (shouldSkipValidation(hookResult.data)) {
@@ -41,8 +47,8 @@ export async function processHookData(
   }
 
   // For PreToolUse, check if we should notify about lint issues
-  if (hookResult.data.hook_event_name === 'PreToolUse' && deps.storage) {
-    const lintNotification = await checkLintNotification(deps.storage)
+  if (hookResult.data.hook_event_name === 'PreToolUse') {
+    const lintNotification = await checkLintNotification(storage)
     if (lintNotification.decision === 'block') {
       return lintNotification
     }
