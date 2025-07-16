@@ -29,7 +29,6 @@ The tool intercepts Write, Edit, and MultiEdit operations before execution, exam
 
 - **Node.js**: Version 18 or higher
 - **Vitest**: Test runner (required)
-- **ESLint**: Latest version recommended for refactoring phase support
 
 ## Installation
 

@@ -26,6 +26,11 @@ USE_SYSTEM_CLAUDE=false
 # Required when MODEL_TYPE or TEST_MODEL_TYPE is set to 'anthropic_api'
 # Get your API key from https://console.anthropic.com/
 TDD_GUARD_ANTHROPIC_API_KEY=your-api-key-here
+
+# Linter type for refactoring phase support (optional)
+# Options: 'eslint' or unset (no linting)
+# Only set this if you want automatic code quality checks during refactoring
+LINTER_TYPE=eslint
 ```
 
 ## Model Configuration
@@ -61,7 +66,9 @@ This is useful for:
 
 ### Interactive Setup (Recommended)
 
-Use Claude Code's `/hooks` command:
+Use Claude Code's `/hooks` command to set up both hooks:
+
+#### PreToolUse Hook (TDD Validation)
 
 1. Type `/hooks` in Claude Code
 2. Select `PreToolUse - Before tool execution`
@@ -73,6 +80,16 @@ Use Claude Code's `/hooks` command:
    - **Project settings** (`.claude/settings.json`) - Recommended for team consistency
    - **Local settings** (`.claude/settings.local.json`) - For personal preferences
    - **User settings** (`~/.claude/settings.json`) - For global configuration
+
+#### PostToolUse Hook (Refactoring Support)
+
+1. Type `/hooks` in Claude Code
+2. Select `PostToolUse - After tool execution`
+3. Choose `+ Add new matcher...`
+4. Enter: `Write|Edit|MultiEdit`
+5. Select `+ Add new hook...`
+6. Enter command: `tdd-guard`
+7. Choose the same settings location as above
 
 ### Manual Configuration
 
@@ -91,10 +108,23 @@ Add to `.claude/settings.json`:
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tdd-guard"
+          }
+        ]
+      }
     ]
   }
 }
 ```
+
+Note: The PostToolUse hook is optional and only needed if you want refactoring support with ESLint.
 
 ## Test Reporter Configuration
 
@@ -119,17 +149,6 @@ export default defineConfig({
 })
 ```
 
-### ESLint
-
-For refactoring phase support, install ESLint in your project:
-
-```bash
-npm install --save-dev eslint
-```
-
-TDD Guard uses ESLint to check for code issues during the refactoring phase.
-Having the latest version ensures the lint results are provided in the format that tdd-guard expects.
-
 ### NPM Scripts
 
 Ensure your `package.json` has a `test` script that runs Vitest:
@@ -142,6 +161,54 @@ Ensure your `package.json` has a `test` script that runs Vitest:
 }
 ```
 
+## Refactoring Phase Support
+
+TDD Guard can optionally check code quality during the refactoring phase (when tests are green) using ESLint. When issues are detected, the coding agent will be prompted to fix them.
+
+### Why Use Refactoring Support?
+
+During the TDD green phase, the coding agent may:
+
+- Clean up implementation code
+- Extract methods or constants
+- Improve naming
+- Remove duplication
+
+The refactoring support helps by:
+
+- Running ESLint automatically after file modifications
+- Detecting code quality issues
+- Prompting the coding agent to fix any issues found
+
+### Setup
+
+1. **Install ESLint** in your project:
+
+   ```bash
+   npm install --save-dev eslint@latest
+   ```
+
+2. **Enable linting** by setting the environment variable:
+
+   ```bash
+   LINTER_TYPE=eslint
+   ```
+
+   Note: Currently only ESLint is supported. Additional linters may be added in the future.
+
+3. **Configure the PostToolUse hook** (see Hook Configuration section below)
+
+### How It Works
+
+When enabled:
+
+1. After any file modification (Edit, MultiEdit, Write)
+2. TDD Guard runs ESLint on modified files
+3. If issues are found, the coding agent receives a notification
+4. The agent will then fix the identified issues
+
+Without `LINTER_TYPE=eslint`, TDD Guard skips all linting operations.
+
 ## Data Storage
 
 TDD Guard stores context data in `.claude/tdd-guard/data/`:
@@ -149,7 +216,7 @@ TDD Guard stores context data in `.claude/tdd-guard/data/`:
 - `test.json` - Latest test results from Vitest
 - `todos.json` - Current todo state
 - `modifications.json` - File modification history
-- `lint.json` - ESLint results for refactoring phase
+- `lint.json` - ESLint results (only created when LINTER_TYPE=eslint)
 
 This directory is created automatically and should be added to `.gitignore`.
 
