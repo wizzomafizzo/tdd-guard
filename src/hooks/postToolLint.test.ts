@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { handlePostToolLint, PostToolLintHandler, DEFAULT_RESULT } from './postToolLint'
 import { testData } from '@testUtils'
-import { ESLint } from '../linters/eslint/ESLint'
 import { MemoryStorage } from '../storage/MemoryStorage'
 import { Linter } from '../linters/Linter'
 import { LintData, LintResult } from '../contracts/schemas/lintSchemas'
@@ -11,10 +10,10 @@ import { TestResult } from '../contracts/schemas/vitestSchemas'
 
 describe('postToolLint', () => {
   describe('PostToolLintHandler', () => {
-    it('uses ESLint by default', () => {
+    it('uses null linter by default', () => {
       const storage = new MemoryStorage()
       const handler = new PostToolLintHandler(storage)
-      expect(handler['linter']).toBeInstanceOf(ESLint)
+      expect(handler['linter']).toBeNull()
     })
 
     it('accepts Linter instance in constructor', () => {
@@ -22,6 +21,12 @@ describe('postToolLint', () => {
       const testLinter = new TestLinter()
       const handler = new PostToolLintHandler(storage, testLinter)
       expect(handler['linter']).toBe(testLinter)
+    })
+
+    it('accepts null linter in constructor', () => {
+      const storage = new MemoryStorage()
+      const handler = new PostToolLintHandler(storage, null)
+      expect(handler['linter']).toBeNull()
     })
   })
 
@@ -187,6 +192,23 @@ describe('postToolLint', () => {
       const parsedLint = JSON.parse(savedLint!)
       expect(parsedLint.hasNotifiedAboutLintIssues).toBe(false)
       expect(parsedLint.issues).toEqual([])
+    })
+  })
+
+  describe('when linter is null', () => {
+    it('skips linting and returns default result', async () => {
+      const storage = new MemoryStorage()
+      const handler = new PostToolLintHandler(storage, null)
+      const hookData = {
+        ...testData.editOperation(),
+        hook_event_name: 'PostToolUse'
+      }
+
+      const result = await handler.handle(JSON.stringify(hookData))
+
+      expect(result).toEqual(DEFAULT_RESULT)
+      const savedLint = await storage.getLint()
+      expect(savedLint).toBeNull()
     })
   })
 

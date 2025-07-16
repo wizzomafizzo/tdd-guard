@@ -3,7 +3,6 @@ import { LintData, LintDataSchema, LintResult } from '../contracts/schemas/lintS
 import { HookDataSchema, HookData } from '../contracts/schemas/toolSchemas'
 import { Storage } from '../storage/Storage'
 import { Linter } from '../linters/Linter'
-import { ESLint } from '../linters/eslint/ESLint'
 
 export const DEFAULT_RESULT: ValidationResult = {
   decision: undefined,
@@ -11,15 +10,19 @@ export const DEFAULT_RESULT: ValidationResult = {
 }
 
 export class PostToolLintHandler {
-  private readonly linter: Linter
+  private readonly linter: Linter | null
   private readonly storage: Storage
 
-  constructor(storage: Storage, linter?: Linter) {
+  constructor(storage: Storage, linter?: Linter | null) {
     this.storage = storage
-    this.linter = linter ?? new ESLint()
+    this.linter = linter ?? null
   }
 
   async handle(hookData: string): Promise<ValidationResult> {
+    // If no linter is configured, skip linting
+    if (!this.linter) {
+      return DEFAULT_RESULT
+    }
     return handlePostToolLint(hookData, this.storage, this.linter)
   }
 }
@@ -104,7 +107,7 @@ function formatLintIssues(issues: LintData['issues']): string {
 export async function handlePostToolLint(
   hookData: string,
   storage: Storage,
-  linter?: Linter
+  linter: Linter
 ): Promise<ValidationResult> {
   const validatedHookData = parseAndValidateHookData(hookData)
   if (!validatedHookData) {
@@ -120,9 +123,8 @@ export async function handlePostToolLint(
   // Get current lint data to check hasNotifiedAboutLintIssues state
   const storedLintData = await getStoredLintData(storage)
 
-  // Run ESLint on the files
-  const activeLinter = linter ?? new ESLint()
-  const lintResults = await activeLinter.lint(filePaths)
+  // Run linting on the files
+  const lintResults = await linter.lint(filePaths)
   
   // Create and save lint data
   const lintData = createLintData(lintResults, storedLintData)

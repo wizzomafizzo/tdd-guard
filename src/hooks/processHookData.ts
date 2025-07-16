@@ -8,11 +8,11 @@ import { HookDataSchema, HookData, isTodoWriteOperation, ToolOperationSchema } f
 import { PostToolLintHandler } from './postToolLint'
 import { LintDataSchema } from '../contracts/schemas/lintSchemas'
 import { TestResultSchema, isTestPassing } from '../contracts/schemas/vitestSchemas'
+import { LinterProvider } from '../providers/LinterProvider'
 
 export interface ProcessHookDataDeps {
   storage?: Storage
   validator?: (context: Context) => Promise<ValidationResult>
-  lintHandler?: PostToolLintHandler
 }
 
 export const defaultResult: ValidationResult = {
@@ -26,9 +26,13 @@ export async function processHookData(
 ): Promise<ValidationResult> {
   const parsedData = JSON.parse(inputData)
   
-  // Initialize storage and lintHandler if not provided
+  // Initialize storage if not provided
   const storage = deps.storage ?? new FileStorage()
-  const lintHandler = deps.lintHandler ?? new PostToolLintHandler(storage)
+  
+  // Create lintHandler with linter from provider
+  const linterProvider = new LinterProvider()
+  const linter = linterProvider.getLinter()
+  const lintHandler = new PostToolLintHandler(storage, linter)
   
   const hookResult = HookDataSchema.safeParse(parsedData)
   if (!hookResult.success) {
