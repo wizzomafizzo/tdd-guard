@@ -105,15 +105,10 @@ describe('TestResultsProcessor', () => {
 
     beforeEach(() => {
       processor = new TestResultsProcessor()
-      const testResults = {
-        testModules: [
-          {
-            moduleId: '/src/example.test.ts',
-            tests: [],
-          },
-        ],
+      const testResults = testData.createTestResults({
+        testModules: [testData.createTestModule()],
         unhandledErrors: [testData.createUnhandledError()],
-      }
+      })
 
       result = processor.process(JSON.stringify(testResults))
     })
@@ -141,6 +136,99 @@ describe('TestResultsProcessor', () => {
 
     it('summary shows 0 tests', () => {
       expect(result).toContain('Tests  0 passed (0)')
+    })
+  })
+
+  describe('handles test run end reason', () => {
+    it('displays reason explanation when test run failed with import error', () => {
+      const processor = new TestResultsProcessor()
+      const testResults = testData.createTestResults({
+        testModules: [testData.createTestModule()],
+        unhandledErrors: [testData.createUnhandledError()],
+        reason: 'failed',
+      })
+
+      const result = processor.process(JSON.stringify(testResults))
+
+      expect(result).toContain(
+        'Test run failed - This is likely when an imported module can not be found'
+      )
+    })
+
+    it('does not display import error explanation when tests fail for other reasons', () => {
+      const processor = new TestResultsProcessor()
+      const testResults = testData.createTestResults({
+        testModules: [
+          testData.createTestModule({
+            moduleId: '/src/calculator.test.ts',
+            tests: [
+              testData.createTest({
+                name: 'should add two numbers',
+                fullName: 'Calculator > should add two numbers',
+                state: 'failed',
+                errors: [
+                  testData.createTestError({
+                    message: 'expected 5 to be 6',
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+        unhandledErrors: [],
+        reason: 'failed',
+      })
+
+      const result = processor.process(JSON.stringify(testResults))
+
+      expect(result).not.toContain(
+        'This is likely when an imported module can not be found'
+      )
+      expect(result).toContain('expected 5 to be 6')
+    })
+
+    it('displays reason explanation when test run failed with no tests collected', () => {
+      const processor = new TestResultsProcessor()
+      const testResults = testData.createTestResults({
+        testModules: [testData.createTestModule()],
+        reason: 'failed',
+      })
+
+      const result = processor.process(JSON.stringify(testResults))
+
+      expect(result).toContain(
+        'Test run failed - This is likely when an imported module can not be found'
+      )
+    })
+
+    it('shows module as failed when test run failed with no tests', () => {
+      const processor = new TestResultsProcessor()
+      const testResults = testData.createTestResults({
+        testModules: [
+          testData.createTestModule({
+            moduleId: '/src/linters/eslint/helpers.test.ts',
+          }),
+        ],
+        reason: 'failed',
+      })
+
+      const result = processor.process(JSON.stringify(testResults))
+
+      expect(result).toContain(
+        '❯ /src/linters/eslint/helpers.test.ts (0 tests | 0 failed) 0ms'
+      )
+    })
+
+    it('counts module as failed in summary when test run failed with no tests', () => {
+      const processor = new TestResultsProcessor()
+      const testResults = testData.createTestResults({
+        testModules: [testData.createTestModule()],
+        reason: 'failed',
+      })
+
+      const result = processor.process(JSON.stringify(testResults))
+
+      expect(result).toContain('Test Files  1 failed (1)')
     })
   })
 })

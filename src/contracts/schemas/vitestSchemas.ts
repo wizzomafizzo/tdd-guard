@@ -26,6 +26,7 @@ export const TestModuleSchema = z.object({
 export const TestResultSchema = z.object({
   testModules: z.array(TestModuleSchema),
   unhandledErrors: z.array(UnhandledErrorSchema).optional(),
+  reason: z.enum(['passed', 'failed', 'interrupted']).optional(),
 })
 
 export type TestError = z.infer<typeof TestErrorSchema>

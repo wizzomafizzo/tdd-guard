@@ -18,11 +18,12 @@ export class TestResultsProcessor {
     }
 
     const counts = this.countTestsAndModules(data)
+    const reasonOutput = this.formatReason(data)
     const moduleOutput = this.formatModules(data)
     const errorOutput = this.formatUnhandledErrors(data)
     const summaryOutput = this.formatSummary(counts)
 
-    return `${moduleOutput}${errorOutput}\n${summaryOutput}`
+    return `${reasonOutput}${moduleOutput}${errorOutput}\n${summaryOutput}`
   }
 
   private countTestsAndModules(data: TestResult): {
@@ -43,6 +44,9 @@ export class TestResultsProcessor {
       passedCount += moduleCounts.passed
 
       if (moduleCounts.failed > 0) {
+        failedModuleCount++
+      } else if (module.tests.length === 0 && data.reason === 'failed') {
+        // Module with no tests in a failed test run should be counted as failed
         failedModuleCount++
       } else {
         passedModuleCount++
@@ -78,7 +82,12 @@ export class TestResultsProcessor {
       const failedTests = module.tests.filter(isFailingTest)
 
       if (failedTests.length === 0) {
-        output += ` ✓ ${module.moduleId} (${testCount} tests) 0ms\n`
+        // Check if this module should be marked as failed due to test run reason
+        if (testCount === 0 && data.reason === 'failed') {
+          output += ` ❯ ${module.moduleId} (${testCount} tests | 0 failed) 0ms\n`
+        } else {
+          output += ` ✓ ${module.moduleId} (${testCount} tests) 0ms\n`
+        }
       } else {
         output += ` ❯ ${module.moduleId} (${testCount} tests | ${failedTests.length} failed) 0ms\n`
         output += this.formatFailingModuleTests(module.tests)
@@ -126,6 +135,23 @@ export class TestResultsProcessor {
     return output
   }
 
+  private formatReason(data: TestResult): string {
+    if (!data.reason) {
+      return ''
+    }
+
+    if (data.reason === 'failed') {
+      const hasEmptyModules = data.testModules.some(
+        (module) => module.tests.length === 0
+      )
+      if (hasEmptyModules) {
+        return 'Test run failed - This is likely when an imported module can not be found and as such no tests were collected, resulting in inaccurate test run results.\n\n'
+      }
+    }
+
+    return ''
+  }
+
   private formatUnhandledErrors(data: TestResult): string {
     if (!data.unhandledErrors || data.unhandledErrors.length === 0) {
       return ''
@@ -162,7 +188,7 @@ export class TestResultsProcessor {
       counts
     let output = ''
 
-    if (failedCount > 0) {
+    if (failedCount > 0 || failedModuleCount > 0) {
       if (passedCount > 0) {
         output += ` Test Files  ${failedModuleCount} failed | ${passedModuleCount} passed (${failedModuleCount + passedModuleCount})\n`
         output += `      Tests  ${failedCount} failed | ${passedCount} passed (${failedCount + passedCount})\n`

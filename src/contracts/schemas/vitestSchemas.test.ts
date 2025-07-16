@@ -181,6 +181,38 @@ describe('Vitest schemas', () => {
         },
         expectedSuccess: true,
       },
+      {
+        description: 'with reason field as "passed"',
+        jsonTestResult: {
+          testModules: [],
+          reason: 'passed',
+        },
+        expectedSuccess: true,
+      },
+      {
+        description: 'with reason field as "failed"',
+        jsonTestResult: {
+          testModules: [],
+          reason: 'failed',
+        },
+        expectedSuccess: true,
+      },
+      {
+        description: 'with reason field as "interrupted"',
+        jsonTestResult: {
+          testModules: [],
+          reason: 'interrupted',
+        },
+        expectedSuccess: true,
+      },
+      {
+        description: 'with invalid reason value',
+        jsonTestResult: {
+          testModules: [],
+          reason: 'invalid',
+        },
+        expectedSuccess: false,
+      },
     ])('$description', ({ jsonTestResult, expectedSuccess }) => {
       const result = TestResultSchema.safeParse(jsonTestResult)
       expect(result.success).toBe(expectedSuccess)

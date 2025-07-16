@@ -1,4 +1,4 @@
-import type { Reporter, TestModule, TestCase } from 'vitest/node'
+import { Reporter, TestModule, TestCase, TestRunEndReason } from 'vitest/node'
 import { Storage } from '../storage/Storage'
 import { FileStorage } from '../storage/FileStorage'
 
@@ -39,7 +39,11 @@ export class VitestReporter implements Reporter {
     }
   }
 
-  async onTestRunEnd(_testModules?: unknown, errors?: unknown): Promise<void> {
+  async onTestRunEnd(
+    _testModules?: unknown,
+    errors?: unknown,
+    reason?: TestRunEndReason
+  ): Promise<void> {
     const output = {
       testModules: Array.from(this.testModules.values()).map((moduleData) => ({
         moduleId: moduleData.moduleId,
@@ -68,6 +72,7 @@ export class VitestReporter implements Reporter {
               return err
             })
           : [],
+      ...(reason && { reason }),
     }
 
     await this.storage.saveTest(JSON.stringify(output, null, 2))

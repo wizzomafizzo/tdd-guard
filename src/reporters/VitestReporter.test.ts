@@ -182,6 +182,38 @@ describe('VitestReporter', () => {
       expect(parsed?.unhandledErrors?.[0].stack).toContain('imported from')
     })
   })
+
+  describe('when test run ends with reason', () => {
+    it('captures "failed" reason in output', async () => {
+      const moduleWithImportError = testData.testModule({
+        moduleId: '/src/linters/eslint/helpers.test.ts',
+      })
+
+      sut.reporter.onTestModuleCollected(moduleWithImportError)
+      await sut.reporter.onTestRunEnd([], [], 'failed')
+
+      const parsed = await sut.getParsedData()
+
+      expect(parsed?.reason).toBe('failed')
+      expect(parsed?.testModules[0].tests).toHaveLength(0)
+    })
+
+    it('captures "interrupted" reason in output', async () => {
+      await sut.reporter.onTestRunEnd([], [], 'interrupted')
+
+      const parsed = await sut.getParsedData()
+      expect(parsed?.reason).toBe('interrupted')
+    })
+
+    it('captures "passed" reason in output', async () => {
+      sut.reporter.onTestModuleCollected(module)
+      sut.reporter.onTestCaseResult(passedTest)
+      await sut.reporter.onTestRunEnd([], [], 'passed')
+
+      const parsed = await sut.getParsedData()
+      expect(parsed?.reason).toBe('passed')
+    })
+  })
 })
 
 // Type guards
