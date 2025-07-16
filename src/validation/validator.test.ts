@@ -221,6 +221,14 @@ This violates TDD principles as explained in the numbered list above.
       expect(result.decision).toBe('block')
       expect(result.reason).toContain('Error during validation')
     })
+
+    test('should provide special message when model returns no response', async () => {
+      const { result } = await runValidator('')
+
+      expect(result.decision).toBe('block')
+      expect(result.reason).not.toContain('Error during validation')
+      expect(result.reason).toBe('No response from model, try again')
+    })
   })
 
   // Test helper

@@ -18,9 +18,16 @@ export async function validator(
     const response = await modelClient.ask(prompt)
     return parseModelResponse(response)
   } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error'
+    const reason =
+      errorMessage === 'No response from model'
+        ? 'No response from model, try again'
+        : `Error during validation: ${errorMessage}`
+
     return {
       decision: 'block',
-      reason: `Error during validation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      reason,
     }
   }
 }
