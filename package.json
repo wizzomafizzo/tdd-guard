@@ -1,6 +1,6 @@
 {
   "name": "tdd-guard",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "TDD Guard enforces Test-Driven Development principles using Claude Code hooks",
   "author": "Nizar Selander",
   "license": "MIT",
