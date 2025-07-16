@@ -39,14 +39,12 @@ export class VitestReporter implements Reporter {
     }
   }
 
-  async onTestRunEnd(): Promise<void> {
+  async onTestRunEnd(_testModules?: unknown, errors?: unknown): Promise<void> {
     const output = {
       testModules: Array.from(this.testModules.values()).map((moduleData) => ({
         moduleId: moduleData.moduleId,
-        // Extract just the data we need from test cases
         tests: moduleData.tests.map((testCase: TestCase) => {
           const result = testCase.result()
-
           return {
             name: testCase.name,
             fullName: testCase.fullName,
@@ -55,6 +53,21 @@ export class VitestReporter implements Reporter {
           }
         }),
       })),
+      // Store unhandled errors - Error objects need special handling for JSON
+      unhandledErrors:
+        errors && Array.isArray(errors)
+          ? errors.map((err) => {
+              if (err instanceof Error) {
+                // Error properties aren't enumerable, so we need to extract them explicitly
+                return {
+                  message: err.message,
+                  stack: err.stack,
+                  name: err.name,
+                }
+              }
+              return err
+            })
+          : [],
     }
 
     await this.storage.saveTest(JSON.stringify(output, null, 2))

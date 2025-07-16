@@ -85,6 +85,8 @@ export const testData = {
   createTest: testResultsFactory.createTest,
   createTestModule: testResultsFactory.createTestModule,
   createTestResults: testResultsFactory.createTestResults,
+  createUnhandledError: testResultsFactory.createUnhandledError,
+  createUnhandledErrorWithout: testResultsFactory.createUnhandledErrorWithout,
 
   // Lint factories
   lintIssue: lintFactory.lintIssue,

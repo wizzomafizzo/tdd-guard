@@ -19,9 +19,10 @@ export class TestResultsProcessor {
 
     const counts = this.countTestsAndModules(data)
     const moduleOutput = this.formatModules(data)
+    const errorOutput = this.formatUnhandledErrors(data)
     const summaryOutput = this.formatSummary(counts)
 
-    return `${moduleOutput}\n${summaryOutput}`
+    return `${moduleOutput}${errorOutput}\n${summaryOutput}`
   }
 
   private countTestsAndModules(data: TestResult): {
@@ -122,6 +123,32 @@ export class TestResultsProcessor {
       output += `     → ${test.errors[0].message}\n`
     }
 
+    return output
+  }
+
+  private formatUnhandledErrors(data: TestResult): string {
+    if (!data.unhandledErrors || data.unhandledErrors.length === 0) {
+      return ''
+    }
+
+    let output = '\nUnhandled Errors:\n'
+    for (const error of data.unhandledErrors) {
+      if (error.name) {
+        output += ` × ${error.name}: ${error.message}\n`
+      } else {
+        output += ` × ${error.message || error.toString()}\n`
+      }
+
+      if (error.stack) {
+        output += `   Stack:\n`
+        const stackLines = error.stack.split('\n')
+        for (const line of stackLines) {
+          if (line.trim()) {
+            output += `     ${line}\n`
+          }
+        }
+      }
+    }
     return output
   }
 

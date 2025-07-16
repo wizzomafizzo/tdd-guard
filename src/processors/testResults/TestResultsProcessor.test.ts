@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { TestResultsProcessor } from './TestResultsProcessor'
 import { testData } from '../../../test/utils'
 
@@ -97,6 +97,50 @@ describe('TestResultsProcessor', () => {
 `
 
       expect(result).toBe(expected)
+    })
+  })
+  describe('formats unhandled errors separately from test results', () => {
+    let processor: TestResultsProcessor
+    let result: string
+
+    beforeEach(() => {
+      processor = new TestResultsProcessor()
+      const testResults = {
+        testModules: [
+          {
+            moduleId: '/src/example.test.ts',
+            tests: [],
+          },
+        ],
+        unhandledErrors: [testData.createUnhandledError()],
+      }
+
+      result = processor.process(JSON.stringify(testResults))
+    })
+
+    it('shows module as passed with 0 tests', () => {
+      expect(result).toContain('✓ /src/example.test.ts (0 tests)')
+    })
+
+    it('displays unhandled errors section', () => {
+      expect(result).toContain('Unhandled Errors:')
+    })
+
+    it('shows error name and message', () => {
+      expect(result).toContain('× Error: Cannot find module "./helpers"')
+    })
+
+    it('includes stack trace', () => {
+      expect(result).toContain('Stack:')
+      expect(result).toContain('imported from')
+    })
+
+    it('summary shows passed test file', () => {
+      expect(result).toContain('Test Files  1 passed (1)')
+    })
+
+    it('summary shows 0 tests', () => {
+      expect(result).toContain('Tests  0 passed (0)')
     })
   })
 })

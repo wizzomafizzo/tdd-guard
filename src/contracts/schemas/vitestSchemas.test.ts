@@ -4,6 +4,7 @@ import {
   TestSchema,
   TestModuleSchema,
   TestResultSchema,
+  UnhandledErrorSchema,
   isTestModule,
   isTestCase,
   isFailingTest,
@@ -13,6 +14,46 @@ import {
 import { testData } from '@testUtils'
 
 describe('Vitest schemas', () => {
+  describe('UnhandledErrorSchema', () => {
+    test.each([
+      {
+        description: 'without name',
+        unhandledError: testData.createUnhandledErrorWithout(['name']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without message',
+        unhandledError: testData.createUnhandledErrorWithout(['message']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'with all required fields',
+        unhandledError: testData.createUnhandledError(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with name and message only',
+        unhandledError: testData.createUnhandledError({ stack: undefined }),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with custom error name',
+        unhandledError: testData.createUnhandledError({
+          name: 'TypeError',
+          message: 'Cannot read property of undefined',
+        }),
+        expectedSuccess: true,
+      },
+    ])('$description', ({ unhandledError, expectedSuccess }) => {
+      const result = UnhandledErrorSchema.safeParse(unhandledError)
+      expect(result.success).toBe(expectedSuccess)
+
+      if (expectedSuccess && result.success) {
+        expect(result.data).toEqual(unhandledError)
+      }
+    })
+  })
+
   describe('TestErrorSchema', () => {
     test.each([
       {
@@ -130,6 +171,14 @@ describe('Vitest schemas', () => {
         jsonTestResult: testData.createTestResults({
           testModules: [testData.createTestModule()],
         }),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with unhandledErrors field',
+        jsonTestResult: {
+          testModules: [],
+          unhandledErrors: [testData.createUnhandledError()],
+        },
         expectedSuccess: true,
       },
     ])('$description', ({ jsonTestResult, expectedSuccess }) => {

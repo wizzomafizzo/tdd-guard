@@ -110,7 +110,7 @@ describe('VitestReporter', () => {
     const parsed = await sut.getParsedData()
 
     expect(parsed).not.toBeNull()
-    expect(parsed).toEqual({ testModules: [] })
+    expect(parsed).toEqual({ testModules: [], unhandledErrors: [] })
   })
 
   describe('storage integration', () => {
@@ -134,6 +134,52 @@ describe('VitestReporter', () => {
 
       const parsed = JSON.parse(result!)
       expect(parsed.testModules[0].tests).toHaveLength(2)
+    })
+  })
+
+  describe('stores import errors as unhandled errors', () => {
+    let parsed: TestResult | null
+
+    beforeEach(async () => {
+      // Given a module that was collected but has no tests due to import error
+      const moduleWithImportError = testData.testModule({
+        moduleId: '/src/example.test.ts',
+      })
+
+      // And an error indicating import failure
+      const importError = testData.createUnhandledError()
+
+      // When the test run ends with errors
+      sut.reporter.onTestModuleCollected(moduleWithImportError)
+      await sut.reporter.onTestRunEnd([], [importError])
+
+      parsed = await sut.getParsedData()
+    })
+
+    it('includes the module in test modules', () => {
+      expect(parsed?.testModules).toHaveLength(1)
+    })
+
+    it('shows module with no tests', () => {
+      expect(parsed?.testModules[0].tests).toHaveLength(0)
+    })
+
+    it('includes error in unhandled errors', () => {
+      expect(parsed?.unhandledErrors).toHaveLength(1)
+    })
+
+    it('preserves error message', () => {
+      expect(parsed?.unhandledErrors?.[0].message).toBe(
+        'Cannot find module "./helpers"'
+      )
+    })
+
+    it('preserves error name', () => {
+      expect(parsed?.unhandledErrors?.[0].name).toBe('Error')
+    })
+
+    it('preserves error stack trace', () => {
+      expect(parsed?.unhandledErrors?.[0].stack).toContain('imported from')
     })
   })
 })

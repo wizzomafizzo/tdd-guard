@@ -3,7 +3,9 @@ import type {
   Test,
   TestModule,
   TestResult,
+  UnhandledError,
 } from '../../../src/contracts/schemas/vitestSchemas'
+import { omit } from './helpers'
 
 // Base builders
 export function createTestError(overrides: Partial<TestError> = {}): TestError {
@@ -12,6 +14,31 @@ export function createTestError(overrides: Partial<TestError> = {}): TestError {
     stack: 'Error: expected value to be different\n    at test.ts:10:5',
     ...overrides,
   }
+}
+
+export function createUnhandledError(
+  overrides: Partial<UnhandledError> = {}
+): UnhandledError {
+  return {
+    name: 'Error',
+    message: 'Cannot find module "./helpers"',
+    stack:
+      "Error: Cannot find module './helpers' imported from '/src/example.test.ts'",
+    ...overrides,
+  }
+}
+
+/**
+ * Creates an unhandled error object with specified properties omitted
+ * @param keys - Array of property keys to omit
+ * @param params - Optional parameters for the unhandled error
+ */
+export const createUnhandledErrorWithout = <K extends keyof UnhandledError>(
+  keys: K[],
+  params: Partial<UnhandledError> = {}
+): Omit<UnhandledError, K> => {
+  const fullError = createUnhandledError(params)
+  return omit(fullError, keys)
 }
 
 export function createTest(overrides: Partial<Test> = {}): Test {

@@ -5,6 +5,12 @@ export const TestErrorSchema = z.object({
   stack: z.string().optional(),
 })
 
+export const UnhandledErrorSchema = z.object({
+  name: z.string(),
+  message: z.string(),
+  stack: z.string().optional(),
+})
+
 export const TestSchema = z.object({
   name: z.string(),
   fullName: z.string(),
@@ -19,9 +25,11 @@ export const TestModuleSchema = z.object({
 
 export const TestResultSchema = z.object({
   testModules: z.array(TestModuleSchema),
+  unhandledErrors: z.array(UnhandledErrorSchema).optional(),
 })
 
 export type TestError = z.infer<typeof TestErrorSchema>
+export type UnhandledError = z.infer<typeof UnhandledErrorSchema>
 export type Test = z.infer<typeof TestSchema>
 export type TestModule = z.infer<typeof TestModuleSchema>
 export type TestResult = z.infer<typeof TestResultSchema>
