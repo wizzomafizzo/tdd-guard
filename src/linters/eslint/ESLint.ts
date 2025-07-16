@@ -1,5 +1,5 @@
 import {
-  LintData,
+  LintResult,
   LintIssue,
   ESLintResult,
   ESLintMessage,
@@ -49,7 +49,7 @@ const createLintData = (
   timestamp: string,
   files: string[],
   results: ESLintResult[]
-): Omit<LintData, 'hasNotifiedAboutLintIssues'> => {
+): LintResult => {
   const issues = extractIssues(results)
   return {
     timestamp,
@@ -64,10 +64,7 @@ const isExecError = (error: unknown): error is Error & { stdout?: string } =>
   error !== null && typeof error === 'object' && 'stdout' in error
 
 export class ESLint implements Linter {
-  async lint(
-    filePaths: string[],
-    configPath?: string
-  ): Promise<Omit<LintData, 'hasNotifiedAboutLintIssues'>> {
+  async lint(filePaths: string[], configPath?: string): Promise<LintResult> {
     return runESLint(filePaths, configPath)
   }
 }
@@ -75,7 +72,7 @@ export class ESLint implements Linter {
 export async function runESLint(
   filePaths: string[],
   configPath?: string
-): Promise<Omit<LintData, 'hasNotifiedAboutLintIssues'>> {
+): Promise<LintResult> {
   const timestamp = new Date().toISOString()
   const args = buildArgs(filePaths, configPath)
 

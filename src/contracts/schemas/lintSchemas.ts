@@ -9,12 +9,15 @@ export const LintIssueSchema = z.object({
   rule: z.string().optional(),
 })
 
-export const LintDataSchema = z.object({
+export const LintResultSchema = z.object({
   timestamp: z.string(),
   files: z.array(z.string()),
   issues: z.array(LintIssueSchema),
   errorCount: z.number(),
   warningCount: z.number(),
+})
+
+export const LintDataSchema = LintResultSchema.extend({
   hasNotifiedAboutLintIssues: z.boolean(),
 })
 
@@ -32,6 +35,7 @@ export const ESLintResultSchema = z.object({
 })
 
 export type LintIssue = z.infer<typeof LintIssueSchema>
+export type LintResult = z.infer<typeof LintResultSchema>
 export type LintData = z.infer<typeof LintDataSchema>
 export type ESLintMessage = z.infer<typeof ESLintMessageSchema>
 export type ESLintResult = z.infer<typeof ESLintResultSchema>

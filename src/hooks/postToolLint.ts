@@ -1,5 +1,5 @@
 import { ValidationResult } from '../contracts/types/ValidationResult'
-import { LintData, LintDataSchema } from '../contracts/schemas/lintSchemas'
+import { LintData, LintDataSchema, LintResult } from '../contracts/schemas/lintSchemas'
 import { HookDataSchema, HookData } from '../contracts/schemas/toolSchemas'
 import { Storage } from '../storage/Storage'
 import { Linter } from '../linters/Linter'
@@ -57,7 +57,7 @@ async function getStoredLintData(storage: Storage): Promise<LintData | null> {
 }
 
 function createLintData(
-  lintResults: Omit<LintData, 'hasNotifiedAboutLintIssues'>,
+  lintResults: LintResult,
   storedLintData: LintData | null
 ): LintData {
   const hasIssues = lintResults.errorCount > 0 || lintResults.warningCount > 0

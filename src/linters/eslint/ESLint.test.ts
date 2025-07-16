@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { ESLint } from './ESLint'
 import { join } from 'path'
-import type { LintData, LintIssue } from '../../contracts/schemas/lintSchemas'
+import type { LintResult, LintIssue } from '../../contracts/schemas/lintSchemas'
 
 describe('ESLint', () => {
   let linter: ESLint
@@ -27,8 +27,7 @@ describe('ESLint', () => {
   })
 
   describe('with single file', () => {
-    // TODO: Create separate schema for ESLint runner output (without hasNotifiedAboutLintIssues flag)
-    let result: Omit<LintData, 'hasNotifiedAboutLintIssues'>
+    let result: LintResult
 
     beforeEach(async () => {
       result = await linter.lint(['src/file.ts'])

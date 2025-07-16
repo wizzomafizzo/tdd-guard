@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import {
   LintIssueSchema,
+  LintResultSchema,
   LintDataSchema,
   ESLintMessageSchema,
   ESLintResultSchema,
@@ -58,11 +59,11 @@ describe('LintIssueSchema', () => {
   })
 })
 
-describe('LintDataSchema', () => {
+describe('LintResultSchema', () => {
   test.each([
     {
-      description: 'valid lint data with no issues',
-      lintData: testData.lintData({
+      description: 'valid lint result with no issues',
+      lintResult: testData.lintResult({
         issues: [],
         errorCount: 0,
         warningCount: 0,
@@ -70,16 +71,56 @@ describe('LintDataSchema', () => {
       expectedSuccess: true,
     },
     {
-      description: 'valid lint data with issues',
-      lintData: testData.lintData({
-        hasNotifiedAboutLintIssues: true,
-      }),
+      description: 'valid lint result with issues',
+      lintResult: testData.lintResult(),
       expectedSuccess: true,
     },
     {
       description: 'without timestamp',
-      lintData: testData.lintDataWithout(['timestamp']),
+      lintResult: testData.lintResultWithout(['timestamp']),
       expectedSuccess: false,
+    },
+    {
+      description: 'without files',
+      lintResult: testData.lintResultWithout(['files']),
+      expectedSuccess: false,
+    },
+    {
+      description: 'without issues',
+      lintResult: testData.lintResultWithout(['issues']),
+      expectedSuccess: false,
+    },
+    {
+      description: 'without errorCount',
+      lintResult: testData.lintResultWithout(['errorCount']),
+      expectedSuccess: false,
+    },
+    {
+      description: 'without warningCount',
+      lintResult: testData.lintResultWithout(['warningCount']),
+      expectedSuccess: false,
+    },
+  ])('$description', ({ lintResult, expectedSuccess }) => {
+    const result = LintResultSchema.safeParse(lintResult)
+    expect(result.success).toBe(expectedSuccess)
+  })
+})
+
+describe('LintDataSchema', () => {
+  test.each([
+    {
+      description: 'valid lint data with notification flag false',
+      lintData: testData.lintData({
+        hasNotifiedAboutLintIssues: false,
+      }),
+      expectedSuccess: true,
+    },
+    {
+      description: 'valid lint data with notification flag true',
+      lintData: testData.lintData({
+        hasNotifiedAboutLintIssues: true,
+      }),
+      expectedSuccess: true,
     },
     {
       description: 'without hasNotifiedAboutLintIssues',
@@ -87,23 +128,18 @@ describe('LintDataSchema', () => {
       expectedSuccess: false,
     },
     {
-      description: 'without files',
+      description: 'extends LintResultSchema - valid with all base fields',
+      lintData: testData.lintData(),
+      expectedSuccess: true,
+    },
+    {
+      description: 'extends LintResultSchema - invalid without base timestamp',
+      lintData: testData.lintDataWithout(['timestamp']),
+      expectedSuccess: false,
+    },
+    {
+      description: 'extends LintResultSchema - invalid without base files',
       lintData: testData.lintDataWithout(['files']),
-      expectedSuccess: false,
-    },
-    {
-      description: 'without issues',
-      lintData: testData.lintDataWithout(['issues']),
-      expectedSuccess: false,
-    },
-    {
-      description: 'without errorCount',
-      lintData: testData.lintDataWithout(['errorCount']),
-      expectedSuccess: false,
-    },
-    {
-      description: 'without warningCount',
-      lintData: testData.lintDataWithout(['warningCount']),
       expectedSuccess: false,
     },
   ])('$description', ({ lintData, expectedSuccess }) => {

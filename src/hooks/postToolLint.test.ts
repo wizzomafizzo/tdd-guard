@@ -4,7 +4,7 @@ import { testData } from '@testUtils'
 import { ESLint } from '../linters/eslint/ESLint'
 import { MemoryStorage } from '../storage/MemoryStorage'
 import { Linter } from '../linters/Linter'
-import { LintData } from '../contracts/schemas/lintSchemas'
+import { LintData, LintResult } from '../contracts/schemas/lintSchemas'
 import { HookData } from '../contracts/schemas/toolSchemas'
 import { ValidationResult } from '../contracts/types/ValidationResult'
 import { TestResult } from '../contracts/schemas/vitestSchemas'
@@ -27,7 +27,7 @@ describe('postToolLint', () => {
 
   it('should return default result for PreToolUse hooks', async () => {
     const { result, parsedLint } = await runLintAndGetResult({
-      lintResult: testData.lintDataWithoutErrors(),
+      lintResult: testData.lintResultWithoutErrors(),
       operation: { hook_event_name: 'PreToolUse' }
     })
 
@@ -96,7 +96,7 @@ describe('postToolLint', () => {
   })
 
   it('should always save lint data to storage', async () => {
-    const lintData = testData.lintDataWithError()
+    const lintData = testData.lintResultWithError()
 
     const { parsedLint } = await runLintAndGetResult({ lintResult: lintData })
 
@@ -108,7 +108,7 @@ describe('postToolLint', () => {
     describe('and notification flag is false', () => {
       it('does not block the operation', async () => {
         const { result } = await runLintAndGetResult({
-          lintResult: testData.lintDataWithError()
+          lintResult: testData.lintResultWithError()
         })
 
         expect(result).toEqual(DEFAULT_RESULT)
@@ -116,7 +116,7 @@ describe('postToolLint', () => {
 
       it('saves hasNotifiedAboutLintIssues as false', async () => {
         const { parsedLint } = await runLintAndGetResult({
-          lintResult: testData.lintDataWithError()
+          lintResult: testData.lintResultWithError()
         })
 
         expect(parsedLint!.hasNotifiedAboutLintIssues).toBe(false)
@@ -126,7 +126,7 @@ describe('postToolLint', () => {
     describe('and notification flag is true', () => {
       it('blocks with detailed lint errors', async () => {
         const { result } = await runLintAndGetResult({
-          lintResult: testData.lintDataWithError(),
+          lintResult: testData.lintResultWithError(),
           initialLintData: testData.lintDataWithNotificationFlag()
         })
 
@@ -136,7 +136,7 @@ describe('postToolLint', () => {
 
       it('preserves the notification flag', async () => {
         const { parsedLint } = await runLintAndGetResult({
-          lintResult: testData.lintDataWithError(),
+          lintResult: testData.lintResultWithError(),
           initialLintData: testData.lintDataWithNotificationFlag()
         })
 
@@ -146,7 +146,7 @@ describe('postToolLint', () => {
 
     describe('and tests are failing (red phase)', () => {
       it('saves lint data without blocking', async () => {
-        const lintData = testData.lintDataWithError()
+        const lintData = testData.lintResultWithError()
         
         const { parsedLint } = await runLintAndGetResult({
           lintResult: lintData,
@@ -164,7 +164,7 @@ describe('postToolLint', () => {
     it('should treat storage read errors as no stored lint data', async () => {
       // This test requires manual setup to spy on storage
       const storage = new MemoryStorage()
-      const testLinter = new TestLinter(testData.lintDataWithoutErrors())
+      const testLinter = new TestLinter(testData.lintResultWithoutErrors())
       
       // Make storage.getLint() throw an error only on the first call
       const getLintSpy = vi.spyOn(storage, 'getLint')
@@ -194,7 +194,7 @@ describe('postToolLint', () => {
     describe('and previous state had notification flag set', () => {
       it('resets hasNotifiedAboutLintIssues to false', async () => {
         const { parsedLint } = await runLintAndGetResult({
-          lintResult: testData.lintDataWithoutErrors(),
+          lintResult: testData.lintResultWithoutErrors(),
           initialLintData: testData.lintDataWithNotificationFlag()
         })
 
@@ -204,7 +204,7 @@ describe('postToolLint', () => {
       describe('and tests are passing', () => {
         it('does not block', async () => {
           const { result } = await runLintAndGetResult({
-            lintResult: testData.lintDataWithoutErrors(),
+            lintResult: testData.lintResultWithoutErrors(),
             initialLintData: testData.lintDataWithNotificationFlag(),
             initialTestData: testData.passingTestResults()
           })
@@ -217,7 +217,7 @@ describe('postToolLint', () => {
     describe('and previous state had issues and notification flag', () => {
       it('resets hasNotifiedAboutLintIssues to false when issues are resolved', async () => {
         const { parsedLint } = await runLintAndGetResult({
-          lintResult: testData.lintDataWithoutErrors(),
+          lintResult: testData.lintResultWithoutErrors(),
           initialLintData: testData.lintData({
             files: ['/src/example.ts'],
             issues: [testData.lintIssue({ file: '/src/example.ts', line: 1, column: 1, message: "Error" })],
@@ -231,7 +231,7 @@ describe('postToolLint', () => {
 
     it('saves clean lint data', async () => {
       const { parsedLint } = await runLintAndGetResult({
-        lintResult: testData.lintDataWithoutErrors()
+        lintResult: testData.lintResultWithoutErrors()
       })
 
       expect(parsedLint!.issues).toEqual([])
@@ -266,7 +266,7 @@ async function runLintAndGetResult(options: LintTestOptions = {}): Promise<{
     await storage.saveTest(JSON.stringify(initialTestData))
   }
   
-  const testLinter = new TestLinter(lintResult ?? testData.lintDataWithoutErrors())
+  const testLinter = new TestLinter(lintResult ?? testData.lintResultWithoutErrors())
   
   let baseOperation
   if (operation.tool_name === 'Write') {
@@ -293,13 +293,13 @@ async function runLintAndGetResult(options: LintTestOptions = {}): Promise<{
 
 // Test Linter implementation with configurable behavior
 class TestLinter implements Linter {
-  private readonly lintResult: Omit<LintData, 'hasNotifiedAboutLintIssues'>
+  private readonly lintResult: LintResult
   
-  constructor(lintResult?: Omit<LintData, 'hasNotifiedAboutLintIssues'>) {
-    this.lintResult = lintResult ?? testData.lintDataWithoutErrors()
+  constructor(lintResult?: LintResult) {
+    this.lintResult = lintResult ?? testData.lintResultWithoutErrors()
   }
   
-  async lint(): Promise<Omit<LintData, 'hasNotifiedAboutLintIssues'>> {
+  async lint(): Promise<LintResult> {
     return this.lintResult
   }
 }

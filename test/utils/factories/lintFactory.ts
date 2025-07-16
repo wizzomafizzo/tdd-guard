@@ -5,6 +5,7 @@
 import type {
   LintIssue,
   LintData,
+  LintResult,
   ESLintMessage,
   ESLintResult,
 } from '../../../src/contracts/schemas/lintSchemas'
@@ -41,6 +42,38 @@ export const lintIssueWithout = <K extends keyof LintIssue>(
 ): Omit<LintIssue, K> => {
   const fullLintIssue = lintIssue(params)
   return omit(fullLintIssue, keys)
+}
+
+/**
+ * Creates a lint result object
+ * @param params - Optional parameters for the lint result
+ */
+export const lintResult = (params?: Partial<LintResult>): LintResult => {
+  const defaults: LintResult = {
+    timestamp: '2024-01-01T00:00:00Z',
+    files: ['/src/example.ts'],
+    issues: [lintIssue()],
+    errorCount: 1,
+    warningCount: 0,
+  }
+
+  return {
+    ...defaults,
+    ...params,
+  }
+}
+
+/**
+ * Creates a lint result object with specified properties omitted
+ * @param keys - Array of property keys to omit
+ * @param params - Optional parameters for the lint result
+ */
+export const lintResultWithout = <K extends keyof LintResult>(
+  keys: K[],
+  params?: Partial<LintResult>
+): Omit<LintResult, K> => {
+  const fullLintResult = lintResult(params)
+  return omit(fullLintResult, keys)
 }
 
 /**
@@ -140,12 +173,12 @@ export const eslintResultWithout = <K extends keyof ESLintResult>(
 }
 
 /**
- * Creates a lint data object with no errors
+ * Creates a lint result object with no errors
  * @param params - Optional parameters to override defaults
  */
-export const lintDataWithoutErrors = (
-  params?: Partial<Omit<LintData, 'hasNotifiedAboutLintIssues'>>
-): Omit<LintData, 'hasNotifiedAboutLintIssues'> => {
+export const lintResultWithoutErrors = (
+  params?: Partial<LintResult>
+): LintResult => {
   return {
     timestamp: new Date().toISOString(),
     files: params?.files ?? [],
@@ -157,12 +190,12 @@ export const lintDataWithoutErrors = (
 }
 
 /**
- * Creates a lint data object with errors
+ * Creates a lint result object with errors
  * @param params - Optional parameters to override defaults
  */
-export const lintDataWithError = (
-  params?: Partial<Omit<LintData, 'hasNotifiedAboutLintIssues'>>
-): Omit<LintData, 'hasNotifiedAboutLintIssues'> => {
+export const lintResultWithError = (
+  params?: Partial<LintResult>
+): LintResult => {
   const defaultIssue = lintIssue()
   return {
     timestamp: new Date().toISOString(),
@@ -188,6 +221,32 @@ export const lintDataWithNotificationFlag = (
     errorCount: 0,
     warningCount: 0,
     hasNotifiedAboutLintIssues: true,
+    ...params,
+  }
+}
+
+/**
+ * Creates a lint data object with errors
+ * @param params - Optional parameters to override defaults
+ */
+export const lintDataWithError = (params?: Partial<LintData>): LintData => {
+  const baseLintResult = lintResultWithError()
+  return {
+    ...baseLintResult,
+    hasNotifiedAboutLintIssues: false,
+    ...params,
+  }
+}
+
+/**
+ * Creates a lint data object without errors
+ * @param params - Optional parameters to override defaults
+ */
+export const lintDataWithoutErrors = (params?: Partial<LintData>): LintData => {
+  const baseLintResult = lintResultWithoutErrors()
+  return {
+    ...baseLintResult,
+    hasNotifiedAboutLintIssues: false,
     ...params,
   }
 }

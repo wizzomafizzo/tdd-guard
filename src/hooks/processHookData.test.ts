@@ -148,10 +148,11 @@ describe('processHookData', () => {
       })
       
       // Setup: lint issues with notification flag false
-      await sut.storage.saveLint(JSON.stringify({
-        ...testData.lintDataWithError(),
-        hasNotifiedAboutLintIssues: false
-      }))
+      await sut.storage.saveLint(JSON.stringify(
+        testData.lintDataWithError({
+          hasNotifiedAboutLintIssues: false
+        })
+      ))
 
       const result = await sut.process(EDIT_HOOK_DATA)
 
@@ -168,10 +169,11 @@ describe('processHookData', () => {
       })
       
       // Setup: lint issues with notification flag false
-      await sut.storage.saveLint(JSON.stringify({
-        ...testData.lintDataWithError(),
-        hasNotifiedAboutLintIssues: false
-      }))
+      await sut.storage.saveLint(JSON.stringify(
+        testData.lintDataWithError({
+          hasNotifiedAboutLintIssues: false
+        })
+      ))
 
       const result = await sut.process(EDIT_HOOK_DATA)
 
@@ -187,10 +189,11 @@ describe('processHookData', () => {
       })
       
       // Setup: no lint issues
-      await sut.storage.saveLint(JSON.stringify({
-        ...testData.lintDataWithoutErrors(),
-        hasNotifiedAboutLintIssues: false
-      }))
+      await sut.storage.saveLint(JSON.stringify(
+        testData.lintDataWithoutErrors({
+          hasNotifiedAboutLintIssues: false
+        })
+      ))
 
       const result = await sut.process(EDIT_HOOK_DATA)
 
@@ -206,10 +209,11 @@ describe('processHookData', () => {
       })
       
       // Setup: lint issues with notification flag true
-      await sut.storage.saveLint(JSON.stringify({
-        ...testData.lintDataWithError(),
-        hasNotifiedAboutLintIssues: true
-      }))
+      await sut.storage.saveLint(JSON.stringify(
+        testData.lintDataWithError({
+          hasNotifiedAboutLintIssues: true
+        })
+      ))
 
       const result = await sut.process(EDIT_HOOK_DATA)
 
@@ -225,10 +229,11 @@ describe('processHookData', () => {
       })
       
       // Setup: lint issues with notification flag false
-      await sut.storage.saveLint(JSON.stringify({
-        ...testData.lintDataWithError(),
-        hasNotifiedAboutLintIssues: false
-      }))
+      await sut.storage.saveLint(JSON.stringify(
+        testData.lintDataWithError({
+          hasNotifiedAboutLintIssues: false
+        })
+      ))
 
       await sut.process(EDIT_HOOK_DATA)
 

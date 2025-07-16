@@ -1,8 +1,5 @@
-import { LintData } from '../contracts/schemas/lintSchemas'
+import { LintResult } from '../contracts/schemas/lintSchemas'
 
 export interface Linter {
-  lint(
-    filePaths: string[],
-    configPath?: string
-  ): Promise<Omit<LintData, 'hasNotifiedAboutLintIssues'>>
+  lint(filePaths: string[], configPath?: string): Promise<LintResult>
 }
