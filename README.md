@@ -96,8 +96,9 @@ TDD Guard runs with your user permissions and has access to your file system. We
 
 ## Roadmap
 
-- Encourage meaningful refactoring opportunities when tests are green
 - Add support for other testing frameworks (Jest, Mocha, etc.)
+- Add support for other programming languages such as Python
+- Encourage meaningful refactoring opportunities when tests are green
 - Improve handling of concurrent subagents
 
 ## Contributing
