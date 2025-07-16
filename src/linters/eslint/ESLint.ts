@@ -65,24 +65,17 @@ const isExecError = (error: unknown): error is Error & { stdout?: string } =>
 
 export class ESLint implements Linter {
   async lint(filePaths: string[], configPath?: string): Promise<LintResult> {
-    return runESLint(filePaths, configPath)
-  }
-}
+    const timestamp = new Date().toISOString()
+    const args = buildArgs(filePaths, configPath)
 
-export async function runESLint(
-  filePaths: string[],
-  configPath?: string
-): Promise<LintResult> {
-  const timestamp = new Date().toISOString()
-  const args = buildArgs(filePaths, configPath)
+    try {
+      await execFileAsync('npx', args)
+      return createLintData(timestamp, filePaths, [])
+    } catch (error) {
+      if (!isExecError(error)) throw error
 
-  try {
-    await execFileAsync('npx', args)
-    return createLintData(timestamp, filePaths, [])
-  } catch (error) {
-    if (!isExecError(error)) throw error
-
-    const results = parseResults(error.stdout)
-    return createLintData(timestamp, filePaths, results)
+      const results = parseResults(error.stdout)
+      return createLintData(timestamp, filePaths, results)
+    }
   }
 }
