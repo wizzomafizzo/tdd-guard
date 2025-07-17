@@ -6,7 +6,7 @@ import { TEST_DEFAULTS } from './factories/testDefaults'
 import * as contextFactory from './factories/contextFactory'
 import * as modelClientProviderFactory from './factories/modelClientProviderFactory'
 import * as operations from './factories/operations'
-import * as scenarios from './factories/scenarios'
+import { typescript, python, languages } from './factories/scenarios/index'
 import * as reporterFactory from './factories/reporterFactory'
 import * as testResultsFactory from './factories/testResultsFactory'
 import * as lintFactory from './factories/lintFactory'
@@ -59,13 +59,18 @@ export const testData = {
   createMultiEditOperation: operations.createMultiEditOperation,
 
   // Scenarios - test data for integration tests
-  testResults: scenarios.testResults,
-  testModifications: scenarios.testModifications,
-  implementationModifications: scenarios.implementationModifications,
-  refactoringImplementation: scenarios.refactoringImplementation,
-  refactoringTestResults: scenarios.refactoringTestResults,
-  refactoringTests: scenarios.refactoringTests,
-  todos: scenarios.todos,
+  testResults: typescript.testResults,
+  testModifications: typescript.testModifications,
+  implementationModifications: typescript.implementationModifications,
+  refactoringImplementation: typescript.refactoringImplementation,
+  refactoringTestResults: typescript.refactoringTestResults,
+  refactoringTests: typescript.refactoringTests,
+  todos: typescript.todos,
+
+  // Language-specific scenarios
+  typescript,
+  python,
+  languages,
 
   // Reporter factories - Vitest test modules and cases
   testModule: reporterFactory.testModule,

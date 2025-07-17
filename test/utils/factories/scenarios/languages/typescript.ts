@@ -1,15 +1,9 @@
-// Todo data structures
-export interface TodoItem {
-  content: string
-  status: 'pending' | 'in_progress' | 'completed'
-  priority: 'high' | 'medium' | 'low'
-  id: string
-}
+// Import existing types from contracts
+import type { Todo } from '../../../../../src/contracts/schemas/toolSchemas'
 
-export interface TestData<T = string> {
-  description: string
-  content: T
-}
+const TEST_MODULE_ID = 'src/Calculator/Calculator.test.ts'
+const TEST_NAME = 'it adds two numbers'
+const TEST_FULL_NAME = 'Calculator > it adds two numbers'
 
 // Test results
 export const testResults = {
@@ -19,11 +13,11 @@ export const testResults = {
       {
         testModules: [
           {
-            moduleId: 'src/Calculator/Calculator.test.ts',
+            moduleId: TEST_MODULE_ID,
             tests: [
               {
-                name: 'it adds two numbers',
-                fullName: 'Calculator > it adds two numbers',
+                name: TEST_NAME,
+                fullName: TEST_FULL_NAME,
                 state: 'failed',
                 errors: [
                   {
@@ -47,11 +41,11 @@ export const testResults = {
       {
         testModules: [
           {
-            moduleId: 'src/Calculator/Calculator.test.ts',
+            moduleId: TEST_MODULE_ID,
             tests: [
               {
-                name: 'it adds two numbers',
-                fullName: 'Calculator > it adds two numbers',
+                name: TEST_NAME,
+                fullName: TEST_FULL_NAME,
                 state: 'failed',
                 errors: [
                   {
@@ -75,11 +69,11 @@ export const testResults = {
       {
         testModules: [
           {
-            moduleId: 'src/Calculator/Calculator.test.ts',
+            moduleId: TEST_MODULE_ID,
             tests: [
               {
-                name: 'it adds two numbers',
-                fullName: 'Calculator > it adds two numbers',
+                name: TEST_NAME,
+                fullName: TEST_FULL_NAME,
                 state: 'failed',
                 errors: [
                   {
@@ -103,11 +97,11 @@ export const testResults = {
       {
         testModules: [
           {
-            moduleId: 'src/Calculator/Calculator.test.ts',
+            moduleId: TEST_MODULE_ID,
             tests: [
               {
-                name: 'it adds two numbers',
-                fullName: 'Calculator > it adds two numbers',
+                name: TEST_NAME,
+                fullName: TEST_FULL_NAME,
                 state: 'failed',
                 errors: [
                   {
@@ -133,11 +127,11 @@ export const testResults = {
       {
         testModules: [
           {
-            moduleId: 'src/Calculator/Calculator.test.ts',
+            moduleId: TEST_MODULE_ID,
             tests: [
               {
-                name: 'it adds two numbers',
-                fullName: 'Calculator > it adds two numbers',
+                name: TEST_NAME,
+                fullName: TEST_FULL_NAME,
                 state: 'passed',
                 errors: [],
               },
@@ -226,8 +220,8 @@ describe('Calculator', () => {
 })
 `,
   },
-  singleTestWithDescribe: {
-    description: 'adding a single test with describe block',
+  singleTestWithContainer: {
+    description: 'adding a single test with test container',
     content: `
 describe('Calculator', () => {
   test('it adds two numbers', () => {
@@ -253,15 +247,15 @@ describe('Calculator', () => {
 })
 `,
   },
-  emptyDescribe: {
-    description: 'empty describe block',
+  emptyTestContainer: {
+    description: 'empty test container',
     content: `
 describe('Calculator', () => {
 
 })
 `,
   },
-  emptyDescribeWithImports: {
+  emptyTestContainerWithImports: {
     description: 'empty test file with imports',
     content: `
 import { describe, test, expect } from 'vitest'
@@ -419,7 +413,7 @@ export class Calculator {
 export const todos = {
   empty: {
     description: 'no todos',
-    content: [] as TodoItem[],
+    content: [] as Todo[],
   },
   irrelevantCompleted: {
     description: 'irrelevant completed todos',
@@ -442,7 +436,7 @@ export const todos = {
         priority: 'high',
         id: '3',
       },
-    ] as TodoItem[],
+    ] as Todo[],
   },
   irrelevantInProgress: {
     description: 'irrelevant task in progress',
@@ -465,7 +459,7 @@ export const todos = {
         priority: 'high',
         id: '3',
       },
-    ] as TodoItem[],
+    ] as Todo[],
   },
   classInProgress: {
     description: 'class in progress',
@@ -488,7 +482,7 @@ export const todos = {
         priority: 'high',
         id: '3',
       },
-    ] as TodoItem[],
+    ] as Todo[],
   },
   methodInProgress: {
     description: 'method in progress',
@@ -511,7 +505,7 @@ export const todos = {
         priority: 'high',
         id: '3',
       },
-    ] as TodoItem[],
+    ] as Todo[],
   },
   allCompleted: {
     description: 'all tasks completed',
@@ -534,7 +528,7 @@ export const todos = {
         priority: 'high',
         id: '3',
       },
-    ] as TodoItem[],
+    ] as Todo[],
   },
   refactoring: {
     description: 'refactoring in progress',
@@ -545,7 +539,7 @@ export const todos = {
         priority: 'high',
         id: '1',
       },
-    ] as TodoItem[],
+    ] as Todo[],
   },
 } as const
 
@@ -684,7 +678,7 @@ export const refactoringTestResults = {
       {
         testModules: [
           {
-            moduleId: 'src/Calculator/Calculator.test.ts',
+            moduleId: TEST_MODULE_ID,
             tests: [
               {
                 name: 'adds two numbers',
@@ -742,7 +736,7 @@ export const refactoringTestResults = {
       {
         testModules: [
           {
-            moduleId: 'src/Calculator/Calculator.test.ts',
+            moduleId: TEST_MODULE_ID,
             tests: [
               {
                 name: 'adds two numbers',

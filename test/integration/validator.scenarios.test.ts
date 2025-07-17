@@ -1,27 +1,23 @@
-import { describe, test, expect } from 'vitest'
+import { describe, test } from 'vitest'
 import { validator } from '../../src/validation/validator'
 import { Context } from '../../src/contracts/types/Context'
 import { Config } from '../../src/config/Config'
 import { ModelClientProvider } from '../../src/providers/ModelClientProvider'
 import { testData } from '@testUtils'
-const {
-  createWriteOperation,
-  createEditOperation,
-  createMultiEditOperation,
-  testModifications,
-  implementationModifications,
-  refactoringImplementation,
-  refactoringTestResults,
-  refactoringTests,
-  todos,
-  testResults,
-} = testData
-import { TestData } from '../utils/factories/scenarios'
+import { TestData } from '../utils/factories/scenarios/types'
 
 import {
   FileModificationSchema,
   type Todo,
 } from '../../src/contracts/schemas/toolSchemas'
+import { expectDecision } from '../utils/factories/scenarios'
+
+const {
+  createWriteOperation,
+  createEditOperation,
+  createMultiEditOperation,
+  languages,
+} = testData
 
 export interface Scenario {
   filePath: string
@@ -33,8 +29,6 @@ export interface Scenario {
 }
 
 type OperationType = 'Write' | 'Edit' | 'MultiEdit'
-const testFile = 'src/Calculator/Calculator.test.ts'
-const implementationFile = 'src/Calculator/Calculator.ts'
 
 describe('Validator', () => {
   const config = new Config({ mode: 'test' })
@@ -42,66 +36,139 @@ describe('Validator', () => {
   const model = provider.getModelClient(config)
   const defaultOperations: OperationType[] = ['Edit', 'Write']
 
-  describe('Valid operations', () => {
-    const violation = false
+  languages.forEach((lang) => {
+    describe(`${lang.language} scenarios`, () => {
+      const testFile = lang.testFile
+      const implementationFile = lang.implementationFile
+      const {
+        testModifications,
+        implementationModifications,
+        refactoringImplementation,
+        refactoringTestResults,
+        refactoringTests,
+        todos,
+        testResults,
+      } = lang
 
-    describe('Creating new test', () => {
-      const oldContent = testModifications.emptyDescribeWithImports
-      const newContent = testModifications.singleTestComplete
+      describe('Valid operations', () => {
+        const violation = false
 
-      // Todo states that should not hinder the writing of a new test
-      const todoVariations = [
-        todos.empty,
-        todos.classInProgress,
-        todos.irrelevantInProgress,
-      ]
+        describe('Creating new test', () => {
+          const oldContent = testModifications.emptyTestContainerWithImports
+          const newContent = testModifications.singleTestComplete
 
-      // Test result outputs that should not hinder the writing of a new test
-      const resultVariations = [testResults.empty, testResults.irrelevant]
+          // Todo states that should not hinder the writing of a new test
+          const todoVariations = [
+            todos.empty,
+            todos.classInProgress,
+            todos.irrelevantInProgress,
+          ]
 
-      todoVariations.forEach((todoData) => {
-        describe(`with ${todoData.description}`, () => {
-          resultVariations.forEach((resultData) => {
-            describe(`and ${resultData.description}`, () => {
-              testOperations({
-                filePath: testFile,
-                oldContent,
-                newContent,
-                todos: todoData,
-                testResult: resultData,
-                violation,
+          // Test result outputs that should not hinder the writing of a new test
+          const resultVariations = [testResults.empty, testResults.irrelevant]
+
+          todoVariations.forEach((todoData) => {
+            describe(`with ${todoData.description}`, () => {
+              resultVariations.forEach((resultData) => {
+                describe(`and ${resultData.description}`, () => {
+                  testOperations({
+                    filePath: testFile,
+                    oldContent,
+                    newContent,
+                    todos: todoData,
+                    testResult: resultData,
+                    violation,
+                  })
+                })
               })
             })
           })
         })
-      })
-    })
 
-    describe('Creating implementation to pass failing test', () => {
-      const oldContent = implementationModifications.methodStubReturning0
-      const newContent = implementationModifications.methodImplementation
+        describe('Creating implementation to pass failing test', () => {
+          const oldContent = implementationModifications.methodStubReturning0
+          const newContent = implementationModifications.methodImplementation
 
-      // Todo states - any todo state is fine as long as test is failing appropriately
-      const todoVariations = [
-        todos.empty,
-        todos.classInProgress,
-        todos.irrelevantInProgress,
-      ]
+          // Todo states - any todo state is fine as long as test is failing appropriately
+          const todoVariations = [
+            todos.empty,
+            todos.classInProgress,
+            todos.irrelevantInProgress,
+          ]
 
-      // Test must be failing for the right reason to allow implementation
-      const validFailureResults = [testResults.assertionError]
+          // Test must be failing for the right reason to allow implementation
+          const validFailureResults = [testResults.assertionError]
 
-      todoVariations.forEach((todoData) => {
-        describe(`with ${todoData.description}`, () => {
-          validFailureResults.forEach((resultData) => {
-            describe(`and ${resultData.description}`, () => {
+          todoVariations.forEach((todoData) => {
+            describe(`with ${todoData.description}`, () => {
+              validFailureResults.forEach((resultData) => {
+                describe(`and ${resultData.description}`, () => {
+                  testOperations(
+                    {
+                      filePath: implementationFile,
+                      oldContent,
+                      newContent,
+                      todos: todoData,
+                      testResult: resultData,
+                      violation,
+                    },
+                    ['Edit']
+                  )
+                })
+              })
+            })
+          })
+        })
+
+        describe('Refactoring existing tests regardless of todo as long as relevant tests are passing', () => {
+          const oldContent = testModifications.multipleTests
+          const newContent = testModifications.refactoredTests
+
+          // Test refactoring should be allowed with various todo states
+          const todoVariations = [
+            todos.empty,
+            todos.methodInProgress,
+            todos.irrelevantInProgress,
+          ]
+
+          // Test refactoring should be allowed only when relevant tests are passing
+          const resultVariations = [testResults.passing]
+
+          todoVariations.forEach((todoData) => {
+            resultVariations.forEach((resultData) => {
+              describe(`with ${todoData.description} and ${resultData.description}`, () => {
+                testOperations(
+                  {
+                    filePath: testFile,
+                    oldContent,
+                    newContent,
+                    todos: todoData,
+                    testResult: resultData,
+                    violation,
+                  },
+                  ['Edit']
+                )
+              })
+            })
+          })
+        })
+
+        describe('Edit operation with one existing test and one new test', () => {
+          const oldContent = testModifications.singleTest
+          const newContent = testModifications.multipleTests // Contains both the existing test and a new one
+
+          // Various todo states - should be allowed regardless
+          const todoVariations = [todos.empty, todos.methodInProgress]
+
+          todoVariations.forEach((todoData) => {
+            describe(`with ${todoData.description}`, () => {
               testOperations(
                 {
-                  filePath: implementationFile,
+                  filePath: testFile,
                   oldContent,
                   newContent,
                   todos: todoData,
-                  testResult: resultData,
+                  testResult: testResults.passing,
                   violation,
                 },
                 ['Edit']
@@ -109,328 +176,271 @@ describe('Validator', () => {
             })
           })
         })
-      })
-    })
 
-    describe('Refactoring existing tests regardless of todo as long as relevant tests are passing', () => {
-      const oldContent = testModifications.multipleTests
-      const newContent = testModifications.refactoredTests
+        describe('Refactoring implementation code', () => {
+          describe('Allowed when tests have been run and are passing', () => {
+            const oldContent = refactoringImplementation.beforeRefactor
+            const newContent = refactoringImplementation.afterRefactor
 
-      // Test refactoring should be allowed with various todo states
-      const todoVariations = [
-        todos.empty,
-        todos.methodInProgress,
-        todos.irrelevantInProgress,
-      ]
+            const todoVariations = [
+              todos.empty,
+              todos.irrelevantInProgress,
+              todos.refactoring,
+            ]
 
-      // Test refactoring should be allowed only when relevant tests are passing
-      const resultVariations = [testResults.passing]
+            const resultVariations = [
+              refactoringTestResults.passing, // Tests must be passing
+            ]
 
-      todoVariations.forEach((todoData) => {
-        resultVariations.forEach((resultData) => {
-          describe(`with ${todoData.description} and ${resultData.description}`, () => {
-            testOperations(
-              {
-                filePath: testFile,
-                oldContent,
-                newContent,
-                todos: todoData,
-                testResult: resultData,
-                violation,
-              },
-              ['Edit']
-            )
+            todoVariations.forEach((todoData) => {
+              resultVariations.forEach((resultData) => {
+                describe(`with ${todoData.description} and ${resultData.description}`, () => {
+                  testOperations(
+                    {
+                      filePath: implementationFile,
+                      oldContent,
+                      newContent,
+                      todos: todoData,
+                      testResult: resultData,
+                      violation: false,
+                    },
+                    ['Edit']
+                  )
+                })
+              })
+            })
           })
-        })
-      })
-    })
 
-    describe('Edit operation with one existing test and one new test', () => {
-      const oldContent = testModifications.singleTest
-      const newContent = testModifications.multipleTests // Contains both the existing test and a new one
+          describe('Not allowed when no relevant tests are passing', () => {
+            const oldContent = refactoringImplementation.beforeRefactor
+            const newContent = refactoringImplementation.afterRefactor
 
-      // Various todo states - should be allowed regardless
-      const todoVariations = [todos.empty, todos.methodInProgress]
+            const todoVariations = [
+              todos.empty,
+              todos.methodInProgress,
+              todos.irrelevantInProgress,
+              todos.refactoring,
+            ]
 
-      todoVariations.forEach((todoData) => {
-        describe(`with ${todoData.description}`, () => {
-          testOperations(
-            {
-              filePath: testFile,
-              oldContent,
-              newContent,
-              todos: todoData,
-              testResult: testResults.passing,
-              violation,
-            },
-            ['Edit']
-          )
-        })
-      })
-    })
+            const resultVariations = [
+              testResults.irrelevant,
+              refactoringTestResults.failing,
+              testResults.empty,
+            ]
 
-    describe('Refactoring implementation code', () => {
-      describe('Allowed when tests have been run and are passing', () => {
-        const oldContent = refactoringImplementation.beforeRefactor
-        const newContent = refactoringImplementation.afterRefactor
-
-        const todoVariations = [
-          todos.empty,
-          todos.irrelevantInProgress,
-          todos.refactoring,
-        ]
-
-        const resultVariations = [
-          refactoringTestResults.passing, // Tests must be passing
-        ]
-
-        todoVariations.forEach((todoData) => {
-          resultVariations.forEach((resultData) => {
-            describe(`with ${todoData.description} and ${resultData.description}`, () => {
-              testOperations(
-                {
-                  filePath: implementationFile,
-                  oldContent,
-                  newContent,
-                  todos: todoData,
-                  testResult: resultData,
-                  violation: false,
-                },
-                ['Edit']
-              )
+            todoVariations.forEach((todoData) => {
+              resultVariations.forEach((resultData) => {
+                describe(`with ${todoData.description} and ${resultData.description}`, () => {
+                  testOperations(
+                    {
+                      filePath: implementationFile,
+                      oldContent,
+                      newContent,
+                      todos: todoData,
+                      testResult: resultData,
+                      violation: true,
+                    },
+                    ['Edit']
+                  )
+                })
+              })
             })
           })
         })
-      })
 
-      describe('Not allowed when no relevant tests are passing', () => {
-        const oldContent = refactoringImplementation.beforeRefactor
-        const newContent = refactoringImplementation.afterRefactor
+        describe('Refactoring test code', () => {
+          describe('Allowed when relevant tests are passing', () => {
+            const oldContent = refactoringTests.beforeRefactor
+            const newContent = refactoringTests.afterRefactor
 
-        const todoVariations = [
-          todos.empty,
-          todos.methodInProgress,
-          todos.irrelevantInProgress,
-          todos.refactoring,
-        ]
+            const todoVariations = [
+              todos.empty,
+              todos.irrelevantInProgress,
+              todos.refactoring,
+            ]
 
-        const resultVariations = [
-          testResults.irrelevant,
-          refactoringTestResults.failing,
-          testResults.empty,
-        ]
+            const resultVariations = [refactoringTestResults.passing]
 
-        todoVariations.forEach((todoData) => {
-          resultVariations.forEach((resultData) => {
-            describe(`with ${todoData.description} and ${resultData.description}`, () => {
-              testOperations(
-                {
-                  filePath: implementationFile,
-                  oldContent,
-                  newContent,
-                  todos: todoData,
-                  testResult: resultData,
-                  violation: true,
-                },
-                ['Edit']
-              )
+            todoVariations.forEach((todoData) => {
+              resultVariations.forEach((resultData) => {
+                describe(`with ${todoData.description} and ${resultData.description}`, () => {
+                  testOperations(
+                    {
+                      filePath: testFile,
+                      oldContent,
+                      newContent,
+                      todos: todoData,
+                      testResult: resultData,
+                      violation: false,
+                    },
+                    ['Edit']
+                  )
+                })
+              })
             })
           })
-        })
-      })
-    })
 
-    describe('Refactoring test code', () => {
-      describe('Allowed when relevant tests are passing', () => {
-        const oldContent = refactoringTests.beforeRefactor
-        const newContent = refactoringTests.afterRefactor
+          describe('Not allowed when no passing tests', () => {
+            const oldContent = refactoringTests.beforeRefactor
+            const newContent = refactoringTests.afterRefactor
 
-        const todoVariations = [
-          todos.empty,
-          todos.irrelevantInProgress,
-          todos.refactoring,
-        ]
+            const todoVariations = [
+              todos.empty,
+              todos.methodInProgress,
+              todos.irrelevantInProgress,
+            ]
 
-        const resultVariations = [refactoringTestResults.passing]
+            const resultVariations = [
+              refactoringTestResults.failing,
+              testResults.irrelevant,
+              testResults.empty,
+            ]
 
-        todoVariations.forEach((todoData) => {
-          resultVariations.forEach((resultData) => {
-            describe(`with ${todoData.description} and ${resultData.description}`, () => {
-              testOperations(
-                {
-                  filePath: testFile,
-                  oldContent,
-                  newContent,
-                  todos: todoData,
-                  testResult: resultData,
-                  violation: false,
-                },
-                ['Edit']
-              )
-            })
-          })
-        })
-      })
-
-      describe('Not allowed when no passing tests', () => {
-        const oldContent = refactoringTests.beforeRefactor
-        const newContent = refactoringTests.afterRefactor
-
-        const todoVariations = [
-          todos.empty,
-          todos.methodInProgress,
-          todos.irrelevantInProgress,
-        ]
-
-        const resultVariations = [
-          refactoringTestResults.failing,
-          testResults.irrelevant,
-          testResults.empty,
-        ]
-
-        todoVariations.forEach((todoData) => {
-          resultVariations.forEach((resultData) => {
-            describe(`with ${todoData.description} and ${resultData.description}`, () => {
-              testOperations(
-                {
-                  filePath: testFile,
-                  oldContent,
-                  newContent,
-                  todos: todoData,
-                  testResult: resultData,
-                  violation: true,
-                },
-                ['Edit']
-              )
-            })
-          })
-        })
-      })
-    })
-  })
-
-  describe('TDD Violations', () => {
-    const violation = true
-
-    describe('Adding multiple tests at once', () => {
-      const oldContent = testModifications.emptyDescribeWithImports
-      const newContent = testModifications.multipleTestsWithImports
-
-      // Todo states - violation occurs regardless of todo state
-      const todoVariations = [
-        todos.empty,
-        todos.classInProgress,
-        todos.refactoring,
-        todos.irrelevantInProgress,
-      ]
-
-      // Test results - violation occurs regardless of test output
-      const resultVariations = [
-        testResults.empty,
-        testResults.passing,
-        testResults.assertionError,
-        testResults.irrelevant,
-      ]
-
-      todoVariations.forEach((todoData) => {
-        describe(`with ${todoData.description}`, () => {
-          resultVariations.forEach((resultData) => {
-            describe(`and ${resultData.description}`, () => {
-              testOperations({
-                filePath: testFile,
-                oldContent,
-                newContent,
-                todos: todoData,
-                testResult: resultData,
-                violation,
+            todoVariations.forEach((todoData) => {
+              resultVariations.forEach((resultData) => {
+                describe(`with ${todoData.description} and ${resultData.description}`, () => {
+                  testOperations(
+                    {
+                      filePath: testFile,
+                      oldContent,
+                      newContent,
+                      todos: todoData,
+                      testResult: resultData,
+                      violation: true,
+                    },
+                    ['Edit']
+                  )
+                })
               })
             })
           })
         })
       })
-    })
 
-    describe('Implementing without proper test failure', () => {
-      const oldContent = implementationModifications.empty
-      const newContent = implementationModifications.methodImplementation
+      describe('TDD Violations', () => {
+        const violation = true
 
-      // Todo states - violation occurs regardless of todo state
-      const todoVariations = [
-        todos.empty,
-        todos.classInProgress,
-        todos.irrelevantInProgress,
-      ]
+        describe('Adding multiple tests at once', () => {
+          const oldContent = testModifications.emptyTestContainerWithImports
+          const newContent = testModifications.multipleTestsWithImports
 
-      // Invalid test results that should block implementation
-      const invalidTestResults = [
-        testResults.empty, // No test has been run
-        testResults.irrelevant, // Test output is for something else
-        testResults.notAConstructor, // Failing for wrong reason
-        testResults.notDefined, // Failing for wrong reason
-      ]
+          // Todo states - violation occurs regardless of todo state
+          const todoVariations = [
+            todos.empty,
+            todos.classInProgress,
+            todos.refactoring,
+            todos.irrelevantInProgress,
+          ]
 
-      todoVariations.forEach((todoData) => {
-        describe(`with ${todoData.description}`, () => {
-          invalidTestResults.forEach((resultData) => {
-            describe(`and ${resultData.description}`, () => {
-              testOperations({
-                filePath: implementationFile,
-                oldContent,
-                newContent,
-                todos: todoData,
-                testResult: resultData,
-                violation,
+          // Test results - violation occurs regardless of test output
+          const resultVariations = [
+            testResults.empty,
+            testResults.passing,
+            testResults.assertionError,
+            testResults.irrelevant,
+          ]
+
+          todoVariations.forEach((todoData) => {
+            describe(`with ${todoData.description}`, () => {
+              resultVariations.forEach((resultData) => {
+                describe(`and ${resultData.description}`, () => {
+                  testOperations({
+                    filePath: testFile,
+                    oldContent,
+                    newContent,
+                    todos: todoData,
+                    testResult: resultData,
+                    violation,
+                  })
+                })
               })
             })
           })
         })
+
+        describe('Implementing without proper test failure', () => {
+          const oldContent = implementationModifications.empty
+          const newContent = implementationModifications.methodImplementation
+
+          // Todo states - violation occurs regardless of todo state
+          const todoVariations = [
+            todos.empty,
+            todos.classInProgress,
+            todos.irrelevantInProgress,
+          ]
+
+          // Invalid test results that should block implementation
+          const invalidTestResults = [
+            testResults.empty, // No test has been run
+            testResults.irrelevant, // Test output is for something else
+            testResults.notAConstructor, // Failing for wrong reason
+            testResults.notDefined, // Failing for wrong reason
+          ]
+
+          todoVariations.forEach((todoData) => {
+            describe(`with ${todoData.description}`, () => {
+              invalidTestResults.forEach((resultData) => {
+                describe(`and ${resultData.description}`, () => {
+                  testOperations({
+                    filePath: implementationFile,
+                    oldContent,
+                    newContent,
+                    todos: todoData,
+                    testResult: resultData,
+                    violation,
+                  })
+                })
+              })
+            })
+          })
+        })
+
+        describe('Implementing entire class when only one method test is failing', () => {
+          const oldContent = implementationModifications.empty
+          const newContent = implementationModifications.completeClass // Full class with multiple methods
+
+          // Test is only for add method, but implementation adds everything
+          testOperations({
+            filePath: implementationFile,
+            oldContent,
+            newContent,
+            todos: todos.methodInProgress,
+            testResult: testResults.notDefined, // Single method test failing
+            violation,
+          })
+        })
+
+        describe('Excessive implementation beyond test requirements', () => {
+          const filePath = implementationFile
+          const oldContent = implementationModifications.methodStub
+          const newContent = implementationModifications.overEngineered // Complex implementation with validation, etc.
+
+          // Test only checks basic addition, but implementation adds validation and error handling
+          testOperations({
+            filePath,
+            oldContent,
+            newContent,
+            todos: todos.methodInProgress,
+            testResult: testResults.assertionError, // Simple assertion failure
+            violation,
+          })
+        })
       })
-    })
 
-    describe('Implementing entire class when only one method test is failing', () => {
-      const oldContent = implementationModifications.empty
-      const newContent = implementationModifications.completeClass // Full class with multiple methods
-
-      // Test is only for add method, but implementation adds everything
-      testOperations({
-        filePath: implementationFile,
-        oldContent,
-        newContent,
-        todos: todos.methodInProgress,
-        testResult: testResults.notDefined, // Single method test failing
-        violation,
-      })
-    })
-
-    describe('Excessive implementation beyond test requirements', () => {
-      const filePath = implementationFile
-      const oldContent = implementationModifications.methodStub
-      const newContent = implementationModifications.overEngineered // Complex implementation with validation, etc.
-
-      // Test only checks basic addition, but implementation adds validation and error handling
-      testOperations({
-        filePath,
-        oldContent,
-        newContent,
-        todos: todos.methodInProgress,
-        testResult: testResults.assertionError, // Simple assertion failure
-        violation,
-      })
+      function testOperations(
+        scenario: Scenario,
+        operations: OperationType[] = defaultOperations
+      ): void {
+        operations.forEach((operation) => {
+          test(`${operation} should ${scenario.violation ? 'block' : 'allow'}`, async () => {
+            const context = createContext(scenario, operation)
+            const result = await validator(context, model)
+            expectDecision(result, scenario.violation ? 'block' : undefined)
+          })
+        })
+      }
     })
   })
-
-  function testOperations(
-    scenario: Scenario,
-    operations: OperationType[] = defaultOperations
-  ): void {
-    operations.forEach((operation) => {
-      test(`${operation} should ${scenario.violation ? 'block' : 'allow'}`, async () => {
-        const context = createContext(scenario, operation)
-        const result = await validator(context, model)
-        expect(result.decision).toBe(scenario.violation ? 'block' : undefined)
-      })
-    })
-  }
 })
 
 // Convert scenario to context for a specific operation type

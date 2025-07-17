@@ -118,7 +118,7 @@ export default [
       'no-magic-numbers': 'off',
       complexity: ['error', 20],
       'sonarjs/cognitive-complexity': ['error', 20],
-      'max-nested-callbacks': ['error', 8],
+      'max-nested-callbacks': ['error', 10],
       '@typescript-eslint/explicit-function-return-type': 'off',
       'sonarjs/no-duplicate-string': ['error', { threshold: 20 }],
     },
