@@ -1,6 +1,7 @@
 import { Reporter, TestModule, TestCase, TestRunEndReason } from 'vitest/node'
 import { Storage } from '../storage/Storage'
 import { FileStorage } from '../storage/FileStorage'
+import 'dotenv/config'
 
 export class VitestReporter implements Reporter {
   private readonly storage: Storage
