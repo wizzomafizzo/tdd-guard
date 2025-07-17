@@ -21,6 +21,7 @@ The tool intercepts Write, Edit, and MultiEdit operations before execution, exam
 
 ## Technical Features
 
+- **Multi-language Support**: Works with JavaScript/TypeScript and Python projects
 - **Multi-model Support**: Choose between Claude Code CLI or Anthropic API
 - **Context Aggregation**: Combines file modifications, todo states, and test results for accurate validation
 - **Dynamic Instructions**: Tailored prompts for Write, Edit, and MultiEdit operations
@@ -29,17 +30,18 @@ The tool intercepts Write, Edit, and MultiEdit operations before execution, exam
 
 - **Node.js**: Version 18 or higher
 - **Test Runner**: Vitest (JavaScript/TypeScript) or pytest (Python)
-- **ESLint**: Latest version recommended for refactoring phase support
 
 ## Installation
 
-### For JavaScript/TypeScript Projects
+TDD Guard supports both JavaScript/TypeScript and Python projects. Choose the installation method for your project type:
+
+### JavaScript/TypeScript Projects
 
 ```bash
 npm install --save-dev tdd-guard
 ```
 
-### For Python Projects
+### Python Projects
 
 ```bash
 git clone https://github.com/nizos/tdd-guard
@@ -99,7 +101,7 @@ The plugin will automatically capture test results for TDD validation.
 
 Make sure your test scripts are configured to use your chosen test runner.
 
-For troubleshooting and configuration options, see the [Configuration Guide](docs/CONFIGURATION.md).
+For troubleshooting, refactoring support with ESLint, and other configuration options, see the [Configuration Guide](docs/CONFIGURATION.md).
 
 ## Security Notice
 
@@ -117,14 +119,18 @@ TDD Guard runs with your user permissions and has access to your file system. We
 
 ## Roadmap
 
-- Add support for other testing frameworks (Jest, Mocha, etc.)
-- Add support for other programming languages such as Python
+- Add support for more testing frameworks (Jest, Mocha, unittest, etc.)
+- Add support for additional programming languages (Go, Rust, Java, etc.)
 - Encourage meaningful refactoring opportunities when tests are green
 - Improve handling of concurrent subagents
 
 ## Contributing
 
 Contributions are welcome. Feel free to submit issues and pull requests.
+
+## Contributors
+
+- Python/pytest support: [@Durafen](https://github.com/Durafen)
 
 ## Documentation
 

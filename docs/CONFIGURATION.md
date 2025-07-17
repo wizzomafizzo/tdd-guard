@@ -128,7 +128,7 @@ Note: The PostToolUse hook is optional and only needed if you want refactoring s
 
 ## Test Reporter Configuration
 
-### Vitest
+### JavaScript/TypeScript (Vitest)
 
 First, ensure Vitest is installed in your project:
 
@@ -149,9 +149,7 @@ export default defineConfig({
 })
 ```
 
-### NPM Scripts
-
-Ensure your `package.json` has a `test` script that runs Vitest:
+Ensure your `package.json` has a `test` script:
 
 ```json
 {
@@ -159,6 +157,16 @@ Ensure your `package.json` has a `test` script that runs Vitest:
     "test": "vitest run"
   }
 }
+```
+
+### Python (pytest)
+
+The TDD Guard pytest plugin is automatically discovered when the package is installed. No additional configuration is needed.
+
+Simply run your tests as usual:
+
+```bash
+pytest
 ```
 
 ## Refactoring Phase Support
@@ -209,11 +217,13 @@ When enabled:
 
 Without `LINTER_TYPE=eslint`, TDD Guard skips all linting operations.
 
+**Tip**: Configure ESLint with complexity rules (e.g., `complexity`, `max-depth`) and the SonarJS plugin to encourage meaningful refactoring. These rules help identify code that could benefit from simplification during the green phase.
+
 ## Data Storage
 
 TDD Guard stores context data in `.claude/tdd-guard/data/`:
 
-- `test.json` - Latest test results from Vitest
+- `test.json` - Latest test results from your test runner (Vitest or pytest)
 - `todos.json` - Current todo state
 - `modifications.json` - File modification history
 - `lint.json` - ESLint results (only created when LINTER_TYPE=eslint)
@@ -276,6 +286,14 @@ Use the latest Vitest version to ensure correct test output format for TDD Guard
 
 ```bash
 npm install --save-dev vitest@latest
+```
+
+#### pytest
+
+For Python projects, ensure you have a recent version of pytest:
+
+```bash
+pip install pytest>=7.0.0
 ```
 
 ### Common Issues
