@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { PytestResultSchema } from '../../../src/contracts/schemas/pytestSchemas'
+import { PytestResultSchema } from './pytestSchemas'
 
 describe('PytestResultSchema', () => {
   it('should validate pytest test result format', () => {
