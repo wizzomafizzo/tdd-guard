@@ -12,6 +12,7 @@ import { PytestResultSchema } from '../contracts/schemas/pytestSchemas'
 import { detectFileType } from './fileTypeDetection'
 import { LinterProvider } from '../providers/LinterProvider'
 import { UserPromptHandler } from './userPromptHandler'
+import { GuardManager } from '../guard/GuardManager'
 
 export interface ProcessHookDataDeps {
   storage?: Storage
@@ -32,22 +33,24 @@ export async function processHookData(
   
   // Initialize dependencies
   const storage = deps.storage ?? new FileStorage()
-  const userPromptHandler = deps.userPromptHandler ?? new UserPromptHandler()
+  const guardManager = new GuardManager(storage)
+  const userPromptHandler = deps.userPromptHandler ?? new UserPromptHandler(guardManager)
   
   // Process user commands
   await userPromptHandler.processUserCommand(inputData)
-  
+
   // Check if guard is disabled and return early if so
   const disabledResult = await userPromptHandler.getDisabledResult()
   if (disabledResult) {
     return disabledResult
   }
-  
+
   // Create lintHandler with linter from provider
   const linterProvider = new LinterProvider()
   const linter = linterProvider.getLinter()
   const lintHandler = new PostToolLintHandler(storage, linter)
-  
+
+
   const hookResult = HookDataSchema.safeParse(parsedData)
   if (!hookResult.success) {
     return defaultResult

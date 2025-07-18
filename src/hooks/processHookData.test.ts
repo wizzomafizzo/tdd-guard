@@ -340,11 +340,19 @@ function createTestProcessor() {
   const storage = new MemoryStorage()
   const mockValidator = vi.fn().mockResolvedValue(BLOCK_RESULT)
   
+  // Create a GuardManager and UserPromptHandler that defaults to enabled for tests
+  const guardManager = new GuardManager(storage)
+  const userPromptHandler = new UserPromptHandler(guardManager)
+  
   // Helper to process hook data
   const process = async (hookData: unknown): Promise<ValidationResult> => {
+    // Ensure TDD Guard is enabled for tests unless explicitly disabled
+    await guardManager.enable()
+    
     return processHookData(JSON.stringify(hookData), {
       storage, 
-      validator: mockValidator
+      validator: mockValidator,
+      userPromptHandler
     })
   }
   

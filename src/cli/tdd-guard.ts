@@ -3,6 +3,7 @@
 import 'dotenv/config'
 import { processHookData } from '../hooks/processHookData'
 import { FileStorage } from '../storage/FileStorage'
+import { Storage } from '../storage/Storage'
 import { validator } from '../validation/validator'
 import { Config } from '../config/Config'
 import { ModelClientProvider } from '../providers/ModelClientProvider'
@@ -11,15 +12,16 @@ import { ValidationResult } from '../contracts/types/ValidationResult'
 export async function run(
   input: string,
   config?: Config,
+  storage?: Storage,
   provider?: ModelClientProvider
 ): Promise<ValidationResult> {
   const appConfig = config ?? new Config()
-  const storage = new FileStorage(appConfig)
+  const actualStorage = storage ?? new FileStorage(appConfig)
   const modelProvider = provider ?? new ModelClientProvider()
   const modelClient = modelProvider.getModelClient(appConfig)
 
   return processHookData(input, {
-    storage,
+    storage: actualStorage,
     validator: (context) => validator(context, modelClient),
   })
 }

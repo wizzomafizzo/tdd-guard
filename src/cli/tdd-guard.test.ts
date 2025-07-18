@@ -61,7 +61,7 @@ describe('tdd-guard CLI', () => {
 
     test('uses custom dataDir from Config', async () => {
       const hookData = testData.editOperation()
-      await run(JSON.stringify(hookData), testConfig, modelProvider)
+      await run(JSON.stringify(hookData), testConfig, storage, modelProvider)
 
       expect(await pathExists(storagePath)).toBe(true)
     })
@@ -69,7 +69,7 @@ describe('tdd-guard CLI', () => {
     test('saves Edit data', async () => {
       const hookData = testData.editOperation()
 
-      await run(JSON.stringify(hookData), testConfig, modelProvider)
+      await run(JSON.stringify(hookData), testConfig, storage, modelProvider)
 
       const savedModifications = await storage.getModifications()
       expect(JSON.parse(savedModifications!)).toStrictEqual(hookData)
@@ -78,7 +78,7 @@ describe('tdd-guard CLI', () => {
     test('saves Write data', async () => {
       const hookData = testData.writeOperation()
 
-      await run(JSON.stringify(hookData), testConfig, modelProvider)
+      await run(JSON.stringify(hookData), testConfig, storage, modelProvider)
 
       const savedModifications = await storage.getModifications()
       expect(JSON.parse(savedModifications!)).toStrictEqual(hookData)
@@ -87,7 +87,7 @@ describe('tdd-guard CLI', () => {
     test('saves TodoWrite data', async () => {
       const hookData = testData.todoWriteOperation()
 
-      await run(JSON.stringify(hookData), testConfig, modelProvider)
+      await run(JSON.stringify(hookData), testConfig, storage, modelProvider)
 
       const savedTodos = await storage.getTodo()
       expect(JSON.parse(savedTodos!)).toStrictEqual(hookData)
@@ -96,18 +96,21 @@ describe('tdd-guard CLI', () => {
     test('saves MultiEdit data', async () => {
       const hookData = testData.multiEditOperation()
 
-      await run(JSON.stringify(hookData), testConfig, modelProvider)
+      await run(JSON.stringify(hookData), testConfig, storage, modelProvider)
 
       const savedModifications = await storage.getModifications()
       expect(JSON.parse(savedModifications!)).toStrictEqual(hookData)
     })
 
     test('uses provided ModelClientProvider', async () => {
+      await storage.saveConfig(JSON.stringify({ guardEnabled: true }))
+
       const hookData = testData.editOperation()
 
       const result = await run(
         JSON.stringify(hookData),
         testConfig,
+        storage,
         modelProvider
       )
 
