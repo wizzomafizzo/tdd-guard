@@ -101,6 +101,11 @@ The plugin will automatically capture test results for TDD validation.
 
 Make sure your test scripts are configured to use your chosen test runner.
 
+## Additional Configuration
+
+- [Quick Commands](docs/quick-commands.md) - Enable/disable TDD Guard without leaving your session
+- [Configuration Guide](docs/CONFIGURATION.md) - Complete setup and troubleshooting guide
+
 For troubleshooting, refactoring support with ESLint, and other configuration options, see the [Configuration Guide](docs/CONFIGURATION.md).
 
 ## Security Notice
