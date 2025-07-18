@@ -29,7 +29,7 @@ TDD_GUARD_ANTHROPIC_API_KEY=your-api-key-here
 
 # Linter type for refactoring phase support (optional)
 # Options: 'eslint' or unset (no linting)
-# Only set this if you want automatic code quality checks during refactoring
+# See docs/linting.md for detailed setup and configuration
 LINTER_TYPE=eslint
 ```
 
@@ -81,16 +81,6 @@ Use Claude Code's `/hooks` command to set up both hooks:
    - **Local settings** (`.claude/settings.local.json`) - For personal preferences
    - **User settings** (`~/.claude/settings.json`) - For global configuration
 
-#### PostToolUse Hook (Refactoring Support)
-
-1. Type `/hooks` in Claude Code
-2. Select `PostToolUse - After tool execution`
-3. Choose `+ Add new matcher...`
-4. Enter: `Write|Edit|MultiEdit`
-5. Select `+ Add new hook...`
-6. Enter command: `tdd-guard`
-7. Choose the same settings location as above
-
 ### Manual Configuration
 
 Add to `.claude/settings.json`:
@@ -108,23 +98,12 @@ Add to `.claude/settings.json`:
           }
         ]
       }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tdd-guard"
-          }
-        ]
-      }
     ]
   }
 }
 ```
 
-Note: The PostToolUse hook is optional and only needed if you want refactoring support with ESLint.
+For optional refactoring support with ESLint, see [docs/linting.md](./linting.md).
 
 ## Test Reporter Configuration
 
@@ -171,53 +150,9 @@ pytest
 
 ## Refactoring Phase Support
 
-TDD Guard can optionally check code quality during the refactoring phase (when tests are green) using ESLint. When issues are detected, the coding agent will be prompted to fix them.
+TDD Guard supports automatic code quality checks during the refactoring phase using ESLint. This helps maintain clean code while following TDD practices.
 
-### Why Use Refactoring Support?
-
-During the TDD green phase, the coding agent may:
-
-- Clean up implementation code
-- Extract methods or constants
-- Improve naming
-- Remove duplication
-
-The refactoring support helps by:
-
-- Running ESLint automatically after file modifications
-- Detecting code quality issues
-- Prompting the coding agent to fix any issues found
-
-### Setup
-
-1. **Install ESLint** in your project:
-
-   ```bash
-   npm install --save-dev eslint@latest
-   ```
-
-2. **Enable linting** by setting the environment variable:
-
-   ```bash
-   LINTER_TYPE=eslint
-   ```
-
-   Note: Currently only ESLint is supported. Additional linters may be added in the future.
-
-3. **Configure the PostToolUse hook** (see Hook Configuration section below)
-
-### How It Works
-
-When enabled:
-
-1. After any file modification (Edit, MultiEdit, Write)
-2. TDD Guard runs ESLint on modified files
-3. If issues are found, the coding agent receives a notification
-4. The agent will then fix the identified issues
-
-Without `LINTER_TYPE=eslint`, TDD Guard skips all linting operations.
-
-**Tip**: Configure ESLint with complexity rules (e.g., `complexity`, `max-depth`) and the SonarJS plugin to encourage meaningful refactoring. These rules help identify code that could benefit from simplification during the green phase.
+For detailed setup and configuration, see [docs/linting.md](./linting.md).
 
 ## Data Storage
 
@@ -271,14 +206,6 @@ unset ANTHROPIC_API_KEY
 ```
 
 ### Dependency Versions
-
-#### ESLint
-
-Install the latest ESLint for better refactoring support during green phases:
-
-```bash
-npm install --save-dev eslint@latest
-```
 
 #### Vitest
 

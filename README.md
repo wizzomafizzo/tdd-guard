@@ -9,9 +9,9 @@ TDD enforcement for Claude Code.
 
 ## Overview
 
-TDD Guard monitors file operations in real-time and blocks changes that violate TDD principles. It provides immediate feedback when violations occur, helping maintain disciplined development practices without manual oversight.
+TDD Guard monitors file operations in real-time and blocks any changes that violate TDD principles. When violations occur, it provides immediate feedback to keep development on track without manual oversight.
 
-The tool intercepts Write, Edit, and MultiEdit operations before execution, examining them against the current development state. Each validation considers the file path, intended modifications, current todo list, and latest test results to determine whether changes follow proper TDD practices.
+The tool runs quietly in the background, checking test results, current tasks, and file modifications against the red-green-refactor cycle to ensure proper TDD practices.
 
 ## Core Benefits
 
@@ -104,9 +104,9 @@ Make sure your test scripts are configured to use your chosen test runner.
 ## Additional Configuration
 
 - [Quick Commands](docs/quick-commands.md) - Enable/disable TDD Guard without leaving your session
-- [Configuration Guide](docs/CONFIGURATION.md) - Complete setup and troubleshooting guide
+- [Linting & Refactoring](docs/linting.md) - ESLint integration for code quality during refactoring
 
-For troubleshooting, refactoring support with ESLint, and other configuration options, see the [Configuration Guide](docs/CONFIGURATION.md).
+For troubleshooting and other configuration options, see the [Configuration Guide](docs/configuration.md).
 
 ## Security Notice
 
@@ -139,7 +139,7 @@ Contributions are welcome. Feel free to submit issues and pull requests.
 
 ## Documentation
 
-- [Configuration Guide](docs/CONFIGURATION.md)
+- [Configuration Guide](docs/configuration.md)
 - [Architecture Decision Records](docs/adr/)
 
 ## License
