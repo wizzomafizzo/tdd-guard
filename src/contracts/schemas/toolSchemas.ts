@@ -14,6 +14,14 @@ export const HookDataSchema = HookContextSchema.extend({
 
 export type HookData = z.infer<typeof HookDataSchema>
 
+// UserPromptSubmit Schema
+export const UserPromptSubmitSchema = HookContextSchema.extend({
+  prompt: z.string(),
+  cwd: z.string(),
+}).refine((data) => data.hook_event_name === 'UserPromptSubmit')
+
+export type UserPromptSubmit = z.infer<typeof UserPromptSubmitSchema>
+
 // Tool Input Schemas
 export const TodoSchema = z.object({
   content: z.string(),

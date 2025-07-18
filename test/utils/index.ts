@@ -10,6 +10,7 @@ import { typescript, python, languages } from './factories/scenarios/index'
 import * as reporterFactory from './factories/reporterFactory'
 import * as testResultsFactory from './factories/testResultsFactory'
 import * as lintFactory from './factories/lintFactory'
+import * as userPromptSubmitFactory from './factories/userPromptSubmitFactory'
 
 /**
  * Unified test data factory that combines all individual factories
@@ -109,6 +110,10 @@ export const testData = {
   eslintMessageWithout: lintFactory.eslintMessageWithout,
   eslintResult: lintFactory.eslintResult,
   eslintResultWithout: lintFactory.eslintResultWithout,
+
+  // UserPromptSubmit factories
+  userPromptSubmit: userPromptSubmitFactory.userPromptSubmit,
+  userPromptSubmitWithout: userPromptSubmitFactory.userPromptSubmitWithout,
 
   // Default test data values
   defaults: TEST_DEFAULTS,

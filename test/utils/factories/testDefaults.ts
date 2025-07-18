@@ -71,6 +71,13 @@ export const TEST_DEFAULTS = {
       ...multiEdit,
     },
   },
+  userPromptSubmit: {
+    session_id,
+    transcript_path,
+    hook_event_name: 'UserPromptSubmit',
+    prompt: 'tdd-guard on',
+    cwd: '/current/working/directory',
+  },
   // Context defaults
   modifications: 'Test modifications',
   test: 'Test results',

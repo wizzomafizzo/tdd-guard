@@ -16,10 +16,54 @@ import {
   isWriteOperation,
   isTodoWriteOperation,
   isFileModification,
+  UserPromptSubmitSchema,
 } from './toolSchemas'
 import { testData } from '@testUtils'
 
 describe('Tool-specific schemas', () => {
+  describe('UserPromptSubmitSchema', () => {
+    test.each([
+      {
+        description: 'with valid data',
+        data: testData.userPromptSubmit(),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with different prompt',
+        data: testData.userPromptSubmit({ prompt: 'tdd-guard off' }),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with wrong hook_event_name',
+        data: testData.userPromptSubmit({ hook_event_name: 'PreToolUse' }),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without prompt',
+        data: testData.userPromptSubmitWithout(['prompt']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without cwd',
+        data: testData.userPromptSubmitWithout(['cwd']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without session_id',
+        data: testData.userPromptSubmitWithout(['session_id']),
+        expectedSuccess: false,
+      },
+      {
+        description: 'without transcript_path',
+        data: testData.userPromptSubmitWithout(['transcript_path']),
+        expectedSuccess: false,
+      },
+    ])('$description', ({ data, expectedSuccess }) => {
+      const result = UserPromptSubmitSchema.safeParse(data)
+      expect(result.success).toBe(expectedSuccess)
+    })
+  })
+
   describe('TodoSchema', () => {
     test.each([
       {
