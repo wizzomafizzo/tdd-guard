@@ -63,6 +63,15 @@ describe.each(getStorageImplementations())('%s', (_name, setupStorage) => {
     })
   })
 
+  describe('saveConfig and getConfig', () => {
+    it('should store content that can be retrieved', async () => {
+      const content = 'config content'
+
+      await storage.saveConfig(content)
+      expect(await storage.getConfig()).toBe(content)
+    })
+  })
+
   describe('get methods when no data exists', () => {
     it('should return null when no test data exists', async () => {
       expect(await storage.getTest()).toBeNull()
@@ -79,6 +88,10 @@ describe.each(getStorageImplementations())('%s', (_name, setupStorage) => {
     it('should return null when no lint data exists', async () => {
       expect(await storage.getLint()).toBeNull()
     })
+
+    it('should return null when no config data exists', async () => {
+      expect(await storage.getConfig()).toBeNull()
+    })
   })
 
   describe('save methods overwrite existing content', () => {
@@ -87,10 +100,12 @@ describe.each(getStorageImplementations())('%s', (_name, setupStorage) => {
       await storage.saveTodo(FIRST_CONTENT)
       await storage.saveModifications(FIRST_CONTENT)
       await storage.saveLint(FIRST_CONTENT)
+      await storage.saveConfig(FIRST_CONTENT)
       await storage.saveTest(SECOND_CONTENT)
       await storage.saveTodo(SECOND_CONTENT)
       await storage.saveModifications(SECOND_CONTENT)
       await storage.saveLint(SECOND_CONTENT)
+      await storage.saveConfig(SECOND_CONTENT)
     })
 
     it('should overwrite existing test content', async () => {
@@ -107,6 +122,10 @@ describe.each(getStorageImplementations())('%s', (_name, setupStorage) => {
 
     it('should overwrite existing lint content', async () => {
       expect(await storage.getLint()).toBe(SECOND_CONTENT)
+    })
+
+    it('should overwrite existing config content', async () => {
+      expect(await storage.getConfig()).toBe(SECOND_CONTENT)
     })
   })
 })

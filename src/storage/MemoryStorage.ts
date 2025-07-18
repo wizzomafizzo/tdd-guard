@@ -19,6 +19,10 @@ export class MemoryStorage implements Storage {
     this.store.set('lint', content)
   }
 
+  async saveConfig(content: string): Promise<void> {
+    this.store.set('config', content)
+  }
+
   async getTest(): Promise<string | null> {
     return this.store.get('test') ?? null
   }
@@ -33,5 +37,9 @@ export class MemoryStorage implements Storage {
 
   async getLint(): Promise<string | null> {
     return this.store.get('lint') ?? null
+  }
+
+  async getConfig(): Promise<string | null> {
+    return this.store.get('config') ?? null
   }
 }

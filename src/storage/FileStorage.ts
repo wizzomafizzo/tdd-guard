@@ -13,6 +13,7 @@ export class FileStorage implements Storage {
       todo: this.config.todosFilePath,
       modifications: this.config.modificationsFilePath,
       lint: this.config.lintFilePath,
+      config: this.config.configFilePath,
     }
   }
 
@@ -49,6 +50,10 @@ export class FileStorage implements Storage {
     await this.save('lint', content)
   }
 
+  async saveConfig(content: string): Promise<void> {
+    await this.save('config', content)
+  }
+
   async getTest(): Promise<string | null> {
     try {
       const stats = await fs.stat(this.filePaths.test)
@@ -71,5 +76,9 @@ export class FileStorage implements Storage {
 
   async getLint(): Promise<string | null> {
     return this.get('lint')
+  }
+
+  async getConfig(): Promise<string | null> {
+    return this.get('config')
   }
 }
