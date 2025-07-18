@@ -53,6 +53,44 @@ describe('Core Validator Scenarios', () => {
         const result = await validator(context, model)
         expectDecision(result, 'block')
       })
+
+      test('should block adding multiple tests at once', async () => {
+        const oldContent =
+          lang.testModifications.emptyTestContainerWithImports.content
+        const newContent =
+          lang.testModifications.multipleTestsWithImports.content
+        const operation = createEditOperation(
+          lang.testFile,
+          oldContent,
+          newContent
+        )
+        const context: Context = {
+          modifications: operation,
+          todo: JSON.stringify(lang.todos.empty.content),
+          test: lang.testResults.empty.content,
+        }
+
+        const result = await validator(context, model)
+        expectDecision(result, 'block')
+      })
+
+      test('should allow test refactoring when tests are passing', async () => {
+        const oldContent = lang.testModifications.multipleTests.content
+        const newContent = lang.testModifications.refactoredTests.content
+        const operation = createEditOperation(
+          lang.testFile,
+          oldContent,
+          newContent
+        )
+        const context: Context = {
+          modifications: operation,
+          todo: JSON.stringify(lang.todos.empty.content),
+          test: lang.testResults.passing.content,
+        }
+
+        const result = await validator(context, model)
+        expectDecision(result, undefined)
+      })
     })
   })
 })
