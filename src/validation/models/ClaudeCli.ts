@@ -21,7 +21,7 @@ export class ClaudeCli implements IModelClient {
       '--output-format',
       'json',
       '--max-turns',
-      '2',
+      '5',
       '--model',
       'sonnet',
     ]
