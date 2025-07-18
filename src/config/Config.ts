@@ -4,6 +4,7 @@ const TEST_RESULTS_FILENAME = 'test.json'
 const TODOS_FILENAME = 'todos.json'
 const MODIFICATIONS_FILENAME = 'modifications.json'
 const LINT_FILENAME = 'lint.json'
+const CONFIG_FILENAME = 'config.json'
 
 export type ConfigOptions = {
   mode?: 'production' | 'test'
@@ -73,6 +74,10 @@ export class Config {
 
   get lintFilePath(): string {
     return path.join(this.dataDir, LINT_FILENAME)
+  }
+
+  get configFilePath(): string {
+    return path.join(this.dataDir, CONFIG_FILENAME)
   }
 
   private getLinterType(options?: ConfigOptions): string | undefined {
