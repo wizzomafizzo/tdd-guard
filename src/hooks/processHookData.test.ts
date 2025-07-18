@@ -4,6 +4,8 @@ import { MemoryStorage } from '../storage/MemoryStorage'
 import { testData } from '@testUtils'
 import { ValidationResult } from '../contracts/types/ValidationResult'
 import { Context } from '../contracts/types/Context'
+import { UserPromptHandler } from './userPromptHandler'
+import { GuardManager } from '../guard/GuardManager'
 
 const BLOCK_RESULT = {
   decision: 'block',
@@ -261,6 +263,76 @@ describe('processHookData', () => {
       expect(parsedLint.hasNotifiedAboutLintIssues).toBe(true)
     })
   })
+
+  describe('UserPromptHandler integration', () => {
+    it('should enable TDD Guard when user sends "tdd-guard on"', async () => {
+      const storage = new MemoryStorage()
+      const guardManager = new GuardManager(storage)
+      await guardManager.disable() // Ensure it starts disabled
+      const userPromptHandler = new UserPromptHandler(guardManager)
+      const userPromptData = testData.userPromptSubmit({ prompt: 'tdd-guard on' })
+      
+      await processHookData(JSON.stringify(userPromptData), { 
+        userPromptHandler 
+      })
+
+      expect(await guardManager.isEnabled()).toBe(true)
+    })
+
+    it('should disable TDD Guard when user sends "tdd-guard off"', async () => {
+      const storage = new MemoryStorage()
+      const guardManager = new GuardManager(storage)
+      await guardManager.enable() // Ensure it starts enabled
+      const userPromptHandler = new UserPromptHandler(guardManager)
+      const userPromptData = testData.userPromptSubmit({ prompt: 'tdd-guard off' })
+      
+      await processHookData(JSON.stringify(userPromptData), { 
+        userPromptHandler 
+      })
+
+      expect(await guardManager.isEnabled()).toBe(false)
+    })
+
+    it('should not proceed with validation when TDD Guard is disabled', async () => {
+      const storage = new MemoryStorage()
+      const guardManager = new GuardManager(storage)
+      await guardManager.disable() // Ensure guard is disabled
+      const userPromptHandler = new UserPromptHandler(guardManager)
+      const mockValidator = vi.fn()
+      
+      // Try to process an edit operation
+      const editData = testData.editOperation()
+      
+      const result = await processHookData(JSON.stringify(editData), { 
+        storage,
+        userPromptHandler,
+        validator: mockValidator
+      })
+
+      expect(mockValidator).not.toHaveBeenCalled()
+      expect(result).toEqual(defaultResult)
+    })
+
+    it('should proceed with validation when TDD Guard is enabled', async () => {
+      const storage = new MemoryStorage()
+      const guardManager = new GuardManager(storage)
+      await guardManager.enable() // Ensure guard is enabled
+      const userPromptHandler = new UserPromptHandler(guardManager)
+      const mockValidator = vi.fn().mockResolvedValue(BLOCK_RESULT)
+      
+      // Try to process an edit operation
+      const editData = testData.editOperation()
+      
+      const result = await processHookData(JSON.stringify(editData), { 
+        storage,
+        userPromptHandler,
+        validator: mockValidator
+      })
+
+      expect(mockValidator).toHaveBeenCalled()
+      expect(result).toEqual(BLOCK_RESULT)
+    })
+  })
 })
 
 // Test setup helper
@@ -296,6 +368,5 @@ function createTestProcessor() {
     // Validator checks
     validatorHasBeenCalled: (): boolean => mockValidator.mock.calls.length > 0,
     getValidatorCallArgs: (): Context | null => mockValidator.mock.calls[0]?.[0] ?? null,
-    resetValidatorMock: (): void => mockValidator.mockClear(),
   }
 }

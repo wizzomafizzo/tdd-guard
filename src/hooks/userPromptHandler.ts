@@ -10,6 +10,12 @@ export class UserPromptHandler {
 
   async processUserCommand(hookData: string): Promise<void> {
     const data = JSON.parse(hookData)
+    
+    // Only process UserPromptSubmit events
+    if (data.hook_event_name !== 'UserPromptSubmit') {
+      return
+    }
+    
     const command = data.prompt?.toLowerCase()
     
     if (command === 'tdd-guard on') {

@@ -11,10 +11,12 @@ import { TestResultSchema, isTestPassing } from '../contracts/schemas/vitestSche
 import { PytestResultSchema } from '../contracts/schemas/pytestSchemas'
 import { detectFileType } from './fileTypeDetection'
 import { LinterProvider } from '../providers/LinterProvider'
+import { UserPromptHandler } from './userPromptHandler'
 
 export interface ProcessHookDataDeps {
   storage?: Storage
   validator?: (context: Context) => Promise<ValidationResult>
+  userPromptHandler?: UserPromptHandler
 }
 
 export const defaultResult: ValidationResult = {
@@ -28,8 +30,18 @@ export async function processHookData(
 ): Promise<ValidationResult> {
   const parsedData = JSON.parse(inputData)
   
-  // Initialize storage if not provided
+  // Initialize dependencies
   const storage = deps.storage ?? new FileStorage()
+  const userPromptHandler = deps.userPromptHandler ?? new UserPromptHandler()
+  
+  // Process user commands
+  await userPromptHandler.processUserCommand(inputData)
+  
+  // Check if guard is disabled and return early if so
+  const disabledResult = await userPromptHandler.getDisabledResult()
+  if (disabledResult) {
+    return disabledResult
+  }
   
   // Create lintHandler with linter from provider
   const linterProvider = new LinterProvider()

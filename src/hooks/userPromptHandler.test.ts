@@ -28,6 +28,18 @@ describe('UserPromptHandler', () => {
   })
 
   describe('processUserCommand', () => {
+    test('only processes UserPromptSubmit events', async () => {
+      await guardManager.disable() // Ensure guard starts disabled
+      const hookData = {
+        ...testData.userPromptSubmit({ prompt: 'tdd-guard on' }),
+        hook_event_name: 'PreToolUse' // Not UserPromptSubmit
+      }
+
+      await handler.processUserCommand(JSON.stringify(hookData))
+
+      expect(await guardManager.isEnabled()).toBe(false) // Should not enable
+    })
+
     test('enables guard when prompt is "tdd-guard on"', async () => {
       await guardManager.disable() // Ensure guard starts disabled
       const hookData = testData.userPromptSubmit({ prompt: 'tdd-guard on' })
