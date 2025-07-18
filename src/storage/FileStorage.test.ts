@@ -69,4 +69,30 @@ describe('FileStorage', () => {
       expect(retrieved).toBe('modifications content')
     })
   })
+
+  describe('test data expiration', () => {
+    beforeEach(async () => {
+      // Save test data
+      await storage.saveTest(
+        JSON.stringify({
+          testModules: [{ moduleId: 'old_test.js' }],
+        })
+      )
+    })
+
+    it('returns saved test data when fresh', async () => {
+      const result = await storage.getTest()
+      expect(result).toContain('old_test.js')
+    })
+
+    it('returns null for test data older than 20 minutes', async () => {
+      // Manually modify file timestamp to simulate old data (21 minutes ago)
+      const testFilePath = config.testResultsFilePath
+      const twentyOneMinutesAgo = new Date(Date.now() - 21 * 60 * 1000)
+      await fs.utimes(testFilePath, twentyOneMinutesAgo, twentyOneMinutesAgo)
+
+      const result = await storage.getTest()
+      expect(result).toBeNull()
+    })
+  })
 })
