@@ -7,6 +7,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     testTimeout: 120000,
+    pool: 'threads',
     reporters: ['default', new VitestReporter()],
     exclude: [
       '**/node_modules/**',
