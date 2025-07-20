@@ -75,6 +75,40 @@ describe('UserPromptHandler', () => {
 
       expect(await guardManager.isEnabled()).toBe(false)
     })
+
+    test('stops operation and prevents "tdd-guard on" command from reaching agent', async () => {
+      const hookData = testData.userPromptSubmit({ prompt: 'tdd-guard on' })
+
+      const result = await handler.processUserCommand(JSON.stringify(hookData))
+
+      expect(result).toEqual({
+        decision: undefined,
+        reason: 'TDD Guard enabled',
+        continue: false,
+        stopReason: 'TDD Guard enabled'
+      })
+    })
+
+    test('stops operation and prevents "tdd-guard off" command from reaching agent', async () => {
+      const hookData = testData.userPromptSubmit({ prompt: 'tdd-guard off' })
+
+      const result = await handler.processUserCommand(JSON.stringify(hookData))
+
+      expect(result).toEqual({
+        decision: undefined,
+        reason: 'TDD Guard disabled',
+        continue: false,
+        stopReason: 'TDD Guard disabled'
+      })
+    })
+
+    test('returns undefined for non-guard commands', async () => {
+      const hookData = testData.userPromptSubmit({ prompt: 'run tests please' })
+
+      const result = await handler.processUserCommand(JSON.stringify(hookData))
+
+      expect(result).toBeUndefined()
+    })
   })
 
   describe('getDisabledResult', () => {

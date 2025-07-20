@@ -37,7 +37,10 @@ export async function processHookData(
   const userPromptHandler = deps.userPromptHandler ?? new UserPromptHandler(guardManager)
   
   // Process user commands
-  await userPromptHandler.processUserCommand(inputData)
+  const stateResult = await userPromptHandler.processUserCommand(inputData)
+  if (stateResult) {
+    return stateResult
+  }
 
   // Check if guard is disabled and return early if so
   const disabledResult = await userPromptHandler.getDisabledResult()
