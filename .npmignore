@@ -44,3 +44,9 @@ Thumbs.db
 # Build artifacts we don't need
 *.tsbuildinfo
 *.map
+
+# Python publishing
+.venv/
+*.egg-info/
+__pycache__/
+pyproject.toml
