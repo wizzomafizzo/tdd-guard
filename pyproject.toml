@@ -1,6 +1,6 @@
 [project]
 name = "tdd-guard"
-version = "0.5.1"
+version = "0.5.2"
 description = "Enforces Test-Driven Development principles in Claude Code through automated validation"
 authors = [{name = "Nizar Selander"}]
 license = "MIT"
