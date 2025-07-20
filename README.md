@@ -1,69 +1,61 @@
 # TDD Guard
 
 [![npm version](https://badge.fury.io/js/tdd-guard.svg)](https://www.npmjs.com/package/tdd-guard)
+[![PyPI version](https://badge.fury.io/py/tdd-guard.svg)](https://pypi.org/project/tdd-guard/)
 [![CI](https://github.com/nizos/tdd-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/nizos/tdd-guard/actions/workflows/ci.yml)
 [![Security](https://github.com/nizos/tdd-guard/actions/workflows/security.yml/badge.svg)](https://github.com/nizos/tdd-guard/actions/workflows/security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-TDD enforcement for Claude Code.
+Automated TDD enforcement for Claude Code.
 
 ## Overview
 
-TDD Guard monitors file operations in real-time and blocks any changes that violate TDD principles. When violations occur, it provides immediate feedback to keep development on track without manual oversight.
+TDD Guard monitors file operations in real-time and blocks any changes that violate TDD principles. By analyzing test results, todos, and code changes, it ensures Claude Code follows the red-green-refactor cycle without manual reminders.
 
-The tool runs quietly in the background, checking test results, current tasks, and file modifications against the red-green-refactor cycle to ensure proper TDD practices.
+<p align="center">
+  <a href="https://nizar.se/uploads/videos/tdd-guard-demo.mp4">
+    <img src="docs/assets/tdd-guard-demo-screenshot.gif" alt="TDD Guard Demo" width="600">
+  </a>
+  <br>
+  <em>Click to watch TDD Guard in action</em>
+</p>
 
-## Core Benefits
+## Why TDD Guard?
 
-- **Eliminates manual TDD enforcement**: No need to remind agents about writing tests first or following TDD cycles
-- **Preserves context window**: Removes lengthy TDD instructions from `CLAUDE.md`, freeing space for domain-specific guidance
-- **Maintains development flow**: Works silently until a violation occurs, then provides clear corrective feedback
-
-## Technical Features
-
-- **Multi-language Support**: Works with JavaScript/TypeScript and Python projects
-- **Multi-model Support**: Choose between Claude Code CLI or Anthropic API
-- **Context Aggregation**: Combines file modifications, todo states, and test results for accurate validation
-- **Dynamic Instructions**: Tailored prompts for Write, Edit, and MultiEdit operations
+- **Focus on solving problems** - TDD Guard enforces the rules while you design solutions
+- **Save context for what matters** - No more TDD instructions cluttering your CLAUDE.md
+- **Works with your stack** - TypeScript, JavaScript, and Python today. More languages coming soon
+- **Control without context switches** - Toggle with `tdd-guard on/off` mid-session
+- **Flexible validation** - Use local Claude or configure Anthropic API
 
 ## Requirements
 
-- **Node.js**: Version 18 or higher
-- **Test Runner**: Vitest (JavaScript/TypeScript) or pytest (Python)
+- Node.js 18+
+- Test Runner:
+  - JavaScript/TypeScript: Vitest
+  - Python: pytest
 
 ## Installation
 
-TDD Guard supports both JavaScript/TypeScript and Python projects. Choose the installation method for your project type:
-
-### JavaScript/TypeScript Projects
+Install the TDD Guard CLI globally:
 
 ```bash
-npm install --save-dev tdd-guard
+npm install -g tdd-guard
 ```
 
-### Python Projects
+For Python projects, also install the pytest reporter:
 
 ```bash
-git clone https://github.com/nizos/tdd-guard
-cd tdd-guard
-pip install -e .
+pip install tdd-guard
 ```
 
 ## Quick Start
 
-### 1. Environment
+Getting started is quick and simple:
 
-If you do not have Claude installed locally, create a `.env` file:
+### 1. Configure Claude Code Hook
 
-```bash
-USE_SYSTEM_CLAUDE=true
-```
-
-This tells TDD Guard to use System Claude from PATH instead of `~/.claude/local/claude`.
-
-### 2. Hook Setup
-
-Configure TDD Guard using the `/hooks` command:
+Use the `/hooks` command in Claude Code:
 
 1. Type `/hooks` in Claude Code
 2. Select `PreToolUse - Before tool execution`
@@ -73,11 +65,15 @@ Configure TDD Guard using the `/hooks` command:
 6. Enter command: `tdd-guard`
 7. Choose where to save (Project settings recommended)
 
-### 3. Test Reporter
+**Tip:** Also configure [quick commands](docs/quick-commands.md) for `tdd-guard on/off` and [ESLint integration](docs/linting.md) for automated refactoring support.
 
-#### For JavaScript/TypeScript (Vitest)
+### 2. Configure Test Reporter
 
-Add the TDD Guard reporter to your `vitest.config.ts`:
+TDD Guard captures test results from your test runner. Ensure your `package.json` or project scripts use the correct test command.
+
+**JavaScript/TypeScript (Vitest)**
+
+Add to `vitest.config.ts`:
 
 ```typescript
 import { VitestReporter } from 'tdd-guard'
@@ -89,24 +85,9 @@ export default defineConfig({
 })
 ```
 
-#### For Python (pytest)
+**Python (pytest)**
 
-The TDD Guard plugin is automatically discovered when the package is installed. Simply run:
-
-```bash
-pytest
-```
-
-The plugin will automatically capture test results for TDD validation.
-
-Make sure your test scripts are configured to use your chosen test runner.
-
-## Additional Configuration
-
-- [Quick Commands](docs/quick-commands.md) - Enable/disable TDD Guard without leaving your session
-- [Linting & Refactoring](docs/linting.md) - ESLint integration for code quality during refactoring
-
-For troubleshooting and other configuration options, see the [Configuration Guide](docs/configuration.md).
+No configuration needed - the pytest plugin activates automatically when installed.
 
 ## Security Notice
 
@@ -120,27 +101,27 @@ TDD Guard runs with your user permissions and has access to your file system. We
 
 ## Known Limitations
 
-- Not tested with multiple subagents working simultaneously
+- Not tested with multiple subagents in the same project
 
 ## Roadmap
 
 - Add support for more testing frameworks (Jest, Mocha, unittest, etc.)
 - Add support for additional programming languages (Go, Rust, Java, etc.)
 - Encourage meaningful refactoring opportunities when tests are green
-- Improve handling of concurrent subagents
+- Add support for multiple concurrent subagents per project
 
 ## Contributing
 
-Contributions are welcome. Feel free to submit issues and pull requests.
+Contributions are welcome! Feel free to submit issues and pull requests.
 
-## Contributors
+**Contributors:**
 
 - Python/pytest support: [@Durafen](https://github.com/Durafen)
 
-## Documentation
+## Learn More
 
-- [Configuration Guide](docs/configuration.md)
-- [Architecture Decision Records](docs/adr/)
+- [Configuration Guide](docs/configuration.md) - Environment variables, model options, and troubleshooting
+- [Architecture Decision Records](docs/adr/) - Technical design decisions and rationale
 
 ## License
 

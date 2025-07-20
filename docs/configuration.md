@@ -103,7 +103,7 @@ Add to `.claude/settings.json`:
 }
 ```
 
-For optional refactoring support with ESLint, see [docs/linting.md](./linting.md).
+**Tip:** Also configure [quick commands](quick-commands.md) for `tdd-guard on/off` and [ESLint integration](linting.md) for automated refactoring support.
 
 ## Test Reporter Configuration
 
@@ -147,12 +147,6 @@ Simply run your tests as usual:
 ```bash
 pytest
 ```
-
-## Refactoring Phase Support
-
-TDD Guard supports automatic code quality checks during the refactoring phase using ESLint. This helps maintain clean code while following TDD practices.
-
-For detailed setup and configuration, see [docs/linting.md](./linting.md).
 
 ## Data Storage
 
@@ -228,8 +222,27 @@ pip install pytest>=7.0.0
 1. **TDD Guard not triggering**: Check that hooks are properly configured in `.claude/settings.json`
 2. **Test results not captured**: Ensure `VitestReporter` is added to your Vitest config
 3. **Claude CLI failures**: Verify Claude installation and check for API key conflicts
-4. **"Command not found" errors**: Make sure `tdd-guard` is installed as a dev dependency
+4. **"Command not found" errors**: Make sure `tdd-guard` is installed globally with `npm install -g tdd-guard`
 5. **Changes not taking effect**: Restart your Claude session after modifying hooks or environment variables
+
+### Updating TDD Guard
+
+To update to the latest version:
+
+```bash
+# Update CLI tool
+npm update -g tdd-guard
+
+# For Python projects, also update the pytest reporter
+pip install --upgrade tdd-guard
+```
+
+Check your current version:
+
+```bash
+npm list -g tdd-guard
+pip show tdd-guard
+```
 
 ## Advanced Configuration
 
