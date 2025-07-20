@@ -130,6 +130,7 @@ export default [
       'node_modules/**',
       'hooks/**',
       'test/artifacts/**',
+      '.venv/**',
     ],
   },
 ]
