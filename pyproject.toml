@@ -15,6 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Testing",
     "Topic :: Software Development :: Quality Assurance",
 ]
@@ -29,10 +30,11 @@ dependencies = [
 "Bug Tracker" = "https://github.com/nizos/tdd-guard/issues"
 
 [project.entry-points."pytest11"]
-tdd-guard = "src.reporters.PytestReporter"
+tdd-guard = "tdd_guard_pytest.reporters.PytestReporter"
 
-[tool.setuptools.packages.find]
-include = ["src*"]
+[tool.setuptools]
+package-dir = {"tdd_guard_pytest" = "src"}
+packages = ["tdd_guard_pytest", "tdd_guard_pytest.reporters"]
 
 [build-system]
 requires = ["setuptools>=45", "wheel"]
