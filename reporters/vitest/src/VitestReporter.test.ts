@@ -3,7 +3,12 @@ import type { TestModule, TestCase } from 'vitest/node'
 import { VitestReporter } from './VitestReporter'
 import { MemoryStorage, FileStorage, Storage } from '@tdd-guard/storage'
 import { Config } from '@tdd-guard/config'
-import { testData } from '@testUtils'
+import {
+  testModule,
+  passedTestCase,
+  failedTestCase,
+  createUnhandledError,
+} from './VitestReporter.test-data'
 import {
   isFailingTest,
   isPassingTest,
@@ -16,9 +21,9 @@ import { join } from 'node:path'
 
 describe('VitestReporter', () => {
   let sut: Awaited<ReturnType<typeof setupVitestReporter>>
-  const module = testData.testModule()
-  const passedTest = testData.passedTestCase()
-  const failedTest = testData.failedTestCase()
+  const module = testModule()
+  const passedTest = passedTestCase()
+  const failedTest = failedTestCase()
 
   beforeEach(() => {
     sut = setupVitestReporter()
@@ -39,8 +44,8 @@ describe('VitestReporter', () => {
     expect(localSut.reporter['storage']).toBeInstanceOf(FileStorage)
 
     const result = await localSut.collectAndGetSaved([
-      testData.testModule(),
-      testData.passedTestCase(),
+      testModule(),
+      passedTestCase(),
     ])
 
     expect(result).toBeTruthy()
@@ -114,8 +119,8 @@ describe('VitestReporter', () => {
   describe('storage integration', () => {
     it('saves test output to storage', async () => {
       const result = await sut.collectAndGetSaved([
-        testData.testModule(),
-        testData.passedTestCase(),
+        testModule(),
+        passedTestCase(),
       ])
 
       expect(result).toBeTruthy()
@@ -140,12 +145,12 @@ describe('VitestReporter', () => {
 
     beforeEach(async () => {
       // Given a module that was collected but has no tests due to import error
-      const moduleWithImportError = testData.testModule({
+      const moduleWithImportError = testModule({
         moduleId: '/src/example.test.ts',
       })
 
       // And an error indicating import failure
-      const importError = testData.createUnhandledError()
+      const importError = createUnhandledError()
 
       // When the test run ends with errors
       sut.reporter.onTestModuleCollected(moduleWithImportError)
@@ -183,7 +188,7 @@ describe('VitestReporter', () => {
 
   describe('when test run ends with reason', () => {
     it('captures "failed" reason in output', async () => {
-      const moduleWithImportError = testData.testModule({
+      const moduleWithImportError = testModule({
         moduleId: '/src/linters/eslint/helpers.test.ts',
       })
 

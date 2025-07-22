@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config'
-import { VitestReporter } from './src/reporters/VitestReporter'
+import { VitestReporter } from '@tdd-guard/vitest'
 import path from 'path'
 
 export default defineConfig({

@@ -19,10 +19,9 @@
   "workspaces": [
     "packages/contracts",
     "packages/config",
-    "packages/storage"
+    "packages/storage",
+    "reporters/vitest"
   ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "bin": {
     "tdd-guard": "dist/cli/tdd-guard.js"
   },
@@ -70,6 +69,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@tdd-guard/vitest": "*",
     "@types/node": "^24.0.10",
     "@typescript-eslint/eslint-plugin": "^8.33.1",
     "@typescript-eslint/parser": "^8.33.1",
