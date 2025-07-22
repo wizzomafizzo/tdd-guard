@@ -1,7 +1,7 @@
 import { describe, test } from 'vitest'
 import { validator } from '../../src/validation/validator'
 import { Context } from '@tdd-guard/contracts'
-import { Config } from '../../src/config/Config'
+import { Config } from '@tdd-guard/config'
 import { ModelClientProvider } from '../../src/providers/ModelClientProvider'
 import { testData } from '@testUtils'
 import { expectDecision } from '../utils/factories/scenarios'

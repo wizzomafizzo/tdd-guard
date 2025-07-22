@@ -1,6 +1,6 @@
 import { ModelClientProvider } from '../../../src/providers/ModelClientProvider'
 import { IModelClient } from '@tdd-guard/contracts'
-import { Config } from '../../../src/config/Config'
+import { Config } from '@tdd-guard/config'
 
 export function modelClientProvider(): ModelClientProvider {
   return new MockModelClientProvider()

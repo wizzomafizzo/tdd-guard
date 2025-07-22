@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest'
 import { ModelClientProvider } from './ModelClientProvider'
-import { Config } from '../config/Config'
+import { Config } from '@tdd-guard/config'
 import { ClaudeCli } from '../validation/models/ClaudeCli'
 import { AnthropicApi } from '../validation/models/AnthropicApi'
 

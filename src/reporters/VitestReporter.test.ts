@@ -4,7 +4,7 @@ import { VitestReporter } from './VitestReporter'
 import { MemoryStorage } from '../storage/MemoryStorage'
 import { FileStorage } from '../storage/FileStorage'
 import { Storage } from '../storage/Storage'
-import { Config } from '../config/Config'
+import { Config } from '@tdd-guard/config'
 import { testData } from '@testUtils'
 import {
   isFailingTest,

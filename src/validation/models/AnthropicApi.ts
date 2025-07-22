@@ -1,5 +1,5 @@
 import { IModelClient } from '@tdd-guard/contracts'
-import { Config } from '../../config/Config'
+import { Config } from '@tdd-guard/config'
 import Anthropic from '@anthropic-ai/sdk'
 
 export class AnthropicApi implements IModelClient {

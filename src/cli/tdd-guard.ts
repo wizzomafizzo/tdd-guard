@@ -5,7 +5,7 @@ import { processHookData } from '../hooks/processHookData'
 import { FileStorage } from '../storage/FileStorage'
 import { Storage } from '../storage/Storage'
 import { validator } from '../validation/validator'
-import { Config } from '../config/Config'
+import { Config } from '@tdd-guard/config'
 import { ModelClientProvider } from '../providers/ModelClientProvider'
 import { ValidationResult } from '@tdd-guard/contracts'
 

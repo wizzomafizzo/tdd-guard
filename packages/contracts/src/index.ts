@@ -1,4 +1,5 @@
 // Types
+export * from './types/ConfigOptions'
 export * from './types/Context'
 export * from './types/ModelClient'
 export * from './types/ValidationResult'

@@ -1,0 +1,27 @@
+{
+  "name": "@tdd-guard/config",
+  "version": "0.1.0",
+  "description": "Configuration management for TDD Guard",
+  "author": "Nizar Selander",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nizos/tdd-guard.git",
+    "directory": "packages/config"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "typescript": "^5.2.2",
+    "vitest": "^3.2.2"
+  }
+}

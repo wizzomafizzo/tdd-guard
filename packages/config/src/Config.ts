@@ -1,19 +1,11 @@
 import path from 'path'
+import { ConfigOptions } from '@tdd-guard/contracts'
 
 const TEST_RESULTS_FILENAME = 'test.json'
 const TODOS_FILENAME = 'todos.json'
 const MODIFICATIONS_FILENAME = 'modifications.json'
 const LINT_FILENAME = 'lint.json'
 const CONFIG_FILENAME = 'config.json'
-
-export type ConfigOptions = {
-  mode?: 'production' | 'test'
-  dataDir?: string
-  useSystemClaude?: boolean
-  anthropicApiKey?: string
-  modelType?: string
-  linterType?: string
-}
 
 export class Config {
   readonly dataDir: string

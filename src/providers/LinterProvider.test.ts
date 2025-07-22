@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest'
 import { LinterProvider } from './LinterProvider'
-import { Config } from '../config/Config'
+import { Config } from '@tdd-guard/config'
 import { ESLint } from '../linters/eslint/ESLint'
 
 describe('LinterProvider', () => {

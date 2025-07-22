@@ -2,7 +2,7 @@ import { IModelClient } from '@tdd-guard/contracts'
 import { execFileSync } from 'child_process'
 import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
-import { Config } from '../../config/Config'
+import { Config } from '@tdd-guard/config'
 
 export class ClaudeCli implements IModelClient {
   private readonly config: Config
