@@ -1,5 +1,4 @@
-import { Storage } from '../storage/Storage'
-import { FileStorage } from '../storage/FileStorage'
+import { Storage, FileStorage } from '@tdd-guard/storage'
 
 export class GuardManager {
   private readonly storage: Storage

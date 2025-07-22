@@ -1,6 +1,5 @@
 import { ValidationResult, Context, HookDataSchema, HookData, isTodoWriteOperation, ToolOperationSchema, LintDataSchema, TestResultSchema, isTestPassing, PytestResultSchema } from '@tdd-guard/contracts'
-import { Storage } from '../storage/Storage'
-import { FileStorage } from '../storage/FileStorage'
+import { Storage, FileStorage } from '@tdd-guard/storage'
 import { buildContext } from '../cli/buildContext'
 import { HookEvents } from './HookEvents'
 import { PostToolLintHandler } from './postToolLint'

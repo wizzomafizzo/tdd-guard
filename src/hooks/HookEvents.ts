@@ -6,7 +6,7 @@ import {
   isTodoWriteOperation,
 } from '@tdd-guard/contracts'
 
-import { Storage } from '../storage/Storage'
+import { Storage } from '@tdd-guard/storage'
 
 export type { HookData }
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { buildContext } from './buildContext'
-import { MemoryStorage } from '../storage/MemoryStorage'
+import { MemoryStorage } from '@tdd-guard/storage'
 
 describe('buildContext', () => {
   let storage: MemoryStorage

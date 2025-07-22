@@ -2,8 +2,7 @@
 
 import 'dotenv/config'
 import { processHookData } from '../hooks/processHookData'
-import { FileStorage } from '../storage/FileStorage'
-import { Storage } from '../storage/Storage'
+import { FileStorage, Storage } from '@tdd-guard/storage'
 import { validator } from '../validation/validator'
 import { Config } from '@tdd-guard/config'
 import { ModelClientProvider } from '../providers/ModelClientProvider'

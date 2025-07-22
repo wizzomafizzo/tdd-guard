@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import type { TestModule, TestCase } from 'vitest/node'
 import { VitestReporter } from './VitestReporter'
-import { MemoryStorage } from '../storage/MemoryStorage'
-import { FileStorage } from '../storage/FileStorage'
-import { Storage } from '../storage/Storage'
+import { MemoryStorage, FileStorage, Storage } from '@tdd-guard/storage'
 import { Config } from '@tdd-guard/config'
 import { testData } from '@testUtils'
 import {

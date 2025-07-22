@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { processHookData, defaultResult } from './processHookData'
-import { MemoryStorage } from '../storage/MemoryStorage'
+import { MemoryStorage } from '@tdd-guard/storage'
 import { testData } from '@testUtils'
 import { ValidationResult, Context } from '@tdd-guard/contracts'
 import { UserPromptHandler } from './userPromptHandler'

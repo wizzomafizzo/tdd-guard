@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { processHookData } from '../../src/hooks/processHookData'
-import { MemoryStorage } from '../../src/storage/MemoryStorage'
+import { MemoryStorage } from '@tdd-guard/storage'
 
 describe('processHookData file type integration', () => {
   it('should use pytest schema for Python files', async () => {

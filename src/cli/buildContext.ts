@@ -1,4 +1,4 @@
-import { Storage } from '../storage/Storage'
+import { Storage } from '@tdd-guard/storage'
 import { Context, LintDataSchema } from '@tdd-guard/contracts'
 import { processLintData } from '../processors/lintProcessor'
 
