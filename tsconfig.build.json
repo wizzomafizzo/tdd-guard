@@ -1,7 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src"
+    "composite": true,
+    "rootDir": "./src",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*"],
   "exclude": [
@@ -10,5 +12,11 @@
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
     "test"
+  ],
+  "references": [
+    { "path": "./packages/contracts" },
+    { "path": "./packages/config" },
+    { "path": "./packages/storage" },
+    { "path": "./reporters/vitest" }
   ]
 }

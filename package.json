@@ -32,7 +32,7 @@
   ],
   "scripts": {
     "build:workspaces": "npm run build --workspaces --if-present",
-    "build": "npm run build:workspaces && tsc -p tsconfig.build.json",
+    "build": "npm run build:workspaces && tsc --build tsconfig.build.json",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:unit": "vitest run --exclude '**/test/integration/**'",
