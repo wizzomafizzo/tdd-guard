@@ -10,10 +10,10 @@ import {
   isFailingTest,
   isPassingTest,
   isTestPassing,
-} from './vitestSchemas'
+} from './reporterSchemas'
 import { testData } from '@testUtils'
 
-describe('Vitest schemas', () => {
+describe('Reporter schemas', () => {
   describe('UnhandledErrorSchema', () => {
     test.each([
       {
