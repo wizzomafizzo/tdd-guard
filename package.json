@@ -32,17 +32,18 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present && tsc -p tsconfig.build.json",
+    "build:workspaces": "npm run build --workspaces --if-present",
+    "build": "npm run build:workspaces && tsc -p tsconfig.build.json",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:unit": "vitest run --exclude '**/test/integration/**'",
     "test:integration": "vitest run test/integration",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint . --fix --report-unused-disable-directives --max-warnings 0",
-    "lint:check": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint": "npm run build:workspaces && eslint . --fix --report-unused-disable-directives --max-warnings 0",
+    "lint:check": "npm run build:workspaces && eslint . --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npm run build:workspaces && tsc --noEmit",
     "checks": "npm run typecheck && npm run lint && npm run format && npm run test",
     "pre-commit": "npm run format:check && npm run lint:check && npm run typecheck && npm run test:unit",
     "prepare": "husky"
