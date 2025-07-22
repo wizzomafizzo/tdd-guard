@@ -1,13 +1,4 @@
-import type { LintData } from '../contracts/schemas/lintSchemas'
-
-export interface ProcessedLintData {
-  hasIssues: boolean
-  summary: string
-  issuesByFile: Map<string, string[]>
-  totalIssues: number
-  errorCount: number
-  warningCount: number
-}
+import type { LintData, ProcessedLintData } from '@tdd-guard/contracts'
 
 /**
  * Processes lint data into a presentable format for validation context

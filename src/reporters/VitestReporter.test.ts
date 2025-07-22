@@ -11,7 +11,7 @@ import {
   isPassingTest,
   TestResult,
   Test,
-} from '../contracts/schemas/vitestSchemas'
+} from '@tdd-guard/contracts'
 import { rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

@@ -16,6 +16,9 @@
     "pytest",
     "python"
   ],
+  "workspaces": [
+    "packages/contracts"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -44,6 +47,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",
+    "@tdd-guard/contracts": "workspace:*",
     "@types/uuid": "^10.0.0",
     "dotenv": "^17.1.0",
     "uuid": "^11.1.0",

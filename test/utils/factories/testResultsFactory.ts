@@ -4,7 +4,7 @@ import type {
   TestModule,
   TestResult,
   UnhandledError,
-} from '../../../src/contracts/schemas/vitestSchemas'
+} from '@tdd-guard/contracts'
 import { omit } from './helpers'
 
 // Base builders

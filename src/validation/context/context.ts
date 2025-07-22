@@ -1,5 +1,5 @@
-import { Context } from '../../contracts/types/Context'
 import {
+  Context,
   isEditOperation,
   isMultiEditOperation,
   isWriteOperation,
@@ -8,12 +8,10 @@ import {
   MultiEditOperation,
   WriteOperation,
   Todo,
-} from '../../contracts/schemas/toolSchemas'
-import { TestResultsProcessor } from '../../processors'
-import {
-  formatLintDataForContext,
   ProcessedLintData,
-} from '../../processors/lintProcessor'
+} from '@tdd-guard/contracts'
+import { TestResultsProcessor } from '../../processors'
+import { formatLintDataForContext } from '../../processors/lintProcessor'
 import { detectFileType } from '../../hooks/fileTypeDetection'
 
 // Import core prompts (always included)

@@ -3,10 +3,7 @@ import { handlePostToolLint, PostToolLintHandler, DEFAULT_RESULT } from './postT
 import { testData } from '@testUtils'
 import { MemoryStorage } from '../storage/MemoryStorage'
 import { Linter } from '../linters/Linter'
-import { LintData, LintResult } from '../contracts/schemas/lintSchemas'
-import { HookData } from '../contracts/schemas/toolSchemas'
-import { ValidationResult } from '../contracts/types/ValidationResult'
-import { TestResult } from '../contracts/schemas/vitestSchemas'
+import { LintData, LintResult, HookData, ValidationResult, TestResult } from '@tdd-guard/contracts'
 
 describe('postToolLint', () => {
   describe('PostToolLintHandler', () => {

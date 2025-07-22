@@ -1,5 +1,5 @@
 import { GuardManager } from '../guard/GuardManager'
-import { ValidationResult } from '../contracts/types/ValidationResult'
+import { ValidationResult } from '@tdd-guard/contracts'
 
 export class UserPromptHandler {
   private readonly guardManager: GuardManager

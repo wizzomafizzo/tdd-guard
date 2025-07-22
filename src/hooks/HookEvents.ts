@@ -4,7 +4,7 @@ import {
   ToolOperationSchema,
   type ToolOperation,
   isTodoWriteOperation,
-} from '../contracts/schemas/toolSchemas'
+} from '@tdd-guard/contracts'
 
 import { Storage } from '../storage/Storage'
 

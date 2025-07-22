@@ -2,10 +2,7 @@
  * Factory functions for creating MultiEdit and MultiEditOperation test data
  */
 
-import type {
-  MultiEdit,
-  MultiEditOperation,
-} from '../../../src/contracts/schemas/toolSchemas'
+import type { MultiEdit, MultiEditOperation } from '@tdd-guard/contracts'
 import { hookDataDefaults, omit } from './helpers'
 import { TEST_DEFAULTS } from './testDefaults'
 

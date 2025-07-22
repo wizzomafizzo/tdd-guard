@@ -1,5 +1,5 @@
 import { ModelClientProvider } from '../../../src/providers/ModelClientProvider'
-import { IModelClient } from '../../../src/contracts/types/ModelClient'
+import { IModelClient } from '@tdd-guard/contracts'
 import { Config } from '../../../src/config/Config'
 
 export function modelClientProvider(): ModelClientProvider {

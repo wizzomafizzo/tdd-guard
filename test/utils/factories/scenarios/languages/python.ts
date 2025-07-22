@@ -1,5 +1,5 @@
 // Import existing types from contracts
-import type { Todo } from '../../../../../src/contracts/schemas/toolSchemas'
+import type { Todo } from '@tdd-guard/contracts'
 
 const TEST_MODULE_ID = 'src/calculator/test_calculator.py'
 const TEST_NAME = 'test_adds_two_numbers'

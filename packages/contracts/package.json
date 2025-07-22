@@ -1,0 +1,30 @@
+{
+  "name": "@tdd-guard/contracts",
+  "version": "0.1.0",
+  "description": "Type definitions and validation schemas for TDD Guard",
+  "author": "Nizar Selander",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nizos/tdd-guard.git",
+    "directory": "packages/contracts"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.25.74"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "typescript": "^5.2.2",
+    "vitest": "^3.2.2"
+  }
+}

@@ -1,6 +1,4 @@
-import { ValidationResult } from '../contracts/types/ValidationResult'
-import { LintData, LintDataSchema, LintResult } from '../contracts/schemas/lintSchemas'
-import { HookDataSchema, HookData } from '../contracts/schemas/toolSchemas'
+import { ValidationResult, LintData, LintDataSchema, LintResult, HookDataSchema, HookData  } from '@tdd-guard/contracts'
 import { Storage } from '../storage/Storage'
 import { Linter } from '../linters/Linter'
 

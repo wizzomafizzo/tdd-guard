@@ -125,12 +125,13 @@ export default [
   },
   {
     ignores: [
-      'dist/**',
+      '**/dist/**',
+      '**/node_modules/**',
       'coverage/**',
-      'node_modules/**',
-      'hooks/**',
       'test/artifacts/**',
       '.venv/**',
+      '**/*.d.ts',
+      '**/*.tsbuildinfo',
     ],
   },
 ]

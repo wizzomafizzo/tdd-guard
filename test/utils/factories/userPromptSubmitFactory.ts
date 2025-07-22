@@ -2,7 +2,7 @@
  * Factory functions for creating UserPromptSubmit test data
  */
 
-import type { UserPromptSubmit } from '../../../src/contracts/schemas/toolSchemas'
+import type { UserPromptSubmit } from '@tdd-guard/contracts'
 import { omit } from './helpers'
 import { TEST_DEFAULTS } from './testDefaults'
 

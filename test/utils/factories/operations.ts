@@ -1,9 +1,4 @@
-import type {
-  Write,
-  Edit,
-  MultiEdit,
-  TodoWrite,
-} from '../../../src/contracts/schemas/toolSchemas'
+import type { Write, Edit, MultiEdit, TodoWrite } from '@tdd-guard/contracts'
 
 type ToolInput = Write | Edit | MultiEdit | TodoWrite
 

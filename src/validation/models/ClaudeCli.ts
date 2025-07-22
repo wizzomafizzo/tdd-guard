@@ -1,4 +1,4 @@
-import { IModelClient } from '../../contracts/types/ModelClient'
+import { IModelClient } from '@tdd-guard/contracts'
 import { execFileSync } from 'child_process'
 import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'

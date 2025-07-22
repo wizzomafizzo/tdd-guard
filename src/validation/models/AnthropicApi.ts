@@ -1,4 +1,4 @@
-import { IModelClient } from '../../contracts/types/ModelClient'
+import { IModelClient } from '@tdd-guard/contracts'
 import { Config } from '../../config/Config'
 import Anthropic from '@anthropic-ai/sdk'
 

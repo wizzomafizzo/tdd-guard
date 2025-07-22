@@ -1,4 +1,4 @@
-import { ValidationResult } from '../../../../src/contracts/types/ValidationResult'
+import { ValidationResult } from '@tdd-guard/contracts'
 import { expect } from 'vitest'
 
 export function expectDecision(

@@ -1,4 +1,4 @@
-import { Context } from '../../../src/contracts/types/Context'
+import { Context } from '@tdd-guard/contracts'
 import { TEST_DEFAULTS } from './testDefaults'
 
 /**

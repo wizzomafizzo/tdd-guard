@@ -7,7 +7,7 @@ import { Storage } from '../storage/Storage'
 import { validator } from '../validation/validator'
 import { Config } from '../config/Config'
 import { ModelClientProvider } from '../providers/ModelClientProvider'
-import { ValidationResult } from '../contracts/types/ValidationResult'
+import { ValidationResult } from '@tdd-guard/contracts'
 
 export async function run(
   input: string,

@@ -1,8 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { validator } from './validator'
-import { Context } from '../contracts/types/Context'
-import { IModelClient } from '../contracts/types/ModelClient'
-import { ValidationResult } from '../contracts/types/ValidationResult'
+import { Context, IModelClient, ValidationResult } from '@tdd-guard/contracts'
 import { generateDynamicContext } from './context/context'
 import { testData } from '@testUtils'
 

@@ -3,8 +3,8 @@ import {
   TestResult,
   isFailingTest,
   isPassingTest,
-} from '../../contracts/schemas/vitestSchemas'
-import { PytestResultSchema } from '../../contracts/schemas/pytestSchemas'
+  PytestResultSchema,
+} from '@tdd-guard/contracts'
 
 export class TestResultsProcessor {
   process(jsonData: string, framework: 'vitest' | 'pytest' = 'vitest'): string {
