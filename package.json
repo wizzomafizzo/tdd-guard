@@ -32,7 +32,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "npm run build --workspaces --if-present && tsc -p tsconfig.build.json",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:unit": "vitest run --exclude '**/test/integration/**'",

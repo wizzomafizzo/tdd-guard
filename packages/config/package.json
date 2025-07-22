@@ -19,6 +19,9 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@tdd-guard/contracts": "*"
+  },
   "devDependencies": {
     "@types/node": "^24.0.10",
     "typescript": "^5.2.2",
