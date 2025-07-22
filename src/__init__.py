@@ -1,1 +1,0 @@
-# TDD Guard source package

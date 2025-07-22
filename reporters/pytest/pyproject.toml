@@ -1,13 +1,14 @@
 [project]
-name = "tdd-guard"
-version = "0.5.3"
-description = "Enforces Test-Driven Development principles in Claude Code through automated validation"
+name = "tdd-guard-pytest"
+version = "0.1.0"
+description = "Pytest plugin for TDD Guard - enforces Test-Driven Development principles"
 authors = [{name = "Nizar Selander"}]
 license = "MIT"
 readme = "README.md"
-keywords = ["tdd", "test-driven-development", "claude", "testing", "pytest"]
+keywords = ["tdd", "test-driven-development", "testing", "pytest", "claude"]
 classifiers = [
     "Development Status :: 4 - Beta",
+    "Framework :: Pytest",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -28,14 +29,15 @@ dependencies = [
 "Homepage" = "https://github.com/nizos/tdd-guard"
 "Repository" = "https://github.com/nizos/tdd-guard"
 "Bug Tracker" = "https://github.com/nizos/tdd-guard/issues"
+"Documentation" = "https://github.com/nizos/tdd-guard/tree/main/reporters/pytest"
 
 [project.entry-points."pytest11"]
-tdd-guard = "tdd_guard_pytest.reporters.PytestReporter"
-
-[tool.setuptools]
-package-dir = {"tdd_guard_pytest" = "src"}
-packages = ["tdd_guard_pytest", "tdd_guard_pytest.reporters"]
+tdd-guard = "tdd_guard_pytest.pytest_reporter"
 
 [build-system]
 requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]

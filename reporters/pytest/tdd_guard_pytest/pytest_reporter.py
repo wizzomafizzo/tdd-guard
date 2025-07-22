@@ -1,13 +1,8 @@
 """
-TDD Guard pytest plugin - equivalent to VitestReporter for Python
+TDD Guard pytest plugin - captures test results for TDD validation.
 
-Usage:
-Add to pytest.ini:
-[tool:pytest]
-addopts = -p tdd_guard.pytest_plugin
-
-Or use via command line:
-pytest -p tdd_guard.pytest_plugin
+This plugin automatically activates when tdd-guard-pytest is installed.
+No configuration needed - it registers via the pytest11 entry point.
 """
 
 import json
