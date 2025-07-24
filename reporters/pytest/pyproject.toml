@@ -2,7 +2,7 @@
 name = "tdd-guard-pytest"
 version = "0.1.0"
 description = "Pytest plugin for TDD Guard - enforces Test-Driven Development principles"
-authors = [{name = "Nizar Selander"}]
+authors = [{name = "Nizar Selander"}, {name = "Durafen"}]
 license = "MIT"
 readme = "README.md"
 keywords = ["tdd", "test-driven-development", "testing", "pytest", "claude"]
