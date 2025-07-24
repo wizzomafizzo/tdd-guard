@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { processHookData, defaultResult } from './processHookData'
-import { MemoryStorage } from '@tdd-guard/storage'
 import { testData } from '@testUtils'
-import { ValidationResult, Context } from '@tdd-guard/contracts'
 import { UserPromptHandler } from './userPromptHandler'
 import { GuardManager } from '../guard/GuardManager'
+import { MemoryStorage } from '../storage/MemoryStorage'
+import { ValidationResult } from '../contracts/types/ValidationResult'
+import { Context } from '../contracts/types/Context'
 
 const BLOCK_RESULT = {
   decision: 'block',

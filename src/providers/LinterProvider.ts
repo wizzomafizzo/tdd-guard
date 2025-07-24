@@ -1,5 +1,5 @@
 import { Linter } from '../linters/Linter'
-import { Config } from '@tdd-guard/config'
+import { Config } from '../config/Config'
 import { ESLint } from '../linters/eslint/ESLint'
 
 export class LinterProvider {

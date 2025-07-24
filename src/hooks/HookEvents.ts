@@ -1,12 +1,11 @@
-import { 
+import {
+  HookData,
   HookDataSchema,
-  type HookData,
-  ToolOperationSchema,
-  type ToolOperation,
   isTodoWriteOperation,
-} from '@tdd-guard/contracts'
-
-import { Storage } from '@tdd-guard/storage'
+  ToolOperation,
+  ToolOperationSchema,
+} from '../contracts/schemas/toolSchemas'
+import { Storage } from '../storage/Storage'
 
 export type { HookData }
 

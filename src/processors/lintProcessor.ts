@@ -1,4 +1,5 @@
-import type { LintData, ProcessedLintData } from '@tdd-guard/contracts'
+import { ProcessedLintData } from '../contracts/types/Context'
+import { LintData } from '../contracts/schemas/lintSchemas'
 
 /**
  * Processes lint data into a presentable format for validation context

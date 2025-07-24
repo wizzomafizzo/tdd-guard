@@ -8,7 +8,7 @@ import type {
   LintResult,
   ESLintMessage,
   ESLintResult,
-} from '@tdd-guard/contracts'
+} from '../../../src/contracts/schemas/lintSchemas'
 import { omit } from './helpers'
 
 /**

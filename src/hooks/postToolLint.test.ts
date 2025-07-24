@@ -1,9 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { handlePostToolLint, PostToolLintHandler, DEFAULT_RESULT } from './postToolLint'
 import { testData } from '@testUtils'
-import { MemoryStorage } from '@tdd-guard/storage'
 import { Linter } from '../linters/Linter'
-import { LintData, LintResult, HookData, ValidationResult, TestResult } from '@tdd-guard/contracts'
+import { MemoryStorage } from '../storage/MemoryStorage'
+import { LintData, LintResult } from '../contracts/schemas/lintSchemas'
+import { HookData } from '../contracts/schemas/toolSchemas'
+import { TestResult } from '../contracts/schemas/reporterSchemas'
+import { ValidationResult } from '../contracts/types/ValidationResult'
 
 describe('postToolLint', () => {
   describe('PostToolLintHandler', () => {

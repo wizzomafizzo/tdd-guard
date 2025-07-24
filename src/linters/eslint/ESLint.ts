@@ -3,7 +3,7 @@ import {
   LintIssue,
   ESLintResult,
   ESLintMessage,
-} from '@tdd-guard/contracts'
+} from '../../contracts/schemas/lintSchemas'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { Linter } from '../Linter'

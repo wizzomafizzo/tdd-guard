@@ -1,5 +1,6 @@
-import { Storage } from '@tdd-guard/storage'
-import { Context, LintDataSchema } from '@tdd-guard/contracts'
+import { Storage } from '../storage/Storage'
+import { LintDataSchema } from '../contracts/schemas/lintSchemas'
+import { Context } from '../contracts/types/Context'
 import { processLintData } from '../processors/lintProcessor'
 
 export async function buildContext(

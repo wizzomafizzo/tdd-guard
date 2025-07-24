@@ -12,11 +12,5 @@
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
     "test"
-  ],
-  "references": [
-    { "path": "./packages/contracts" },
-    { "path": "./packages/config" },
-    { "path": "./packages/storage" },
-    { "path": "./reporters/vitest" }
   ]
 }

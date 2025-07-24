@@ -1,8 +1,8 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { ClaudeCli } from './ClaudeCli'
-import { Config } from '@tdd-guard/config'
 import { execFileSync } from 'child_process'
 import * as fs from 'fs'
+import { Config } from '../../config/Config'
 
 vi.mock('child_process')
 vi.mock('fs', { spy: true })

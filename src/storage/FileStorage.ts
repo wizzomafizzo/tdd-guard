@@ -1,5 +1,5 @@
 import { Storage } from './Storage'
-import { Config } from '@tdd-guard/config'
+import { Config } from '../config/Config'
 import fs from 'fs/promises'
 
 export class FileStorage implements Storage {

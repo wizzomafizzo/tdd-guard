@@ -1,5 +1,7 @@
+import { ValidationResult } from '../contracts/types/ValidationResult'
+import { Context } from '../contracts/types/Context'
+import { IModelClient } from '../contracts/types/ModelClient'
 import { ClaudeCli } from './models/ClaudeCli'
-import { IModelClient, ValidationResult, Context } from '@tdd-guard/contracts'
 import { generateDynamicContext } from './context/context'
 
 interface ModelResponseJson {

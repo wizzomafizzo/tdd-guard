@@ -1,20 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import type { TestModule, TestCase } from 'vitest/node'
 import { VitestReporter } from './VitestReporter'
-import { MemoryStorage, FileStorage, Storage } from '@tdd-guard/storage'
-import { Config } from '@tdd-guard/config'
+import { MemoryStorage, FileStorage, Storage, Config } from 'tdd-guard'
 import {
   testModule,
   passedTestCase,
   failedTestCase,
   createUnhandledError,
 } from './VitestReporter.test-data'
-import {
-  isFailingTest,
-  isPassingTest,
-  TestResult,
-  Test,
-} from '@tdd-guard/contracts'
+import { isFailingTest, isPassingTest, TestResult, Test } from 'tdd-guard'
 import { rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

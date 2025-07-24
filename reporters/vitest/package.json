@@ -20,14 +20,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tdd-guard/storage": "*"
+    "tdd-guard": "*"
   },
   "peerDependencies": {
     "vitest": ">=3.0.0"
   },
   "devDependencies": {
-    "@tdd-guard/config": "*",
-    "@tdd-guard/contracts": "*",
     "@types/node": "^24.0.10",
     "typescript": "^5.2.2",
     "vitest": "^3.2.2"

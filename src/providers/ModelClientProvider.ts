@@ -1,5 +1,5 @@
-import { IModelClient } from '@tdd-guard/contracts'
-import { Config } from '@tdd-guard/config'
+import { IModelClient } from '../contracts/types/ModelClient'
+import { Config } from '../config/Config'
 import { ClaudeCli } from '../validation/models/ClaudeCli'
 import { AnthropicApi } from '../validation/models/AnthropicApi'
 

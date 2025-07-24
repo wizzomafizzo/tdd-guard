@@ -2,7 +2,11 @@
  * Factory functions for creating Todo, TodoWrite, and TodoWriteOperation test data
  */
 
-import type { Todo, TodoWrite, TodoWriteOperation } from '@tdd-guard/contracts'
+import type {
+  Todo,
+  TodoWrite,
+  TodoWriteOperation,
+} from '../../../src/contracts/schemas/toolSchemas'
 import { hookDataDefaults, omit } from './helpers'
 import { TEST_DEFAULTS } from './testDefaults'
 

@@ -1,14 +1,14 @@
 import { describe, test } from 'vitest'
 import { validator } from '../../src/validation/validator'
-import { Config } from '@tdd-guard/config'
+import { Config } from '../../src/config/Config'
 import { ModelClientProvider } from '../../src/providers/ModelClientProvider'
 import { testData } from '@testUtils'
 import { TestData } from '../utils/factories/scenarios/types'
+import { Context } from '../../src/contracts/types/Context'
 import {
-  Context,
+  Todo,
   FileModificationSchema,
-  type Todo,
-} from '@tdd-guard/contracts'
+} from '../../src/contracts/schemas/toolSchemas'
 import { expectDecision } from '../utils/factories/scenarios'
 
 const {

@@ -4,7 +4,7 @@ import type {
   TestModule,
   TestResult,
   UnhandledError,
-} from '@tdd-guard/contracts'
+} from '../../../src/contracts/schemas/reporterSchemas'
 import { omit } from './helpers'
 
 // Base builders

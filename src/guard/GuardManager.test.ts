@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { GuardManager } from './GuardManager'
-import { MemoryStorage, FileStorage, Storage } from '@tdd-guard/storage'
+import { Storage } from '../storage/Storage'
+import { MemoryStorage } from '../storage/MemoryStorage'
+import { FileStorage } from '../storage/FileStorage'
 
 describe('GuardManager', () => {
   let storage: Storage

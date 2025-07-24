@@ -1,5 +1,5 @@
+import { Context, ProcessedLintData } from '../../contracts/types/Context'
 import {
-  Context,
   isEditOperation,
   isMultiEditOperation,
   isWriteOperation,
@@ -8,8 +8,7 @@ import {
   MultiEditOperation,
   WriteOperation,
   Todo,
-  ProcessedLintData,
-} from '@tdd-guard/contracts'
+} from '../../contracts/schemas/toolSchemas'
 import { TestResultsProcessor } from '../../processors'
 import { formatLintDataForContext } from '../../processors/lintProcessor'
 import { detectFileType } from '../../hooks/fileTypeDetection'

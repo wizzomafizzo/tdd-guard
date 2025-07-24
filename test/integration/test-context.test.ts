@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { VitestReporter } from 'tdd-guard-vitest'
 import { TestResultsProcessor } from '../../src/processors'
-import { MemoryStorage } from '@tdd-guard/storage'
+import { MemoryStorage } from '../../src/storage/MemoryStorage'
 import { testData } from '../utils'
 
 describe('Test Context', () => {

@@ -2,11 +2,12 @@
 
 import 'dotenv/config'
 import { processHookData } from '../hooks/processHookData'
-import { FileStorage, Storage } from '@tdd-guard/storage'
+import { Storage } from '../storage/Storage'
+import { FileStorage } from '../storage/FileStorage'
 import { validator } from '../validation/validator'
-import { Config } from '@tdd-guard/config'
+import { Config } from '../config/Config'
 import { ModelClientProvider } from '../providers/ModelClientProvider'
-import { ValidationResult } from '@tdd-guard/contracts'
+import { ValidationResult } from '../contracts/types/ValidationResult'
 
 export async function run(
   input: string,

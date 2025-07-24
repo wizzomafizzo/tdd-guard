@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { ESLint } from './ESLint'
 import { join } from 'path'
-import type { LintResult, LintIssue } from '@tdd-guard/contracts'
+import { LintIssue, LintResult } from '../../contracts/schemas/lintSchemas'
 
 describe('ESLint', () => {
   let linter: ESLint

@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { UserPromptHandler } from './userPromptHandler'
 import { GuardManager } from '../guard/GuardManager'
-import { MemoryStorage } from '@tdd-guard/storage'
+import { MemoryStorage } from '../storage/MemoryStorage'
 import { testData } from '@testUtils'
 
 describe('UserPromptHandler', () => {

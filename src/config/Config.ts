@@ -1,5 +1,5 @@
 import path from 'path'
-import { ConfigOptions } from '@tdd-guard/contracts'
+import { ConfigOptions } from '../contracts/types/ConfigOptions'
 
 const TEST_RESULTS_FILENAME = 'test.json'
 const TODOS_FILENAME = 'todos.json'

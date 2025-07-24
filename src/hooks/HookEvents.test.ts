@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { HookEvents } from './HookEvents'
-import { MemoryStorage } from '@tdd-guard/storage'
+import { MemoryStorage } from '../storage/MemoryStorage'
 import { testData } from '@testUtils'
 
 describe('HookEvents', () => {

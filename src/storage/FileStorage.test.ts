@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { FileStorage } from './FileStorage'
-import { Config } from '@tdd-guard/config'
+import { Config } from '../config/config'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'

@@ -1,6 +1,5 @@
 import { Reporter, TestModule, TestCase, TestRunEndReason } from 'vitest/node'
-import { Storage, FileStorage } from '@tdd-guard/storage'
-import { Config } from '@tdd-guard/config'
+import { Storage, FileStorage, Config } from 'tdd-guard'
 import 'dotenv/config'
 
 export class VitestReporter implements Reporter {

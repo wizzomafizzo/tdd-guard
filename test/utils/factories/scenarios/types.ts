@@ -1,5 +1,5 @@
 // Shared types for scenario data structures
-import type { Todo } from '@tdd-guard/contracts'
+import type { Todo } from '../../../../src/contracts/schemas/toolSchemas'
 
 export interface TestData<T = string> {
   description: string

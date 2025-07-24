@@ -1,12 +1,18 @@
-import { ValidationResult, Context, HookDataSchema, HookData, isTodoWriteOperation, ToolOperationSchema, LintDataSchema, TestResultSchema, isTestPassing, PytestResultSchema } from '@tdd-guard/contracts'
-import { Storage, FileStorage } from '@tdd-guard/storage'
 import { buildContext } from '../cli/buildContext'
-import { HookEvents } from './HookEvents'
+import { HookData, HookEvents } from './HookEvents'
 import { PostToolLintHandler } from './postToolLint'
 import { detectFileType } from './fileTypeDetection'
 import { LinterProvider } from '../providers/LinterProvider'
 import { UserPromptHandler } from './userPromptHandler'
 import { GuardManager } from '../guard/GuardManager'
+import { Storage } from '../storage/Storage'
+import { FileStorage } from '../storage/FileStorage'
+import { ValidationResult } from '../contracts/types/ValidationResult'
+import { Context } from '../contracts/types/Context'
+import { HookDataSchema, isTodoWriteOperation, ToolOperationSchema } from '../contracts/schemas/toolSchemas'
+import { PytestResultSchema } from '../contracts/schemas/pytestSchemas'
+import { isTestPassing, TestResultSchema } from '../contracts/schemas/reporterSchemas'
+import { LintDataSchema } from '../contracts/schemas/lintSchemas'
 
 export interface ProcessHookDataDeps {
   storage?: Storage

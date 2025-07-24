@@ -1,5 +1,7 @@
-import { ValidationResult, LintData, LintDataSchema, LintResult, HookDataSchema, HookData  } from '@tdd-guard/contracts'
-import { Storage } from '@tdd-guard/storage'
+import { ValidationResult } from '../contracts/types/ValidationResult'
+import { HookData, HookDataSchema } from '../contracts/schemas/toolSchemas'
+import { LintData, LintDataSchema, LintResult } from '../contracts/schemas/lintSchemas'
+import { Storage } from '../storage/Storage'
 import { Linter } from '../linters/Linter'
 
 export const DEFAULT_RESULT: ValidationResult = {
