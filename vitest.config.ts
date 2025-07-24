@@ -2,13 +2,15 @@ import { defineConfig } from 'vitest/config'
 import { VitestReporter } from '@tdd-guard/vitest'
 import path from 'path'
 
+const root = path.resolve(__dirname)
+
 export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
     testTimeout: 120000,
     pool: 'threads',
-    reporters: ['default', new VitestReporter()],
+    reporters: ['default', new VitestReporter(root)],
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
