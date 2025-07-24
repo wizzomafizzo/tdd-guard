@@ -138,6 +138,42 @@ Ensure your `package.json` has a `test` script:
 }
 ```
 
+#### Workspace/Monorepo Configuration
+
+Projects with workspaces or monorepos require additional configuration to ensure TDD Guard finds test results in the correct location.
+
+**The problem:** When running tests from a workspace package with its own `package.json`, the working directory changes to that package's directory. This causes test results to be written to the workspace's `.claude` directory instead of the root, where TDD Guard expects to find them.
+
+**Solution:**
+
+1. Set Claude Code to maintain the project root directory:
+
+```bash
+# In ~/.zshrc or ~/.bashrc
+export CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR=1
+```
+
+This returns Claude Code to the project root after each command. See [environment variables documentation](https://docs.anthropic.com/en/docs/claude-code/settings#environment-variables) for details.
+
+Remember to restart your terminal or run `source ~/.zshrc` after adding.
+
+2. Configure VitestReporter with the project root path:
+
+```typescript
+// vitest.config.ts in project root
+import { defineConfig } from 'vitest/config'
+import { VitestReporter } from 'tdd-guard'
+import path from 'path'
+
+export default defineConfig({
+  test: {
+    reporters: ['default', new VitestReporter(path.resolve(__dirname))],
+  },
+})
+```
+
+If your vitest config is in a workspace subdirectory, pass the absolute path to your project root instead: `new VitestReporter('/Users/username/projects/my-app')`.
+
 ### Python (pytest)
 
 The TDD Guard pytest plugin is automatically discovered when the package is installed. No additional configuration is needed.

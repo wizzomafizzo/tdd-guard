@@ -85,6 +85,8 @@ export default defineConfig({
 })
 ```
 
+**Note:** Using workspaces or monorepos? See the [workspace configuration guide](docs/configuration.md#workspacemonorepo-configuration) for additional setup steps.
+
 **Python (pytest)**
 
 No configuration needed - the pytest plugin activates automatically when installed.
