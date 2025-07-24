@@ -6,64 +6,59 @@ Accepted
 
 ## Context
 
-TDD Guard needed to support multiple test frameworks across different programming languages. The original architecture had all code in a single package with language-specific reporters mixed together in the src directory.
+TDD Guard originally published a single package to both npm and PyPI, with all test framework reporters mixed together in the src directory. This created several problems:
 
-This presented several challenges:
-
-- **Language mixing** - JavaScript and Python code coexisted in src/reporters
-- **Publishing complexity** - Different package managers (npm, pip) from one codebase
-- **Contribution barriers** - Adding new reporters required understanding the entire codebase
+- **Language mixing** - JavaScript and Python code in the same package
+- **Publishing complexity** - Single codebase published to multiple package registries
+- **Package bloat** - Users installed code for all languages even if using only one
+- **Contribution barriers** - Adding new reporters required navigating the entire codebase
 
 We considered several approaches:
 
 1. **Keep monolithic structure** - Continue with mixed languages in one package
 2. **Separate repositories** - Create individual repos for each reporter
-3. **Monorepo with workspaces** - Use npm workspaces for modular packages
+3. **Monorepo with workspaces** - Keep one repo but separate packages
 
 ## Decision
 
-We will restructure TDD Guard as a monorepo using npm workspaces, with shared functionality extracted into internal packages and language-specific reporters in dedicated directories.
+We will restructure TDD Guard as a monorepo using npm workspaces, with each reporter as a separate package.
 
-The implementation follows this structure:
+The new structure:
 
 ```
-packages/                    # Internal npm workspace packages
-├── @tdd-guard/contracts    # Types and validation schemas
-├── @tdd-guard/config       # Configuration management
-└── @tdd-guard/storage      # Storage abstractions
+tdd-guard/                  # Main CLI package (npm)
+├── src/                    # Core functionality and shared code
+└── package.json
 
-reporters/                   # Language-specific test reporters
-├── vitest/                 # tdd-guard-vitest (npm)
-└── pytest/                 # tdd-guard-pytest (pip)
-
-src/                        # Main CLI application
+reporters/
+├── vitest/                 # tdd-guard-vitest package (npm)
+│   └── package.json
+└── pytest/                 # tdd-guard-pytest package (PyPI)
+    └── pyproject.toml
 ```
 
-Key architectural decisions:
+Implementation details:
 
-- **Internal packages use scoped names** (@tdd-guard/\*) with `"private": true`
-- **Public packages use flat names** (tdd-guard, tdd-guard-vitest, tdd-guard-pytest)
-- **Reporters are self-contained** with their own tests and build systems
-- **TypeScript composite builds** for faster incremental compilation
-- **Clear dependency hierarchy** - reporters depend on packages, not vice versa
+- Main package exports shared functionality (Storage, Config, contracts)
+- Each reporter is a standalone package with its own version
+- Vitest reporter imports shared code from 'tdd-guard' package
+- Python reporter is self-contained (no JavaScript dependencies)
 
 ## Consequences
 
 ### Positive
 
-- **Language isolation** - Each reporter is contained in its own directory with appropriate tooling
-- **Independent versioning** - Reporters can be released separately
-- **Cleaner dependencies** - JavaScript packages don't include Python files
-- **Easier contributions** - Add reporters without understanding core logic
+- **Clean separation** - Each language has its own package and tooling
+- **Smaller packages** - Users only install what they need
+- **Independent releases** - Can update reporters without touching others
+- **Easier contributions** - Clear boundaries for adding new reporters
 
 ### Negative
 
-- **Increased complexity** - Multiple package.json files to maintain
-- **Build orchestration** - Must build workspaces in correct order
-- **Initial setup burden** - Contributors need to understand workspace structure
-- **Documentation overhead** - Multiple README files and install instructions
+- **Multiple packages to maintain** - More release overhead
+- **Build complexity** - Must ensure correct build order during development
 
 ### Neutral
 
-- Users must install reporters separately from the CLI tool
-- Internal packages remain in the repository but aren't published
+- Users now install two packages (CLI + reporter) instead of one
+- Each package has its own documentation and version number
