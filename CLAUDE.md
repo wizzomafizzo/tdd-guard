@@ -15,14 +15,6 @@ This automated enforcement maintains code quality without cluttering prompts wit
 
 ## Development Workflow
 
-### TDD Process
-
-1. **Start with behavior**: Define what the system should do, not how
-2. **Write failing test**: Create test that describes desired behavior
-3. **Minimal implementation**: Write just enough code to pass the test
-4. **Refactor if valuable**: Improve code structure while keeping tests green
-5. **Iterate**: Repeat cycle for next behavior
-
 ### Pre-commit Hooks
 
 The project uses husky and lint-staged to ensure code quality before commits:
