@@ -18,6 +18,7 @@ import {
 import { rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import path from 'node:path'
 
 describe('VitestReporter', () => {
   let sut: Awaited<ReturnType<typeof setupVitestReporter>>
@@ -67,7 +68,11 @@ describe('VitestReporter', () => {
     // Verify the storage is configured with the correct path
     const fileStorage = reporter['storage'] as FileStorage
     const config = fileStorage['config'] as Config
-    expect(config.dataDir).toBe('/some/project/root/.claude/tdd-guard/data')
+    const expectedDataDir = path.join(
+      rootPath,
+      ...Config.DEFAULT_DATA_DIR.split('/')
+    )
+    expect(config.dataDir).toBe(expectedDataDir)
   })
 
   describe('when collecting test data', () => {
@@ -240,13 +245,13 @@ function isTestCase(item: TestModule | TestCase): item is TestCase {
 
 function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
   // Test directory setup for FileStorage tests
-  let testDir: string | undefined
+  let projectRoot: string | undefined
 
   // Create storage based on options
   let storage: Storage
   if (options?.type === 'file') {
-    testDir = mkdtempSync(join(tmpdir(), 'vitest-reporter-test-'))
-    const config = new Config({ dataDir: testDir })
+    projectRoot = mkdtempSync(join(tmpdir(), 'vitest-reporter-test-'))
+    const config = new Config({ projectRoot })
     storage = new FileStorage(config)
   } else {
     storage = new MemoryStorage()
@@ -293,8 +298,8 @@ function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
 
   // Cleanup function
   const cleanup = (): void => {
-    if (testDir) {
-      rmSync(testDir, { recursive: true, force: true })
+    if (projectRoot) {
+      rmSync(projectRoot, { recursive: true, force: true })
     }
   }
 

@@ -8,6 +8,8 @@ const LINT_FILENAME = 'lint.json'
 const CONFIG_FILENAME = 'config.json'
 
 export class Config {
+  static readonly DEFAULT_DATA_DIR = '.claude/tdd-guard/data' as const
+
   readonly dataDir: string
   readonly useSystemClaude: boolean
   readonly anthropicApiKey: string | undefined
@@ -25,18 +27,16 @@ export class Config {
   }
 
   private getDataDir(options?: ConfigOptions): string {
-    // If dataDir is explicitly provided, use it
-    if (options?.dataDir) {
-      return options.dataDir
-    }
-
     // If projectRoot is provided, construct dataDir from it
     if (options?.projectRoot) {
-      return path.join(options.projectRoot, '.claude', 'tdd-guard', 'data')
+      return path.join(
+        options.projectRoot,
+        ...Config.DEFAULT_DATA_DIR.split('/')
+      )
     }
 
     // Default to relative path
-    return '.claude/tdd-guard/data'
+    return Config.DEFAULT_DATA_DIR
   }
 
   private getUseSystemClaude(options?: ConfigOptions): boolean {

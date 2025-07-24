@@ -6,18 +6,18 @@ import path from 'path'
 import os from 'os'
 
 describe('FileStorage', () => {
-  let tempDir: string
+  let projectRoot: string
   let config: Config
   let storage: FileStorage
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'filestorage-test-'))
-    config = new Config({ dataDir: tempDir })
+    projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'filestorage-test-'))
+    config = new Config({ projectRoot })
     storage = new FileStorage(config)
   })
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true })
+    await fs.rm(projectRoot, { recursive: true, force: true })
   })
 
   describe('constructor', () => {
@@ -36,8 +36,12 @@ describe('FileStorage', () => {
   })
 
   it('creates directory if it does not exist', async () => {
-    const nonExistentPath = path.join(tempDir, 'new-directory')
-    const customConfig = new Config({ dataDir: nonExistentPath })
+    const newProjectRoot = path.join(projectRoot, 'new-project')
+    const nonExistentPath = path.join(
+      newProjectRoot,
+      ...Config.DEFAULT_DATA_DIR.split('/')
+    )
+    const customConfig = new Config({ projectRoot: newProjectRoot })
     const customStorage = new FileStorage(customConfig)
 
     await expect(fs.access(nonExistentPath)).rejects.toThrow()

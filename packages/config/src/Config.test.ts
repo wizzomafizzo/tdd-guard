@@ -3,7 +3,6 @@ import { Config } from './Config'
 
 describe('Config', () => {
   const originalEnv = process.env
-  const customDataDir = '/custom/data/dir'
 
   beforeEach(() => {
     process.env = { ...originalEnv }
@@ -14,49 +13,43 @@ describe('Config', () => {
   })
 
   describe('dataDir', () => {
+    const projectRoot = '/test/project'
+    const projectDataDir = `${projectRoot}/${Config.DEFAULT_DATA_DIR}`
     let config: Config
 
     beforeEach(() => {
-      config = new Config({ dataDir: customDataDir })
+      config = new Config({ projectRoot })
     })
 
-    test('accepts custom dataDir in options', () => {
-      expect(config.dataDir).toBe(customDataDir)
-    })
-
-    test('defaults to .claude/tdd-guard/data when not provided', () => {
+    test('defaults to relative path when no projectRoot provided', () => {
       const defaultConfig = new Config()
-      expect(defaultConfig.dataDir).toBe('.claude/tdd-guard/data')
+      expect(defaultConfig.dataDir).toBe(Config.DEFAULT_DATA_DIR)
     })
 
-    test('uses projectRoot when provided', () => {
-      const projectRoot = '/my/project/root'
-      const configWithRoot = new Config({ projectRoot })
-      expect(configWithRoot.dataDir).toBe(
-        '/my/project/root/.claude/tdd-guard/data'
-      )
+    test('uses projectRoot to construct absolute dataDir', () => {
+      expect(config.dataDir).toBe(projectDataDir)
     })
 
     test('testResultsFilePath returns test.json path within dataDir', () => {
-      expect(config.testResultsFilePath).toBe(`${customDataDir}/test.json`)
+      expect(config.testResultsFilePath).toBe(`${projectDataDir}/test.json`)
     })
 
     test('todosFilePath returns todos.json path within dataDir', () => {
-      expect(config.todosFilePath).toBe(`${customDataDir}/todos.json`)
+      expect(config.todosFilePath).toBe(`${projectDataDir}/todos.json`)
     })
 
     test('modificationsFilePath returns modifications.json path within dataDir', () => {
       expect(config.modificationsFilePath).toBe(
-        `${customDataDir}/modifications.json`
+        `${projectDataDir}/modifications.json`
       )
     })
 
     test('lintFilePath returns lint.json path within dataDir', () => {
-      expect(config.lintFilePath).toBe(`${customDataDir}/lint.json`)
+      expect(config.lintFilePath).toBe(`${projectDataDir}/lint.json`)
     })
 
     test('configFilePath returns config.json path within dataDir', () => {
-      expect(config.configFilePath).toBe(`${customDataDir}/config.json`)
+      expect(config.configFilePath).toBe(`${projectDataDir}/config.json`)
     })
   })
 

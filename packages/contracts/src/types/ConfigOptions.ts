@@ -1,6 +1,5 @@
 export type ConfigOptions = {
   mode?: 'production' | 'test'
-  dataDir?: string
   projectRoot?: string
   useSystemClaude?: boolean
   anthropicApiKey?: string

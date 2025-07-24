@@ -149,13 +149,13 @@ function getStorageImplementations(): Array<
         storage: Storage
         cleanup?: () => Promise<void>
       }> => {
-        const tempDir = await fs.mkdtemp(
+        const projectRoot = await fs.mkdtemp(
           path.join(os.tmpdir(), 'storage-test-')
         )
         return {
-          storage: new FileStorage(new Config({ dataDir: tempDir })),
+          storage: new FileStorage(new Config({ projectRoot })),
           cleanup: async (): Promise<void> => {
-            await fs.rm(tempDir, { recursive: true, force: true })
+            await fs.rm(projectRoot, { recursive: true, force: true })
           },
         }
       },

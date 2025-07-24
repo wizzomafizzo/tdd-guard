@@ -38,8 +38,7 @@ describe('tdd-guard CLI', () => {
   })
 
   describe('Data Persistence', () => {
-    let tempDir: string
-    let storagePath: string
+    let projectRoot: string
     let storage: FileStorage
     let testConfig: Config
     let modelProvider: ModelClientProvider
@@ -47,23 +46,22 @@ describe('tdd-guard CLI', () => {
 
     beforeEach(async () => {
       process.env = { ...originalEnv }
-      tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tdd-guard-test-'))
-      storagePath = path.join(tempDir, 'custom-storage')
-      testConfig = new Config({ dataDir: storagePath })
+      projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'tdd-guard-test-'))
+      testConfig = new Config({ projectRoot })
       storage = new FileStorage(testConfig)
       modelProvider = testData.modelClientProvider()
     })
 
     afterEach(async () => {
       process.env = originalEnv
-      await fs.rm(tempDir, { recursive: true, force: true })
+      await fs.rm(projectRoot, { recursive: true, force: true })
     })
 
-    test('uses custom dataDir from Config', async () => {
+    test('uses projectRoot from Config', async () => {
       const hookData = testData.editOperation()
       await run(JSON.stringify(hookData), testConfig, storage, modelProvider)
 
-      expect(await pathExists(storagePath)).toBe(true)
+      expect(await pathExists(testConfig.dataDir)).toBe(true)
     })
 
     test('saves Edit data', async () => {

@@ -1,7 +1,6 @@
 import { Reporter, TestModule, TestCase, TestRunEndReason } from 'vitest/node'
 import { Storage, FileStorage } from '@tdd-guard/storage'
 import { Config } from '@tdd-guard/config'
-import path from 'path'
 import 'dotenv/config'
 
 export class VitestReporter implements Reporter {
@@ -17,8 +16,7 @@ export class VitestReporter implements Reporter {
 
   constructor(storageOrRoot?: Storage | string) {
     if (typeof storageOrRoot === 'string') {
-      const dataDir = path.join(storageOrRoot, '.claude', 'tdd-guard', 'data')
-      const config = new Config({ dataDir })
+      const config = new Config({ projectRoot: storageOrRoot })
       this.storage = new FileStorage(config)
     } else {
       this.storage = storageOrRoot ?? new FileStorage()
