@@ -35,57 +35,28 @@ TDD Guard monitors file operations in real-time and blocks any changes that viol
   - JavaScript/TypeScript: Vitest
   - Python: pytest
 
-## Installation
+## Quick Start
 
-Install the TDD Guard CLI globally:
+### 1. Install TDD Guard
 
 ```bash
 npm install -g tdd-guard
 ```
 
-### Language-Specific Reporters
+### 2. Set Up Test Reporter
 
-**JavaScript/TypeScript (Vitest)**
+TDD Guard needs to capture test results from your test runner. Choose your language below:
 
-In your project, install the Vitest reporter:
+<details>
+<summary><b>JavaScript/TypeScript (Vitest)</b></summary>
+
+Install the reporter in your project:
 
 ```bash
 npm install --save-dev @tdd-guard/vitest
 ```
 
-**Python (pytest)**
-
-Install the pytest reporter:
-
-```bash
-pip install tdd-guard
-```
-
-## Quick Start
-
-Getting started is quick and simple:
-
-### 1. Configure Claude Code Hook
-
-Use the `/hooks` command in Claude Code:
-
-1. Type `/hooks` in Claude Code
-2. Select `PreToolUse - Before tool execution`
-3. Choose `+ Add new matcher...`
-4. Enter: `Write|Edit|MultiEdit|TodoWrite`
-5. Select `+ Add new hook...`
-6. Enter command: `tdd-guard`
-7. Choose where to save (Project settings recommended)
-
-**Tip:** Also configure [quick commands](docs/quick-commands.md) for `tdd-guard on/off` and [ESLint integration](docs/linting.md) for automated refactoring support.
-
-### 2. Configure Test Reporter
-
-TDD Guard captures test results from your test runner. Ensure your `package.json` or project scripts use the correct test command.
-
-**JavaScript/TypeScript (Vitest)**
-
-Add to `vitest.config.ts`:
+Add to your `vitest.config.ts`:
 
 ```typescript
 import { VitestReporter } from '@tdd-guard/vitest'
@@ -99,9 +70,34 @@ export default defineConfig({
 
 **Note:** Using workspaces or monorepos? See the [workspace configuration guide](docs/configuration.md#workspacemonorepo-configuration) for additional setup steps.
 
-**Python (pytest)**
+</details>
+
+<details>
+<summary><b>Python (pytest)</b></summary>
+
+Install the reporter:
+
+```bash
+pip install tdd-guard
+```
 
 No configuration needed - the pytest plugin activates automatically when installed.
+
+</details>
+
+### 3. Configure Claude Code Hook
+
+Use the `/hooks` command in Claude Code:
+
+1. Type `/hooks` in Claude Code
+2. Select `PreToolUse - Before tool execution`
+3. Choose `+ Add new matcher...`
+4. Enter: `Write|Edit|MultiEdit|TodoWrite`
+5. Select `+ Add new hook...`
+6. Enter command: `tdd-guard`
+7. Choose where to save (Project settings recommended)
+
+**Tip:** Also configure [quick commands](docs/quick-commands.md) for `tdd-guard on/off` and [ESLint integration](docs/linting.md) for automated refactoring support.
 
 ## Security Notice
 
