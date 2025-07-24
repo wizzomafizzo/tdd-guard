@@ -78,7 +78,7 @@ export default defineConfig({
 Install the reporter:
 
 ```bash
-pip install tdd-guard
+pip install tdd-guard-pytest
 ```
 
 No configuration needed - the pytest plugin activates automatically when installed.

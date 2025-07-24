@@ -269,15 +269,18 @@ To update to the latest version:
 # Update CLI tool
 npm update -g tdd-guard
 
-# For Python projects, also update the pytest reporter
-pip install --upgrade tdd-guard
+# For JavaScript/TypeScript projects, update the Vitest reporter in your project
+npm update @tdd-guard/vitest
+
+# For Python projects, update the pytest reporter
+pip install --upgrade tdd-guard-pytest
 ```
 
 Check your current version:
 
 ```bash
 npm list -g tdd-guard
-pip show tdd-guard
+pip show tdd-guard-pytest
 ```
 
 ## Advanced Configuration
