@@ -1,6 +1,7 @@
 {
   "name": "@tdd-guard/config",
   "version": "0.1.0",
+  "private": true,
   "description": "Configuration management for TDD Guard",
   "author": "Nizar Selander",
   "license": "MIT",

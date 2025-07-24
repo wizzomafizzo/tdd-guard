@@ -1,6 +1,7 @@
 {
   "name": "@tdd-guard/storage",
   "version": "0.1.0",
+  "private": true,
   "description": "Storage abstraction and implementations for TDD Guard",
   "author": "Nizar Selander",
   "license": "MIT",
