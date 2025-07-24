@@ -60,6 +60,16 @@ describe('VitestReporter', () => {
     expect(reporter['storage']).toBe(storage)
   })
 
+  it('accepts root path string in constructor', () => {
+    const rootPath = '/some/project/root'
+    const reporter = new VitestReporter(rootPath)
+    expect(reporter['storage']).toBeInstanceOf(FileStorage)
+    // Verify the storage is configured with the correct path
+    const fileStorage = reporter['storage'] as FileStorage
+    const config = fileStorage['config'] as Config
+    expect(config.dataDir).toBe('/some/project/root/.claude/tdd-guard/data')
+  })
+
   describe('when collecting test data', () => {
     beforeEach(async () => {
       sut.reporter.onTestModuleCollected(module)
