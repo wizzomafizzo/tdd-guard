@@ -34,23 +34,30 @@ Example: `feat: add network request filtering to reduce noise in captured data` 
 
 ## Project Structure
 
-The codebase follows a clean, modular architecture organized by domain and responsibility:
+The codebase is organized as a monorepo using npm workspaces, with modular packages and language-specific reporters:
 
 ```
-src/
+packages/                         # Core functionality as npm workspaces
+├── contracts/                    # @tdd-guard/contracts - Types and Zod schemas
+├── config/                       # @tdd-guard/config - Configuration management
+└── storage/                      # @tdd-guard/storage - Storage abstractions
+
+reporters/                        # Language-specific test reporters
+├── vitest/                       # @tdd-guard/vitest - Vitest reporter (npm)
+└── pytest/                       # tdd-guard-pytest - Pytest reporter (pip)
+
+src/                              # Main CLI application
 ├── cli/                          # Hook entry point and context builder
-├── config/                       # Environment and runtime configuration
-├── contracts/                    # Types and Zod validation schemas
+├── guard/                        # Guard enable/disable management
 ├── hooks/                        # Claude Code hook parsing and processing
-├── providers/                    # Model client factory based on config
-├── processors/                   # Test result processing and formatting
+├── linters/                      # ESLint integration for code quality
+├── processors/                   # Test result and lint processing
+├── providers/                    # Model and linter client factories
 ├── validation/                   # TDD principle validation
 │   ├── validator.ts              # Sends context to AI model and parses response
 │   ├── context/                  # Formats operations for AI validation
 │   ├── prompts/                  # TDD validation rules and AI instructions
 │   └── models/                   # Claude CLI and Anthropic API clients
-├── storage/                      # File and memory storage implementations
-├── reporters/                    # Vitest reporter for test result capture
 └── index.ts                      # Package entry point
 
 test/
@@ -61,6 +68,16 @@ docs/
 ├── adr/                          # Architecture Decision Records
 └── CONFIGURATION.md              # Detailed configuration guide
 ```
+
+### Monorepo Architecture
+
+TDD Guard uses npm workspaces to separate concerns:
+
+- **packages/**: Core functionality (@tdd-guard/contracts, config, storage)
+- **reporters/**: Language-specific test reporters (vitest, pytest)
+- **src/**: Main CLI application
+
+Dependencies between workspaces are managed automatically.
 
 ### Testing
 
@@ -74,6 +91,7 @@ docs/
 #### Commands
 
 ```bash
+npm run build             # Build all workspaces and main package
 npm run test              # All unit tests and base integration tests
 npm run test:unit         # Fast unit tests only
 npm run test:integration  # Slow integration tests (run after major prompt changes)
