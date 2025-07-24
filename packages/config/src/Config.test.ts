@@ -29,6 +29,14 @@ describe('Config', () => {
       expect(defaultConfig.dataDir).toBe('.claude/tdd-guard/data')
     })
 
+    test('uses projectRoot when provided', () => {
+      const projectRoot = '/my/project/root'
+      const configWithRoot = new Config({ projectRoot })
+      expect(configWithRoot.dataDir).toBe(
+        '/my/project/root/.claude/tdd-guard/data'
+      )
+    })
+
     test('testResultsFilePath returns test.json path within dataDir', () => {
       expect(config.testResultsFilePath).toBe(`${customDataDir}/test.json`)
     })

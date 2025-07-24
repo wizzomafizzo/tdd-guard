@@ -25,7 +25,18 @@ export class Config {
   }
 
   private getDataDir(options?: ConfigOptions): string {
-    return options?.dataDir ?? '.claude/tdd-guard/data'
+    // If dataDir is explicitly provided, use it
+    if (options?.dataDir) {
+      return options.dataDir
+    }
+
+    // If projectRoot is provided, construct dataDir from it
+    if (options?.projectRoot) {
+      return path.join(options.projectRoot, '.claude', 'tdd-guard', 'data')
+    }
+
+    // Default to relative path
+    return '.claude/tdd-guard/data'
   }
 
   private getUseSystemClaude(options?: ConfigOptions): boolean {
