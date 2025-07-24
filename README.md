@@ -43,7 +43,19 @@ Install the TDD Guard CLI globally:
 npm install -g tdd-guard
 ```
 
-For Python projects, also install the pytest reporter:
+### Language-Specific Reporters
+
+**JavaScript/TypeScript (Vitest)**
+
+In your project, install the Vitest reporter:
+
+```bash
+npm install --save-dev @tdd-guard/vitest
+```
+
+**Python (pytest)**
+
+Install the pytest reporter:
 
 ```bash
 pip install tdd-guard
@@ -76,7 +88,7 @@ TDD Guard captures test results from your test runner. Ensure your `package.json
 Add to `vitest.config.ts`:
 
 ```typescript
-import { VitestReporter } from 'tdd-guard'
+import { VitestReporter } from '@tdd-guard/vitest'
 
 export default defineConfig({
   test: {
