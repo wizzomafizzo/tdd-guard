@@ -53,13 +53,13 @@ TDD Guard needs to capture test results from your test runner. Choose your langu
 Install the reporter in your project:
 
 ```bash
-npm install --save-dev @tdd-guard/vitest
+npm install --save-dev tdd-guard-vitest
 ```
 
 Add to your `vitest.config.ts`:
 
 ```typescript
-import { VitestReporter } from '@tdd-guard/vitest'
+import { VitestReporter } from 'tdd-guard-vitest'
 
 export default defineConfig({
   test: {

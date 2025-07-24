@@ -112,14 +112,14 @@ Add to `.claude/settings.json`:
 First, ensure Vitest is installed in your project:
 
 ```bash
-npm install --save-dev @tdd-guard/vitest
+npm install --save-dev tdd-guard-vitest
 ```
 
 Then configure it in `vitest.config.ts`:
 
 ```typescript
 import { defineConfig } from 'vitest/config'
-import { VitestReporter } from '@tdd-guard/vitest'
+import { VitestReporter } from 'tdd-guard-vitest'
 
 export default defineConfig({
   test: {
@@ -162,7 +162,7 @@ Remember to restart your terminal or run `source ~/.zshrc` after adding.
 ```typescript
 // vitest.config.ts in project root
 import { defineConfig } from 'vitest/config'
-import { VitestReporter } from '@tdd-guard/vitest'
+import { VitestReporter } from 'tdd-guard-vitest'
 import path from 'path'
 
 export default defineConfig({
@@ -270,7 +270,7 @@ To update to the latest version:
 npm update -g tdd-guard
 
 # For JavaScript/TypeScript projects, update the Vitest reporter in your project
-npm update @tdd-guard/vitest
+npm update tdd-guard-vitest
 
 # For Python projects, update the pytest reporter
 pip install --upgrade tdd-guard-pytest

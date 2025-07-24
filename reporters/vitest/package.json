@@ -1,5 +1,5 @@
 {
-  "name": "@tdd-guard/vitest",
+  "name": "tdd-guard-vitest",
   "version": "0.1.0",
   "description": "Vitest reporter for TDD Guard",
   "author": "Nizar Selander",

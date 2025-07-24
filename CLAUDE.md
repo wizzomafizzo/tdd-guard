@@ -43,7 +43,7 @@ packages/                         # Core functionality as npm workspaces
 └── storage/                      # @tdd-guard/storage - Storage abstractions
 
 reporters/                        # Language-specific test reporters
-├── vitest/                       # @tdd-guard/vitest - Vitest reporter (npm)
+├── vitest/                       # tdd-guard-vitest - Vitest reporter (npm)
 └── pytest/                       # tdd-guard-pytest - Pytest reporter (pip)
 
 src/                              # Main CLI application

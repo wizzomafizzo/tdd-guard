@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config'
-import { VitestReporter } from '@tdd-guard/vitest'
+import { VitestReporter } from 'tdd-guard-vitest'
 import path from 'path'
 
 const root = path.resolve(__dirname)

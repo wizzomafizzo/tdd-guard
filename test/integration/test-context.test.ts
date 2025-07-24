@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from 'vitest'
-import { VitestReporter } from '@tdd-guard/vitest'
+import { VitestReporter } from 'tdd-guard-vitest'
 import { TestResultsProcessor } from '../../src/processors'
 import { MemoryStorage } from '@tdd-guard/storage'
 import { testData } from '../utils'
