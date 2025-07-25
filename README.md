@@ -49,7 +49,7 @@ TDD Guard needs to capture test results from your test runner. Choose your langu
 <details>
 <summary><b>JavaScript/TypeScript (Vitest)</b></summary>
 
-Install the reporter in your project:
+Install the [tdd-guard-vitest](https://www.npmjs.com/package/tdd-guard-vitest) reporter in your project:
 
 ```bash
 npm install --save-dev tdd-guard-vitest
@@ -74,7 +74,7 @@ export default defineConfig({
 <details>
 <summary><b>Python (pytest)</b></summary>
 
-Install the reporter:
+Install the [tdd-guard-pytest](https://pypi.org/project/tdd-guard-pytest) reporter:
 
 ```bash
 pip install tdd-guard-pytest
