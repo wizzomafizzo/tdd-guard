@@ -130,6 +130,7 @@ export default [
       'coverage/**',
       'test/artifacts/**',
       '.venv/**',
+      'reporters/pytest/**',
       '**/*.d.ts',
       '**/*.tsbuildinfo',
     ],
