@@ -10,13 +10,36 @@ import os
 from pathlib import Path
 
 
+# Default storage directory relative to project root
+DEFAULT_DATA_DIR = Path('.claude/tdd-guard/data')
+
+
 class TDDGuardPytestPlugin:
     """Pytest plugin that captures test results for TDD Guard"""
     
-    def __init__(self):
+    def __init__(self, config=None, cwd=None):
         self.test_results = []
-        # Use same path as Config.dataDir default: .claude/tdd-guard/data
-        self.storage_dir = Path('.claude/tdd-guard/data')
+        
+        # Use injected cwd or default to Path.cwd()
+        current_dir = cwd if cwd is not None else Path.cwd()
+        
+        # Check if config provides a project root
+        if config and hasattr(config, 'getini'):
+            project_root = config.getini('tdd_guard_project_root')
+            if project_root and os.path.isabs(project_root):
+                # Validate that cwd is within project root
+                try:
+                    current_dir.relative_to(Path(project_root))
+                    # Valid: cwd is within project root
+                    self.storage_dir = Path(project_root) / DEFAULT_DATA_DIR
+                except ValueError:
+                    # Invalid: cwd is not within project root, fall back to default
+                    self.storage_dir = DEFAULT_DATA_DIR
+            else:
+                self.storage_dir = Path('.claude/tdd-guard/data')
+        else:
+            # Use same path as Config.dataDir default: .claude/tdd-guard/data
+            self.storage_dir = Path('.claude/tdd-guard/data')
     
     def pytest_collectreport(self, report):
         """Capture collection errors (import failures, etc.)"""
@@ -69,6 +92,21 @@ class TDDGuardPytestPlugin:
         storage_path = self.storage_dir / 'test.json'
         with open(storage_path, 'w') as f:
             json.dump(output, f, indent=2)
+
+
+def pytest_addoption(parser):
+    """Register configuration options"""
+    parser.addini(
+        "tdd_guard_project_root",
+        help="Absolute path to project root for TDD Guard storage",
+        default=""
+    )
+
+
+def pytest_configure(config):
+    """Configure the plugin with pytest config"""
+    global tdd_guard_plugin
+    tdd_guard_plugin = TDDGuardPytestPlugin(config)
 
 
 # Plugin instance

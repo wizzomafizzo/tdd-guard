@@ -2,10 +2,9 @@
 
 import json
 import pytest
-from pathlib import Path
 from unittest.mock import Mock, patch, mock_open
 
-from tdd_guard_pytest.pytest_reporter import TDDGuardPytestPlugin
+from tdd_guard_pytest.pytest_reporter import TDDGuardPytestPlugin, DEFAULT_DATA_DIR
 
 
 class TestTDDGuardPytestPlugin:
@@ -15,7 +14,7 @@ class TestTDDGuardPytestPlugin:
         """Plugin should initialize with empty test results."""
         plugin = TDDGuardPytestPlugin()
         assert plugin.test_results == []
-        assert plugin.storage_dir == Path('.claude/tdd-guard/data')
+        assert plugin.storage_dir == DEFAULT_DATA_DIR
 
     def test_pytest_runtest_logreport_captures_passed_test(self):
         """Should capture passed test results."""
@@ -117,7 +116,7 @@ class TestTDDGuardPytestPlugin:
         mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
         
         # Verify file was opened for writing
-        mock_file.assert_called_once_with(Path('.claude/tdd-guard/data/test.json'), 'w')
+        mock_file.assert_called_once_with(DEFAULT_DATA_DIR / 'test.json', 'w')
         
         # Get the data that was written
         written_data = ''.join(call.args[0] for call in mock_file().write.call_args_list)
