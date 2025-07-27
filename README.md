@@ -67,7 +67,7 @@ export default defineConfig({
 })
 ```
 
-**Note:** Using workspaces or monorepos? See the [workspace configuration guide](docs/configuration.md#workspacemonorepo-configuration) for additional setup steps.
+**Note:** Using workspaces or monorepos? See the [vitest reporter configuration](reporters/vitest/README.md#configuration) for additional setup steps.
 
 </details>
 
@@ -80,7 +80,9 @@ Install the [tdd-guard-pytest](https://pypi.org/project/tdd-guard-pytest) report
 pip install tdd-guard-pytest
 ```
 
-No configuration needed - the pytest plugin activates automatically when installed.
+The pytest plugin activates automatically when installed.
+
+**Note:** Using workspaces or monorepos? See the [pytest reporter configuration](reporters/pytest/README.md#configuration) for additional setup steps.
 
 </details>
 
