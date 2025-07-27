@@ -19,27 +19,40 @@ class TDDGuardPytestPlugin:
     
     def __init__(self, config=None, cwd=None):
         self.test_results = []
-        
-        # Use injected cwd or default to Path.cwd()
+        self.storage_dir = self._determine_storage_dir(config, cwd)
+    
+    def _determine_storage_dir(self, config, cwd):
+        """Determine the storage directory based on config and current working directory."""
         current_dir = cwd if cwd is not None else Path.cwd()
         
-        # Check if config provides a project root
-        if config and hasattr(config, 'getini'):
-            project_root = config.getini('tdd_guard_project_root')
-            if project_root and os.path.isabs(project_root):
-                # Validate that cwd is within project root
-                try:
-                    current_dir.relative_to(Path(project_root))
-                    # Valid: cwd is within project root
-                    self.storage_dir = Path(project_root) / DEFAULT_DATA_DIR
-                except ValueError:
-                    # Invalid: cwd is not within project root, fall back to default
-                    self.storage_dir = DEFAULT_DATA_DIR
-            else:
-                self.storage_dir = Path('.claude/tdd-guard/data')
+        # Try to get project root from config
+        project_root = self._get_project_root_from_config(config)
+        if not project_root:
+            return DEFAULT_DATA_DIR
+        
+        # Validate that it's an absolute path
+        if not os.path.isabs(project_root):
+            return DEFAULT_DATA_DIR
+        
+        # Validate that cwd is within project root
+        if self._is_cwd_within_project_root(current_dir, project_root):
+            return Path(project_root) / DEFAULT_DATA_DIR
         else:
-            # Use same path as Config.dataDir default: .claude/tdd-guard/data
-            self.storage_dir = Path('.claude/tdd-guard/data')
+            return DEFAULT_DATA_DIR
+    
+    def _get_project_root_from_config(self, config):
+        """Extract project root from config if available."""
+        if config and hasattr(config, 'getini'):
+            return config.getini('tdd_guard_project_root')
+        return None
+    
+    def _is_cwd_within_project_root(self, cwd, project_root):
+        """Check if current working directory is within the project root."""
+        try:
+            cwd.relative_to(Path(project_root))
+            return True
+        except ValueError:
+            return False
     
     def pytest_collectreport(self, report):
         """Capture collection errors (import failures, etc.)"""
