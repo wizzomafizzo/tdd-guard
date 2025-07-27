@@ -1,7 +1,6 @@
 """Tests for TDD Guard pytest reporter."""
 
 import json
-import pytest
 from unittest.mock import Mock, patch, mock_open
 
 from tdd_guard_pytest.pytest_reporter import TDDGuardPytestPlugin, DEFAULT_DATA_DIR

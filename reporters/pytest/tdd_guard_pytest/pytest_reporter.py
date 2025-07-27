@@ -8,6 +8,7 @@ No configuration needed - it registers via the pytest11 entry point.
 import json
 import os
 from pathlib import Path
+import pytest
 
 
 # Default storage directory relative to project root
@@ -107,6 +108,10 @@ class TDDGuardPytestPlugin:
             json.dump(output, f, indent=2)
 
 
+# Stash key for storing our plugin instance
+tdd_guard_stash_key = pytest.StashKey[TDDGuardPytestPlugin]()
+
+
 def pytest_addoption(parser):
     """Register configuration options"""
     parser.addini(
@@ -115,17 +120,15 @@ def pytest_addoption(parser):
         default=""
     )
 
-
 def pytest_configure(config):
-    """Configure the plugin with pytest config"""
-    global tdd_guard_plugin
-    tdd_guard_plugin = TDDGuardPytestPlugin(config)
+    """Register and configure the plugin"""
+    plugin = TDDGuardPytestPlugin(config)
+    config.stash[tdd_guard_stash_key] = plugin
+    config.pluginmanager.register(plugin)
 
 
-# Plugin instance
-tdd_guard_plugin = TDDGuardPytestPlugin()
-
-# Pytest hook implementations
-pytest_collectreport = tdd_guard_plugin.pytest_collectreport
-pytest_runtest_logreport = tdd_guard_plugin.pytest_runtest_logreport
-pytest_sessionfinish = tdd_guard_plugin.pytest_sessionfinish
+def pytest_unconfigure(config):
+    """Unregister the plugin"""
+    plugin = config.stash.get(tdd_guard_stash_key, None)
+    if plugin is not None:
+        config.pluginmanager.unregister(plugin)
