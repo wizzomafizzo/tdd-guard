@@ -1,6 +1,6 @@
 [project]
 name = "tdd-guard-pytest"
-version = "0.1.0"
+version = "0.1.1"
 description = "Pytest plugin for TDD Guard - enforces Test-Driven Development principles"
 authors = [{name = "Nizar Selander"}, {name = "Durafen"}]
 license = "MIT"
