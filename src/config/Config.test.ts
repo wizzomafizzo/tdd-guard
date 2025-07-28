@@ -51,6 +51,80 @@ describe('Config', () => {
     test('configFilePath returns config.json path within dataDir', () => {
       expect(config.configFilePath).toBe(`${projectDataDir}/config.json`)
     })
+
+    describe('CLAUDE_PROJECT_DIR', () => {
+      let originalCwd: typeof process.cwd
+
+      beforeEach(() => {
+        originalCwd = process.cwd
+      })
+
+      afterEach(() => {
+        process.cwd = originalCwd
+        delete process.env.CLAUDE_PROJECT_DIR
+      })
+
+      test('uses CLAUDE_PROJECT_DIR when available and no projectRoot provided', () => {
+        const claudeProjectDir = '/claude/project/root'
+        process.env.CLAUDE_PROJECT_DIR = claudeProjectDir
+        process.cwd = () => '/claude/project/root/src'
+
+        const configWithClaudeDir = new Config()
+
+        expect(configWithClaudeDir.dataDir).toBe(
+          `${claudeProjectDir}/${Config.DEFAULT_DATA_DIR}`
+        )
+      })
+
+      test('projectRoot option takes precedence over CLAUDE_PROJECT_DIR', () => {
+        const claudeProjectDir = '/claude/project/root'
+        const explicitProjectRoot = '/explicit/project/root'
+        process.env.CLAUDE_PROJECT_DIR = claudeProjectDir
+
+        const configWithBoth = new Config({ projectRoot: explicitProjectRoot })
+
+        expect(configWithBoth.dataDir).toBe(
+          `${explicitProjectRoot}/${Config.DEFAULT_DATA_DIR}`
+        )
+      })
+
+      test('throws error when CLAUDE_PROJECT_DIR is not an absolute path', () => {
+        process.env.CLAUDE_PROJECT_DIR = 'relative/path'
+
+        expect(() => new Config()).toThrow(
+          'CLAUDE_PROJECT_DIR must be an absolute path'
+        )
+      })
+
+      test('throws error when cwd is outside CLAUDE_PROJECT_DIR', () => {
+        process.env.CLAUDE_PROJECT_DIR = '/project/root'
+        process.cwd = () => '/some/other/path'
+
+        expect(() => new Config()).toThrow(
+          'CLAUDE_PROJECT_DIR must contain the current working directory'
+        )
+      })
+
+      test('uses CLAUDE_PROJECT_DIR when cwd is deeply nested within it', () => {
+        process.env.CLAUDE_PROJECT_DIR = '/project/root'
+        process.cwd = () => '/project/root/src/nested/deeply'
+
+        const configWithNestedCwd = new Config()
+
+        expect(configWithNestedCwd.dataDir).toBe(
+          '/project/root/.claude/tdd-guard/data'
+        )
+      })
+
+      test('throws error when CLAUDE_PROJECT_DIR contains path traversal', () => {
+        process.env.CLAUDE_PROJECT_DIR = '/some/path/../../../other'
+        process.cwd = () => '/other/location'
+
+        expect(() => new Config()).toThrow(
+          'CLAUDE_PROJECT_DIR must not contain path traversal'
+        )
+      })
+    })
   })
 
   describe('useSystemClaude', () => {

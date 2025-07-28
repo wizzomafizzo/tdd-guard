@@ -27,12 +27,12 @@ export class Config {
   }
 
   private getDataDir(options?: ConfigOptions): string {
-    // If projectRoot is provided, construct dataDir from it
-    if (options?.projectRoot) {
-      return path.join(
-        options.projectRoot,
-        ...Config.DEFAULT_DATA_DIR.split('/')
-      )
+    // Determine the base directory
+    const baseDir = options?.projectRoot ?? this.getValidatedClaudeProjectDir()
+
+    // If we have a base directory, construct the full path
+    if (baseDir) {
+      return path.join(baseDir, ...Config.DEFAULT_DATA_DIR.split('/'))
     }
 
     // Default to relative path
@@ -89,5 +89,32 @@ export class Config {
     }
     const envValue = process.env.LINTER_TYPE?.toLowerCase()
     return envValue && envValue.trim() !== '' ? envValue : undefined
+  }
+
+  private getValidatedClaudeProjectDir(): string | null {
+    const projectDir = process.env.CLAUDE_PROJECT_DIR
+    if (!projectDir) {
+      return null
+    }
+
+    // Validate that CLAUDE_PROJECT_DIR is an absolute path
+    if (!path.isAbsolute(projectDir)) {
+      throw new Error('CLAUDE_PROJECT_DIR must be an absolute path')
+    }
+
+    // Validate that CLAUDE_PROJECT_DIR does not contain path traversal
+    if (projectDir.includes('..')) {
+      throw new Error('CLAUDE_PROJECT_DIR must not contain path traversal')
+    }
+
+    // Validate that current working directory is within CLAUDE_PROJECT_DIR
+    const cwd = process.cwd()
+    if (!cwd.startsWith(projectDir)) {
+      throw new Error(
+        'CLAUDE_PROJECT_DIR must contain the current working directory'
+      )
+    }
+
+    return projectDir
   }
 }
