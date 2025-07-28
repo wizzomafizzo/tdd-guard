@@ -58,16 +58,20 @@ npm install --save-dev tdd-guard-vitest
 Add to your `vitest.config.ts`:
 
 ```typescript
+import { defineConfig } from 'vitest/config'
 import { VitestReporter } from 'tdd-guard-vitest'
 
 export default defineConfig({
   test: {
-    reporters: ['default', new VitestReporter()],
+    reporters: [
+      'default',
+      new VitestReporter('/Users/username/projects/my-app'),
+    ],
   },
 })
 ```
 
-**Note:** Using workspaces or monorepos? See the [vitest reporter configuration](reporters/vitest/README.md#configuration) for additional setup steps.
+**Note:** Specify the project root path when your vitest config is not at the project root (e.g., in workspaces or monorepos). This ensures TDD Guard can find the test results. See the [vitest reporter configuration](reporters/vitest/README.md#configuration) for more details.
 
 </details>
 
@@ -80,9 +84,14 @@ Install the [tdd-guard-pytest](https://pypi.org/project/tdd-guard-pytest) report
 pip install tdd-guard-pytest
 ```
 
-The pytest plugin activates automatically when installed.
+Configure the project root in your `pyproject.toml`:
 
-**Note:** Using workspaces or monorepos? See the [pytest reporter configuration](reporters/pytest/README.md#configuration) for additional setup steps.
+```toml
+[tool.pytest.ini_options]
+tdd_guard_project_root = "/Users/username/projects/my-app"
+```
+
+**Note:** Specify the project root path when your tests run from a subdirectory or in a monorepo setup. This ensures TDD Guard can find the test results. See the [pytest reporter configuration](reporters/pytest/README.md#configuration) for alternative configuration methods (pytest.ini, setup.cfg).
 
 </details>
 
