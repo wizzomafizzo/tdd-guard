@@ -1,6 +1,6 @@
 {
   "name": "tdd-guard-vitest",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Vitest reporter for TDD Guard",
   "author": "Nizar Selander",
   "license": "MIT",
