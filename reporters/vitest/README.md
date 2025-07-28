@@ -16,24 +16,6 @@ npm install --save-dev tdd-guard-vitest
 
 ## Configuration
 
-TDD Guard needs consistent test result locations. Two configurations ensure this:
-
-1. **Environment variable** - Keeps Claude Code in the project root
-2. **Vitest config** - Tells the reporter where to save results
-
-### Environment Setup
-
-Set Claude Code to maintain the project root:
-
-```bash
-# In ~/.zshrc or ~/.bashrc
-export CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR=1
-```
-
-This returns Claude Code to the project root after each command. See [environment variables documentation](https://docs.anthropic.com/en/docs/claude-code/settings#environment-variables) for details.
-
-Restart your terminal or run `source ~/.zshrc` after adding.
-
 ### Vitest Configuration
 
 Add the reporter to your `vitest.config.ts`:
