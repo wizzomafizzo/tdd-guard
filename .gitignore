@@ -43,6 +43,9 @@ TODO.md
 # TDD Guard data directory
 .claude/tdd-guard/
 
+# Ignore .claude directories in subdirectories (not at project root)
+**/.claude/
+
 # Python virtual environment
 .venv/
 
@@ -76,6 +79,7 @@ wheels/
 .coverage
 htmlcov/
 .tox/
+reporters/pytest/pytest.ini
 
 # Claude indexer
 .claude-indexer/
