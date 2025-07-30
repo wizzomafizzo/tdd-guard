@@ -264,6 +264,40 @@ describe('processHookData', () => {
     })
   })
 
+  describe('SessionStart handling', () => {
+    let result: ValidationResult
+
+    beforeEach(async () => {
+      // Populate storage with data
+      await sut.populateStorage({
+        test: JSON.stringify(testData.passingTestResults()),
+        todo: JSON.stringify(testData.todoWriteOperation()),
+        modifications: JSON.stringify(testData.editOperation()),
+        lint: JSON.stringify(testData.lintDataWithoutErrors()),
+        config: JSON.stringify({ guardEnabled: true })
+      })
+
+      const sessionStartData = testData.sessionStart()
+      result = await sut.process(sessionStartData)
+    })
+
+    it('should clear transient data when SessionStart event is received', async () => {
+      // Verify transient data is cleared
+      expect(await sut.getTest()).toBeNull()
+      expect(await sut.getTodo()).toBeNull()
+      expect(await sut.getModifications()).toBeNull()
+      expect(await sut.getLint()).toBeNull()
+    })
+
+    it('should preserve config data when SessionStart event is received', async () => {
+      expect(await sut.getConfig()).toBe(JSON.stringify({ guardEnabled: true }))
+    })
+
+    it('should return defaultResult when SessionStart event is processed', () => {
+      expect(result).toEqual(defaultResult)
+    })
+  })
+
   describe('UserPromptHandler integration', () => {
     it('should enable TDD Guard when user sends "tdd-guard on"', async () => {
       const storage = new MemoryStorage()
@@ -357,10 +391,18 @@ function createTestProcessor() {
   }
   
   // Pre-populate storage helper
-  const populateStorage = async (data: { modifications?: string; test?: string; todo?: string }): Promise<void> => {
+  const populateStorage = async (data: { 
+    modifications?: string; 
+    test?: string; 
+    todo?: string;
+    lint?: string;
+    config?: string;
+  }): Promise<void> => {
     if (data.modifications) await storage.saveModifications(data.modifications)
     if (data.test) await storage.saveTest(data.test)
     if (data.todo) await storage.saveTodo(data.todo)
+    if (data.lint) await storage.saveLint(data.lint)
+    if (data.config) await storage.saveConfig(data.config)
   }
   
   return {
@@ -372,6 +414,8 @@ function createTestProcessor() {
     getModifications: (): Promise<string | null> => storage.getModifications(),
     getTest: (): Promise<string | null> => storage.getTest(),
     getTodo: (): Promise<string | null> => storage.getTodo(),
+    getLint: (): Promise<string | null> => storage.getLint(),
+    getConfig: (): Promise<string | null> => storage.getConfig(),
     
     // Validator checks
     validatorHasBeenCalled: (): boolean => mockValidator.mock.calls.length > 0,

@@ -4,6 +4,7 @@ import { PostToolLintHandler } from './postToolLint'
 import { detectFileType } from './fileTypeDetection'
 import { LinterProvider } from '../providers/LinterProvider'
 import { UserPromptHandler } from './userPromptHandler'
+import { SessionHandler } from './sessionHandler'
 import { GuardManager } from '../guard/GuardManager'
 import { Storage } from '../storage/Storage'
 import { FileStorage } from '../storage/FileStorage'
@@ -35,6 +36,13 @@ export async function processHookData(
   const storage = deps.storage ?? new FileStorage()
   const guardManager = new GuardManager(storage)
   const userPromptHandler = deps.userPromptHandler ?? new UserPromptHandler(guardManager)
+  const sessionHandler = new SessionHandler(storage)
+  
+  // Process SessionStart events
+  if (parsedData.hook_event_name === 'SessionStart') {
+    await sessionHandler.processSessionStart(inputData)
+    return defaultResult
+  }
   
   // Process user commands
   const stateResult = await userPromptHandler.processUserCommand(inputData)
