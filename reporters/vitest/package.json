@@ -1,6 +1,6 @@
 {
   "name": "tdd-guard-vitest",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Vitest reporter for TDD Guard",
   "author": "Nizar Selander",
   "license": "MIT",
@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "tdd-guard": "^0.7.0"
+    "tdd-guard": "^0.8.0"
   },
   "peerDependencies": {
     "vitest": ">=3.0.0"
