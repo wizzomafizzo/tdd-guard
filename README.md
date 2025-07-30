@@ -161,7 +161,7 @@ TDD Guard runs with your user permissions and has access to your file system. We
 
 ## Known Limitations
 
-- Not tested with multiple subagents in the same project
+- Not tested with multiple concurrent sessions in the same project
 
 ## Roadmap
 
