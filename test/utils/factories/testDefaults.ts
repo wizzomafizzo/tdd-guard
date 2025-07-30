@@ -82,7 +82,7 @@ export const TEST_DEFAULTS = {
     session_id,
     transcript_path,
     hook_event_name: 'SessionStart',
-    matcher: 'startup' as const,
+    source: 'startup' as const,
   },
   // Context defaults
   modifications: 'Test modifications',

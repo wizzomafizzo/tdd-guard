@@ -18,7 +18,7 @@ export const sessionStart = (params?: Partial<SessionStart>): SessionStart => {
     session_id: base.session_id ?? defaults.session_id,
     transcript_path: base.transcript_path ?? defaults.transcript_path,
     hook_event_name: base.hook_event_name ?? defaults.hook_event_name,
-    matcher: base.matcher ?? defaults.matcher,
+    source: base.source ?? defaults.source,
   }
 }
 

@@ -25,7 +25,7 @@ export type UserPromptSubmit = z.infer<typeof UserPromptSubmitSchema>
 // SessionStart Schema
 export const SessionStartSchema = HookContextSchema.extend({
   hook_event_name: z.literal('SessionStart'),
-  matcher: z.enum(['startup', 'resume', 'clear']),
+  source: z.enum(['startup', 'resume', 'clear']),
 })
 
 export type SessionStart = z.infer<typeof SessionStartSchema>

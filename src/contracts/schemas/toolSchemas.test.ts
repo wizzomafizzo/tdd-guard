@@ -25,23 +25,23 @@ describe('Tool-specific schemas', () => {
   describe('SessionStartSchema', () => {
     test.each([
       {
-        description: 'with startup matcher',
-        data: testData.sessionStart({ matcher: 'startup' }),
+        description: 'with startup source',
+        data: testData.sessionStart({ source: 'startup' }),
         expectedSuccess: true,
       },
       {
-        description: 'with resume matcher',
-        data: testData.sessionStart({ matcher: 'resume' }),
+        description: 'with resume source',
+        data: testData.sessionStart({ source: 'resume' }),
         expectedSuccess: true,
       },
       {
-        description: 'with clear matcher',
-        data: testData.sessionStart({ matcher: 'clear' }),
+        description: 'with clear source',
+        data: testData.sessionStart({ source: 'clear' }),
         expectedSuccess: true,
       },
       {
-        description: 'with invalid matcher',
-        data: { ...testData.sessionStart(), matcher: 'invalid' },
+        description: 'with invalid source',
+        data: { ...testData.sessionStart(), source: 'invalid' },
         expectedSuccess: false,
       },
       {
@@ -50,8 +50,8 @@ describe('Tool-specific schemas', () => {
         expectedSuccess: false,
       },
       {
-        description: 'without matcher',
-        data: testData.sessionStartWithout(['matcher']),
+        description: 'without source',
+        data: testData.sessionStartWithout(['source']),
         expectedSuccess: false,
       },
     ])('$description', ({ data, expectedSuccess }) => {
