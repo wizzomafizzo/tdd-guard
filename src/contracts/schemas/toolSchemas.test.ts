@@ -17,10 +17,48 @@ import {
   isTodoWriteOperation,
   isFileModification,
   UserPromptSubmitSchema,
+  SessionStartSchema,
 } from './toolSchemas'
 import { testData } from '@testUtils'
 
 describe('Tool-specific schemas', () => {
+  describe('SessionStartSchema', () => {
+    test.each([
+      {
+        description: 'with startup matcher',
+        data: testData.sessionStart({ matcher: 'startup' }),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with resume matcher',
+        data: testData.sessionStart({ matcher: 'resume' }),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with clear matcher',
+        data: testData.sessionStart({ matcher: 'clear' }),
+        expectedSuccess: true,
+      },
+      {
+        description: 'with invalid matcher',
+        data: { ...testData.sessionStart(), matcher: 'invalid' },
+        expectedSuccess: false,
+      },
+      {
+        description: 'with wrong hook_event_name',
+        data: { ...testData.sessionStart(), hook_event_name: 'PreToolUse' },
+        expectedSuccess: false,
+      },
+      {
+        description: 'without matcher',
+        data: testData.sessionStartWithout(['matcher']),
+        expectedSuccess: false,
+      },
+    ])('$description', ({ data, expectedSuccess }) => {
+      const result = SessionStartSchema.safeParse(data)
+      expect(result.success).toBe(expectedSuccess)
+    })
+  })
   describe('UserPromptSubmitSchema', () => {
     test.each([
       {

@@ -78,6 +78,12 @@ export const TEST_DEFAULTS = {
     prompt: 'tdd-guard on',
     cwd: '/current/working/directory',
   },
+  sessionStart: {
+    session_id,
+    transcript_path,
+    hook_event_name: 'SessionStart',
+    matcher: 'startup' as const,
+  },
   // Context defaults
   modifications: 'Test modifications',
   test: 'Test results',

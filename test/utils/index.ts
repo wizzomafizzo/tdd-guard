@@ -11,6 +11,7 @@ import * as reporterFactory from './factories/reporterFactory'
 import * as testResultsFactory from './factories/testResultsFactory'
 import * as lintFactory from './factories/lintFactory'
 import * as userPromptSubmitFactory from './factories/userPromptSubmitFactory'
+import * as sessionStartFactory from './factories/sessionStartFactory'
 
 /**
  * Unified test data factory that combines all individual factories
@@ -114,6 +115,10 @@ export const testData = {
   // UserPromptSubmit factories
   userPromptSubmit: userPromptSubmitFactory.userPromptSubmit,
   userPromptSubmitWithout: userPromptSubmitFactory.userPromptSubmitWithout,
+
+  // SessionStart factories
+  sessionStart: sessionStartFactory.sessionStart,
+  sessionStartWithout: sessionStartFactory.sessionStartWithout,
 
   // Default test data values
   defaults: TEST_DEFAULTS,
