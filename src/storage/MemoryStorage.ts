@@ -1,4 +1,4 @@
-import { Storage } from './Storage'
+import { Storage, TRANSIENT_DATA } from './Storage'
 
 export class MemoryStorage implements Storage {
   private readonly store = new Map<string, string>()
@@ -41,5 +41,9 @@ export class MemoryStorage implements Storage {
 
   async getConfig(): Promise<string | null> {
     return this.store.get('config') ?? null
+  }
+
+  async clearTransientData(): Promise<void> {
+    TRANSIENT_DATA.forEach((key) => this.store.delete(key))
   }
 }

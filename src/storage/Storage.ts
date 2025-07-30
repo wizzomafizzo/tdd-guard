@@ -1,3 +1,5 @@
+export const TRANSIENT_DATA = ['test', 'todo', 'modifications', 'lint'] as const
+
 export interface Storage {
   saveTest(content: string): Promise<void>
   saveTodo(content: string): Promise<void>
@@ -9,4 +11,5 @@ export interface Storage {
   getModifications(): Promise<string | null>
   getLint(): Promise<string | null>
   getConfig(): Promise<string | null>
+  clearTransientData(): Promise<void>
 }

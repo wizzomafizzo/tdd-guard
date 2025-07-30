@@ -1,4 +1,4 @@
-import { Storage } from './Storage'
+import { Storage, TRANSIENT_DATA } from './Storage'
 import { Config } from '../config/Config'
 import fs from 'fs/promises'
 
@@ -80,5 +80,28 @@ export class FileStorage implements Storage {
 
   async getConfig(): Promise<string | null> {
     return this.get('config')
+  }
+
+  async clearTransientData(): Promise<void> {
+    await Promise.all(
+      TRANSIENT_DATA.map((fileType) =>
+        this.deleteFileIfExists(this.filePaths[fileType])
+      )
+    )
+  }
+
+  private async deleteFileIfExists(filePath: string): Promise<void> {
+    try {
+      await fs.unlink(filePath)
+    } catch (error) {
+      // Only ignore ENOENT errors (file not found)
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        error.code !== 'ENOENT'
+      ) {
+        throw error
+      }
+    }
   }
 }

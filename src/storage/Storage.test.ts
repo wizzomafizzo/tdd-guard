@@ -128,6 +128,43 @@ describe.each(getStorageImplementations())('%s', (_name, setupStorage) => {
       expect(await storage.getConfig()).toBe(SECOND_CONTENT)
     })
   })
+
+  describe('clearTransientData', () => {
+    it('should clear test data', async () => {
+      await storage.saveTest('test content')
+      await storage.clearTransientData()
+
+      expect(await storage.getTest()).toBeNull()
+    })
+
+    it('should clear todo data', async () => {
+      await storage.saveTodo('todo content')
+      await storage.clearTransientData()
+
+      expect(await storage.getTodo()).toBeNull()
+    })
+
+    it('should clear modifications data', async () => {
+      await storage.saveModifications('modifications content')
+      await storage.clearTransientData()
+
+      expect(await storage.getModifications()).toBeNull()
+    })
+
+    it('should clear lint data', async () => {
+      await storage.saveLint('lint content')
+      await storage.clearTransientData()
+
+      expect(await storage.getLint()).toBeNull()
+    })
+
+    it('should NOT clear config data', async () => {
+      await storage.saveConfig('config content')
+      await storage.clearTransientData()
+
+      expect(await storage.getConfig()).toBe('config content')
+    })
+  })
 })
 
 function getStorageImplementations(): Array<
