@@ -143,7 +143,11 @@ Use the `/hooks` command in Claude Code:
 6. Enter command: `tdd-guard`
 7. Choose where to save (Project settings recommended)
 
-**Tip:** Also configure [quick commands](docs/quick-commands.md) for `tdd-guard on/off` and [ESLint integration](docs/linting.md) for automated refactoring support.
+**Tip:** Also configure:
+
+- [Quick commands](docs/quick-commands.md) for `tdd-guard on/off`
+- [Session clearing](docs/session-clearing.md) for automatic cleanup on new sessions
+- [ESLint integration](docs/linting.md) for automated refactoring support
 
 ## Security Notice
 
