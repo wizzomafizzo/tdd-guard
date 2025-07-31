@@ -1,4 +1,38 @@
 #!/bin/bash
+# FIREWALL CONFIGURATION FOR TDD GUARD DEVCONTAINER
+# =================================================
+#
+# This script implements network restrictions for the development container
+# to ensure a controlled environment for TDD Guard development.
+#
+# ALLOWED CONNECTIONS:
+# - DNS resolution (port 53)
+# - SSH connections (port 22)
+# - Localhost/loopback
+# - GitHub API and Git operations (api.github.com, github.com)
+# - Package registries:
+#   - NPM: registry.npmjs.org
+#   - PyPI: pypi.org, files.pythonhosted.org
+#   - Packagist: packagist.org, repo.packagist.org, getcomposer.org
+# - Claude/Anthropic services: api.anthropic.com, sentry.io, statsig.com
+# - JetBrains plugin marketplace: plugins.jetbrains.com
+# - Host network (for Docker operations)
+#
+# BLOCKED CONNECTIONS:
+# - All other outbound connections
+# - All inbound connections except established/related
+#
+# RATIONALE:
+# - Prevents accidental data exfiltration during development
+# - Ensures all dependencies are explicitly declared
+# - Maintains security boundaries for sensitive development
+#
+# To disable: Comment out the firewall initialization in postCreateCommand
+#
+# REFERENCES:
+# - Claude Code DevContainer docs: https://docs.anthropic.com/en/docs/claude-code/devcontainer
+# - Example configurations: https://github.com/anthropics/claude-code/tree/main/.devcontainer
+
 set -euo pipefail  # Exit on error, undefined vars, and pipeline failures
 IFS=$'\n\t'       # Stricter word splitting
 
@@ -69,21 +103,40 @@ for domain in \
     "api.anthropic.com" \
     "sentry.io" \
     "statsig.anthropic.com" \
-    "statsig.com"; do
+    "statsig.com" \
+    "pypi.org" \
+    "files.pythonhosted.org" \
+    "packagist.org" \
+    "repo.packagist.org" \
+    "getcomposer.org" \
+    "plugins.jetbrains.com"; do
     echo "Resolving $domain..."
-    ips=$(dig +short A "$domain")
+    # Retry DNS resolution with exponential backoff
+    for attempt in 1 2 3 4 5; do
+        ips=$(dig +short A "$domain" 2>/dev/null)
+        if [ -n "$ips" ]; then
+            break
+        fi
+        if [ $attempt -lt 5 ]; then
+            delay=$((attempt * attempt))  # 1, 4, 9, 16 seconds
+            echo "  DNS resolution attempt $attempt failed, retrying in ${delay}s..."
+            sleep $delay
+        fi
+    done
+    
     if [ -z "$ips" ]; then
-        echo "ERROR: Failed to resolve $domain"
+        echo "ERROR: Failed to resolve $domain after 5 attempts"
         exit 1
     fi
     
     while read -r ip; do
+        # Skip CNAME records and other non-IP entries
         if [[ ! "$ip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-            echo "ERROR: Invalid IP from DNS for $domain: $ip"
-            exit 1
+            echo "Skipping non-IP entry for $domain: $ip"
+            continue
         fi
         echo "Adding $ip for $domain"
-        ipset add allowed-domains "$ip"
+        ipset add allowed-domains "$ip" 2>/dev/null || echo "  (already in set)"
     done < <(echo "$ips")
 done
 
