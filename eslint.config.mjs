@@ -132,6 +132,7 @@ export default [
       '.venv/**',
       'reporters/pytest/**',
       'reporters/phpunit/**',
+      'reporters/jest/**',
       '**/*.d.ts',
       '**/*.tsbuildinfo',
     ],

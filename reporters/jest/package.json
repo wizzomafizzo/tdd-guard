@@ -1,0 +1,36 @@
+{
+  "name": "tdd-guard-jest",
+  "version": "0.1.0",
+  "description": "Jest reporter for TDD Guard",
+  "author": "Nizar Selander",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nizos/tdd-guard.git",
+    "directory": "reporters/jest"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "tdd-guard": "^0.8.0"
+  },
+  "peerDependencies": {
+    "jest": ">=27.0.0"
+  },
+  "devDependencies": {
+    "@jest/reporters": "^29.7.0",
+    "@jest/test-result": "^29.7.0",
+    "@jest/types": "^29.6.3",
+    "@types/node": "^24.0.10",
+    "typescript": "^5.2.2",
+    "vitest": "^3.2.2"
+  }
+}

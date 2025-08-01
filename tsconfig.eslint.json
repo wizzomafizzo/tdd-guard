@@ -8,6 +8,7 @@
     "test/**/*",
     "packages/*/src/**/*",
     "reporters/*/src/**/*",
+    "reporters/*/test/**/*",
     "vitest.config.ts",
     "eslint.config.mjs"
   ],
