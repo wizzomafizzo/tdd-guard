@@ -17,7 +17,8 @@
     "python"
   ],
   "workspaces": [
-    "reporters/vitest"
+    "reporters/vitest",
+    "reporters/jest"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

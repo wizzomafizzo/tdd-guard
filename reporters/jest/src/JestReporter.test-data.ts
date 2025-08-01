@@ -153,6 +153,7 @@ export function createUnhandledError(
     stack:
       overrides.stack ??
       "Error: Cannot find module './helpers' imported from '/src/example.test.ts'",
+    ...(overrides.name && { name: overrides.name }),
     // SerializableError might have additional properties but these are the required ones
   }
 }

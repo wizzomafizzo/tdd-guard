@@ -14,6 +14,7 @@ export default defineConfig({
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
+      '**/artifacts/**',
       '**/test/integration/validator.scenarios.test.ts', // Extensive test suite - run separately for faster feedback
     ],
   },

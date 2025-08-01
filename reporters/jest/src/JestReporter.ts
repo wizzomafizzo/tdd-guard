@@ -1,114 +1,157 @@
-import type { Config } from '@jest/types'
+import { BaseReporter } from '@jest/reporters'
 import type { Test, TestResult, AggregatedResult } from '@jest/reporters'
 import type { AssertionResult } from '@jest/test-result'
 import type { TestContext } from '@jest/test-result'
 import { Storage, FileStorage, Config as TDDConfig } from 'tdd-guard'
+import type {
+  TDDGuardReporterOptions,
+  CapturedError,
+  CapturedTest,
+  CapturedTestRun,
+  CapturedUnhandledError,
+  CapturedModule,
+} from './types'
 
-export interface TDDGuardReporterOptions {
-  storage?: Storage
-  projectRoot?: string
-}
-
-export class JestReporter {
-  private readonly globalConfig: Config.GlobalConfig
+export class JestReporter extends BaseReporter {
   private readonly storage: Storage
   private readonly testModules: Map<
     string,
     { test: Test; testResult: TestResult }
   > = new Map()
 
-  constructor(
-    globalConfig: Config.GlobalConfig,
-    reporterOptions?: TDDGuardReporterOptions
-  ) {
-    this.globalConfig = globalConfig
-
-    if (reporterOptions?.storage) {
-      this.storage = reporterOptions.storage
-    } else if (reporterOptions?.projectRoot) {
-      const config = new TDDConfig({ projectRoot: reporterOptions.projectRoot })
-      this.storage = new FileStorage(config)
-    } else {
-      this.storage = new FileStorage()
-    }
+  constructor(reporterOptions?: TDDGuardReporterOptions) {
+    super()
+    this.storage = this.initializeStorage(reporterOptions)
   }
 
-  onTestResult(
-    test: Test,
-    testResult: TestResult,
-    _aggregatedResult: AggregatedResult
-  ): void {
+  private initializeStorage(options?: TDDGuardReporterOptions): Storage {
+    if (options?.storage) {
+      return options.storage
+    }
+
+    if (options?.projectRoot) {
+      const config = new TDDConfig({ projectRoot: options.projectRoot })
+      return new FileStorage(config)
+    }
+
+    return new FileStorage()
+  }
+
+  override onTestResult(test: Test, testResult: TestResult): void {
     this.testModules.set(test.path, { test, testResult })
   }
 
-  async onRunComplete(
+  override async onRunComplete(
     _contexts: Set<TestContext>,
     results: AggregatedResult
   ): Promise<void> {
-    interface TDDGuardOutput {
-      testModules: Array<{
-        moduleId: string
-        tests: Array<{
-          name: string
-          fullName: string
-          state: string
-          errors?: Array<{ message: string }>
-        }>
-      }>
-      unhandledErrors?: Array<{
-        message: string
-        name: string
-        stack?: string
-      }>
-      reason?: 'passed' | 'failed' | 'interrupted'
-    }
-
-    const output: TDDGuardOutput = {
-      testModules: Array.from(this.testModules.entries()).map(
-        ([path, data]) => ({
-          moduleId: path,
-          tests: data.testResult.testResults.map((test: AssertionResult) => ({
-            name: test.title,
-            fullName: test.fullName,
-            state: test.status,
-            ...(test.failureMessages.length > 0 && {
-              errors: test.failureMessages.map((message: string) => ({
-                message,
-              })),
-            }),
-          })),
-        })
-      ),
-      unhandledErrors: [],
-    }
-
-    // Add unhandled errors if present
-    if (results.runExecError) {
-      const error = results.runExecError
-      output.unhandledErrors = [
-        {
-          message: error.message,
-          name:
-            'name' in error && typeof error.name === 'string'
-              ? error.name
-              : 'Error',
-          stack: error.stack ?? undefined,
-        },
-      ]
-    }
-
-    // Add reason based on test results
-    if (results.wasInterrupted) {
-      output.reason = 'interrupted'
-    } else if (
-      results.numFailedTestSuites === 0 &&
-      results.numTotalTestSuites > 0
-    ) {
-      output.reason = 'passed'
-    } else {
-      output.reason = 'failed'
+    const output: CapturedTestRun = {
+      testModules: this.buildTestModules(),
+      unhandledErrors: this.buildUnhandledErrors(results),
+      reason: this.determineTestRunReason(results),
     }
 
     await this.storage.saveTest(JSON.stringify(output, null, 2))
+  }
+
+  private determineTestRunReason(
+    results: AggregatedResult
+  ): 'passed' | 'failed' | 'interrupted' {
+    if (results.wasInterrupted) {
+      return 'interrupted'
+    }
+
+    if (results.numFailedTestSuites === 0 && results.numTotalTestSuites > 0) {
+      return 'passed'
+    }
+
+    return 'failed'
+  }
+
+  private mapTestResult(test: AssertionResult): CapturedTest {
+    const result: CapturedTest = {
+      name: test.title,
+      fullName: test.fullName,
+      state: test.status,
+    }
+
+    // Process failure details if present
+    if (test.failureMessages.length > 0) {
+      result.errors = this.processTestErrors(test)
+    }
+
+    return result
+  }
+
+  private processTestErrors(test: AssertionResult): CapturedError[] {
+    if (test.failureDetails.length === 0) {
+      return test.failureMessages.map((message) => ({ message }))
+    }
+
+    return test.failureDetails.map((detail: unknown, index: number) => {
+      const message = test.failureMessages[index] || ''
+      const error: CapturedError = { message }
+
+      if (detail && typeof detail === 'object') {
+        this.extractErrorDetails(error, detail as Record<string, unknown>)
+        this.parseExpectedActualFromMessage(error, message)
+      }
+
+      return error
+    })
+  }
+
+  private extractErrorDetails(
+    error: CapturedError,
+    obj: Record<string, unknown>
+  ): void {
+    if ('actual' in obj) error.actual = String(obj.actual)
+    if ('expected' in obj) error.expected = String(obj.expected)
+    if ('showDiff' in obj) error.showDiff = Boolean(obj.showDiff)
+    if ('operator' in obj) error.operator = String(obj.operator)
+    if ('diff' in obj) error.diff = String(obj.diff)
+    if ('name' in obj) error.name = String(obj.name)
+    if ('ok' in obj) error.ok = Boolean(obj.ok)
+    if ('stack' in obj) error.stack = String(obj.stack)
+  }
+
+  private parseExpectedActualFromMessage(
+    error: CapturedError,
+    message: string
+  ): void {
+    if (!error.expected || !error.actual) {
+      const expectedMatch = /Expected:\s*(\d+)/.exec(message)
+      const receivedMatch = /Received:\s*(\d+)/.exec(message)
+      if (expectedMatch && !error.expected) error.expected = expectedMatch[1]
+      if (receivedMatch && !error.actual) error.actual = receivedMatch[1]
+    }
+  }
+
+  private buildTestModules(): CapturedModule[] {
+    return Array.from(this.testModules.entries()).map(([path, data]) => ({
+      moduleId: path,
+      tests: data.testResult.testResults.map((test: AssertionResult) =>
+        this.mapTestResult(test)
+      ),
+    }))
+  }
+
+  private buildUnhandledErrors(
+    results: AggregatedResult
+  ): CapturedUnhandledError[] {
+    if (!results.runExecError) {
+      return []
+    }
+
+    const error = results.runExecError
+    const errorObj = error as Record<string, unknown>
+
+    return [
+      {
+        message: String(errorObj.message ?? 'Unknown error'),
+        name: typeof errorObj.name === 'string' ? errorObj.name : 'Error',
+        stack: typeof errorObj.stack === 'string' ? errorObj.stack : undefined,
+      },
+    ]
   }
 }

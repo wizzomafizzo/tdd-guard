@@ -1,5 +1,4 @@
-import { describe, it, expect } from 'vitest'
-import type { Config } from '@jest/types'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { JestReporter } from './JestReporter'
 import { FileStorage, MemoryStorage, Config as TDDConfig } from 'tdd-guard'
 import path from 'node:path'
@@ -11,32 +10,33 @@ import {
 } from './JestReporter.test-data'
 
 describe('JestReporter', () => {
-  describe('constructor', () => {
-    it('accepts globalConfig as first parameter', () => {
-      const globalConfig = { rootDir: '/test/root' } as Config.GlobalConfig
-      const reporter = new JestReporter(globalConfig)
-      expect(reporter['globalConfig']).toBe(globalConfig)
-    })
+  let sut: ReturnType<typeof setupJestReporter>
 
+  beforeEach(() => {
+    sut = setupJestReporter()
+  })
+
+  afterEach(() => {
+    sut.cleanup()
+  })
+
+  describe('constructor', () => {
     it('uses FileStorage by default', () => {
-      const globalConfig = {} as Config.GlobalConfig
-      const reporter = new JestReporter(globalConfig)
+      const reporter = new JestReporter()
       expect(reporter['storage']).toBeInstanceOf(FileStorage)
     })
 
     it('accepts Storage instance in reporterOptions', () => {
-      const globalConfig = {} as Config.GlobalConfig
       const storage = new MemoryStorage()
       const reporterOptions = { storage }
-      const reporter = new JestReporter(globalConfig, reporterOptions)
+      const reporter = new JestReporter(reporterOptions)
       expect(reporter['storage']).toBe(storage)
     })
 
     it('accepts projectRoot string in reporterOptions', () => {
-      const globalConfig = {} as Config.GlobalConfig
       const rootPath = '/some/project/root'
       const reporterOptions = { projectRoot: rootPath }
-      const reporter = new JestReporter(globalConfig, reporterOptions)
+      const reporter = new JestReporter(reporterOptions)
       expect(reporter['storage']).toBeInstanceOf(FileStorage)
       // Verify the storage is configured with the correct path
       const fileStorage = reporter['storage'] as FileStorage
@@ -51,57 +51,46 @@ describe('JestReporter', () => {
 
   describe('onTestResult', () => {
     it('collects test results', () => {
-      const globalConfig = {} as Config.GlobalConfig
-      const reporter = new JestReporter(globalConfig)
       const test = createTest()
       const testResult = createTestResult()
-      const aggregatedResult = createAggregatedResult()
 
-      reporter.onTestResult(test, testResult, aggregatedResult)
+      sut.reporter.onTestResult(test, testResult)
 
-      expect(reporter['testModules'].size).toBe(1)
+      expect(sut.reporter['testModules'].size).toBe(1)
     })
   })
 
   describe('onRunComplete', () => {
     it('saves test results to storage', async () => {
-      const globalConfig = {} as Config.GlobalConfig
-      const storage = new MemoryStorage()
-      const reporter = new JestReporter(globalConfig, { storage })
       const test = createTest()
       const testResult = createTestResult()
       const aggregatedResult = createAggregatedResult()
 
       // Collect test results first
-      reporter.onTestResult(test, testResult, aggregatedResult)
+      sut.reporter.onTestResult(test, testResult)
 
       // Run complete
-      await reporter.onRunComplete(new Set(), aggregatedResult)
+      await sut.reporter.onRunComplete(new Set(), aggregatedResult)
 
       // Verify results were saved
-      const savedData = await storage.getTest()
-      expect(savedData).toBeTruthy()
-      const parsed = JSON.parse(savedData!)
+      const parsed = await sut.getParsedData()
+      expect(parsed).toBeTruthy()
       expect(parsed.testModules).toHaveLength(1)
     })
 
     it('includes test case details in output', async () => {
-      const globalConfig = {} as Config.GlobalConfig
-      const storage = new MemoryStorage()
-      const reporter = new JestReporter(globalConfig, { storage })
       const test = createTest()
       const testResult = createTestResult()
       const aggregatedResult = createAggregatedResult()
 
       // Collect test results
-      reporter.onTestResult(test, testResult, aggregatedResult)
+      sut.reporter.onTestResult(test, testResult)
 
       // Run complete
-      await reporter.onRunComplete(new Set(), aggregatedResult)
+      await sut.reporter.onRunComplete(new Set(), aggregatedResult)
 
       // Verify test details are included
-      const savedData = await storage.getTest()
-      const parsed = JSON.parse(savedData!)
+      const parsed = await sut.getParsedData()
       const module = parsed.testModules[0]
       expect(module.tests).toHaveLength(1)
       expect(module.tests[0].name).toBe('should pass')
@@ -110,22 +99,18 @@ describe('JestReporter', () => {
     })
 
     it('includes error details for failed tests', async () => {
-      const globalConfig = {} as Config.GlobalConfig
-      const storage = new MemoryStorage()
-      const reporter = new JestReporter(globalConfig, { storage })
       const test = createTest()
       const failedTestResult = createTestResult({ numFailingTests: 1 })
       const aggregatedResult = createAggregatedResult()
 
       // Collect test results
-      reporter.onTestResult(test, failedTestResult, aggregatedResult)
+      sut.reporter.onTestResult(test, failedTestResult)
 
       // Run complete
-      await reporter.onRunComplete(new Set(), aggregatedResult)
+      await sut.reporter.onRunComplete(new Set(), aggregatedResult)
 
       // Verify error details are included
-      const savedData = await storage.getTest()
-      const parsed = JSON.parse(savedData!)
+      const parsed = await sut.getParsedData()
       const module = parsed.testModules[0]
       const failedTest = module.tests[0]
       expect(failedTest.state).toBe('failed')
@@ -135,34 +120,25 @@ describe('JestReporter', () => {
     })
 
     it('handles empty test runs', async () => {
-      const globalConfig = {} as Config.GlobalConfig
-      const storage = new MemoryStorage()
-      const reporter = new JestReporter(globalConfig, { storage })
-
       // Run complete without any tests
-      await reporter.onRunComplete(new Set(), createAggregatedResult())
+      await sut.reporter.onRunComplete(new Set(), createAggregatedResult())
 
       // Verify empty output
-      const savedData = await storage.getTest()
-      const parsed = JSON.parse(savedData!)
+      const parsed = await sut.getParsedData()
       expect(parsed.testModules).toEqual([])
     })
 
     it('includes unhandled errors in output', async () => {
-      const globalConfig = {} as Config.GlobalConfig
-      const storage = new MemoryStorage()
-      const reporter = new JestReporter(globalConfig, { storage })
       const error = createUnhandledError()
       const aggregatedResult = createAggregatedResult({
         runExecError: error,
       })
 
       // Run complete with unhandled error
-      await reporter.onRunComplete(new Set(), aggregatedResult)
+      await sut.reporter.onRunComplete(new Set(), aggregatedResult)
 
       // Verify unhandled errors are included
-      const savedData = await storage.getTest()
-      const parsed = JSON.parse(savedData!)
+      const parsed = await sut.getParsedData()
       expect(parsed.unhandledErrors).toBeDefined()
       expect(parsed.unhandledErrors).toHaveLength(1)
       expect(parsed.unhandledErrors[0].message).toBe(
@@ -173,9 +149,6 @@ describe('JestReporter', () => {
     })
 
     it('includes test run reason when tests pass', async () => {
-      const globalConfig = {} as Config.GlobalConfig
-      const storage = new MemoryStorage()
-      const reporter = new JestReporter(globalConfig, { storage })
       const test = createTest()
       const testResult = createTestResult()
       const aggregatedResult = createAggregatedResult({
@@ -183,18 +156,14 @@ describe('JestReporter', () => {
         numFailedTests: 0,
       })
 
-      reporter.onTestResult(test, testResult, aggregatedResult)
-      await reporter.onRunComplete(new Set(), aggregatedResult)
+      sut.reporter.onTestResult(test, testResult)
+      await sut.reporter.onRunComplete(new Set(), aggregatedResult)
 
-      const savedData = await storage.getTest()
-      const parsed = JSON.parse(savedData!)
+      const parsed = await sut.getParsedData()
       expect(parsed.reason).toBe('passed')
     })
 
     it('handles SerializableError without name property', async () => {
-      const globalConfig = {} as Config.GlobalConfig
-      const storage = new MemoryStorage()
-      const reporter = new JestReporter(globalConfig, { storage })
       const aggregatedResult = createAggregatedResult({
         runExecError: {
           message: 'Module not found',
@@ -202,13 +171,36 @@ describe('JestReporter', () => {
         },
       })
 
-      await reporter.onRunComplete(new Set(), aggregatedResult)
+      await sut.reporter.onRunComplete(new Set(), aggregatedResult)
 
-      const savedData = await storage.getTest()
-      const parsed = JSON.parse(savedData!)
+      const parsed = await sut.getParsedData()
       expect(parsed.unhandledErrors[0].message).toBe('Module not found')
       expect(parsed.unhandledErrors[0].name).toBe('Error')
       expect(parsed.unhandledErrors[0].stack).toBe('at test.js:1:1')
     })
   })
 })
+
+// Test setup helper function
+function setupJestReporter() {
+  const storage = new MemoryStorage()
+  const reporter = new JestReporter({ storage })
+
+  // Helper to get parsed test data
+  const getParsedData = async () => {
+    const savedData = await storage.getTest()
+    return savedData ? JSON.parse(savedData) : null
+  }
+
+  // Cleanup function
+  const cleanup = () => {
+    // Nothing to clean up for memory storage
+  }
+
+  return {
+    reporter,
+    storage,
+    getParsedData,
+    cleanup,
+  }
+}
