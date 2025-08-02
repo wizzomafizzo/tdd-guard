@@ -43,7 +43,7 @@ Choose one of:
 
 [Learn more about VS Code Dev Containers →](https://code.visualstudio.com/docs/devcontainers/containers)
 
-### IntelliJ IDEA (Ultimate only)
+### IntelliJ IDEA
 
 1. File → Remote Development → Dev Containers → New Dev Container → From Local Project
 2. Select Docker/Colima connection
@@ -66,7 +66,7 @@ IntelliJ requires more resources than the default:
 colima start --cpu 2 --memory 4
 
 # With performance optimization
-colima start --cpu 2 --memory 4 --mount-type virtiofs
+colima start --cpu 4 --memory 8 --vm-type vz --mount-type virtiofs
 ```
 
 ### macOS Performance
@@ -74,7 +74,7 @@ colima start --cpu 2 --memory 4 --mount-type virtiofs
 For better file performance:
 
 - **Docker Desktop**: Enable VirtioFS in Settings → General → Choose file sharing implementation
-- **Colima**: Use `--mount-type virtiofs` flag when starting (see above)
+- **Colima**: Use ` --vm-type vz --mount-type virtiofs` flag when starting (see above)
 
 ### Git "dubious ownership" error
 
