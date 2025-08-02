@@ -170,6 +170,10 @@ TDD Guard runs with your user permissions and has access to your file system. We
 - Encourage meaningful refactoring opportunities when tests are green
 - Add support for multiple concurrent subagents per project
 
+## Development
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for setup instructions and development guidelines.
+
 ## Contributing
 
 Contributions are welcome! Feel free to submit issues and pull requests.
