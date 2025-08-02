@@ -23,11 +23,11 @@
     "tdd-guard": "^0.8.0"
   },
   "peerDependencies": {
-    "vitest": ">=3.0.0"
+    "vitest": ">=3.2.4"
   },
   "devDependencies": {
-    "@types/node": "^24.0.10",
-    "typescript": "^5.2.2",
-    "vitest": "^3.2.2"
+    "@types/node": "^24.1.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }
