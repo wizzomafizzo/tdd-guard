@@ -9,6 +9,7 @@
     "packages/*/src/**/*",
     "reporters/*/src/**/*",
     "reporters/*/test/**/*",
+    "reporters/test/**/*",
     "vitest.config.ts",
     "eslint.config.mjs"
   ],

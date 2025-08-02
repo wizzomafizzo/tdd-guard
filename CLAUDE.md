@@ -43,6 +43,8 @@ packages/                         # Core functionality as npm workspaces
 └── storage/                      # @tdd-guard/storage - Storage abstractions
 
 reporters/                        # Language-specific test reporters
+├── jest/                         # tdd-guard-jest - Jest reporter (npm)
+├── phpunit/                      # tdd-guard/phpunit - PHPUnit reporter (composer)
 ├── vitest/                       # tdd-guard-vitest - Vitest reporter (npm)
 └── pytest/                       # tdd-guard-pytest - Pytest reporter (pip)
 
@@ -74,7 +76,7 @@ docs/
 TDD Guard uses npm workspaces to separate concerns:
 
 - **packages/**: Core functionality (@tdd-guard/contracts, config, storage)
-- **reporters/**: Language-specific test reporters (vitest, pytest)
+- **reporters/**: Language-specific test reporters (phpunit, vitest, pytest)
 - **src/**: Main CLI application
 
 Dependencies between workspaces are managed automatically.
