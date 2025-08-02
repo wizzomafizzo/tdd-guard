@@ -17,3 +17,20 @@ export interface ReporterConfig {
     artifactPath: string
   ) => void
 }
+
+export interface TestResultData {
+  testModules: Array<{
+    moduleId: string
+    tests: Array<{
+      name: string
+      fullName: string
+      state: string
+      errors?: Array<{
+        message: string
+        expected?: string
+        actual?: string
+      }>
+    }>
+  }>
+  reason: string
+}
