@@ -5,10 +5,9 @@ A consistent, isolated environment for developing TDD Guard.
 ## Features
 
 - Network isolation for security
+- Automated development environment setup
 - Pre-configured development tools
 - Persistent command history
-- Auto-installs dependencies on container creation
-- VS Code extensions included (ESLint, Prettier, GitLens, etc.)
 
 ## What's Inside
 
@@ -24,7 +23,9 @@ A consistent, isolated environment for developing TDD Guard.
 
 - `Dockerfile` - Container definition
 - `devcontainer.json` - IDE configuration
-- `init-firewall.sh` - Network security
+- `scripts/` - Setup and configuration scripts
+  - `init-firewall.sh` - Network security
+  - `setup-dev-environment.sh` - Main setup orchestrator
 
 ## Prerequisites
 
@@ -76,14 +77,18 @@ For better file performance:
 - **Docker Desktop**: Enable VirtioFS in Settings → General → Choose file sharing implementation
 - **Colima**: Use ` --vm-type vz --mount-type virtiofs` flag when starting (see above)
 
-### Git "dubious ownership" error
+### Common Commands
 
 ```bash
-git config --global --add safe.directory /workspace
+npm test               # Run all tests
+npm run test:unit      # Run unit tests only
+npm run test:reporters # Run reporter tests
+npm run checks         # Run all quality checks (typecheck, lint, format, test)
 ```
 
-### Other notes
+### Additional Notes
 
-- Container preserves command history between sessions
-- Network access is restricted for security
-- See firewall configuration in `init-firewall.sh` if you need to allow additional services
+- **Command history** is preserved between container sessions in a persistent volume
+- **Network isolation** restricts outbound connections for security (see `scripts/init-firewall.sh` for allowed services)
+- **Environment variables** like `NODE_OPTIONS` and `USE_SYSTEM_CLAUDE` are pre-configured
+- **Timezone** defaults to Europe/Stockholm but can be changed via `TZ` build arg
