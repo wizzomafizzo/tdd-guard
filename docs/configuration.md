@@ -107,8 +107,11 @@ Add to `.claude/settings.json`:
 
 ## Test Reporter Configuration
 
-- **JavaScript/TypeScript**: See [Vitest reporter configuration](../reporters/vitest/README.md#configuration)
+- **JavaScript/TypeScript**:
+  - [Vitest reporter configuration](../reporters/vitest/README.md#configuration)
+  - [Jest reporter configuration](../reporters/jest/README.md#configuration)
 - **Python**: See [Pytest reporter configuration](../reporters/pytest/README.md#configuration)
+- **PHP**: See [PHPUnit reporter configuration](../reporters/phpunit/README.md#configuration)
 
 ## Data Storage
 

@@ -31,7 +31,7 @@ TDD Guard monitors file operations in real-time and blocks any changes that viol
 
 - Node.js 18+
 - Test Runner:
-  - JavaScript/TypeScript: Vitest
+  - JavaScript/TypeScript: Vitest or Jest
   - Python: pytest
   - PHP: PHPUnit 9.x, 10.x, 11.x, or 12.x
 
@@ -48,7 +48,11 @@ npm install -g tdd-guard
 TDD Guard needs to capture test results from your test runner. Choose your language below:
 
 <details>
-<summary><b>JavaScript/TypeScript (Vitest)</b></summary>
+<summary><b>JavaScript/TypeScript</b></summary>
+
+Choose your test runner:
+
+#### Vitest
 
 Install the [tdd-guard-vitest](https://www.npmjs.com/package/tdd-guard-vitest) reporter in your project:
 
@@ -72,7 +76,38 @@ export default defineConfig({
 })
 ```
 
-**Note:** Specify the project root path when your vitest config is not at the project root (e.g., in workspaces or monorepos). This ensures TDD Guard can find the test results. See the [vitest reporter configuration](reporters/vitest/README.md#configuration) for more details.
+#### Jest
+
+Install the [tdd-guard-jest](https://www.npmjs.com/package/tdd-guard-jest) reporter in your project:
+
+```bash
+npm install --save-dev tdd-guard-jest
+```
+
+Add to your `jest.config.ts`:
+
+```typescript
+import type { Config } from 'jest'
+
+const config: Config = {
+  reporters: [
+    'default',
+    [
+      'tdd-guard-jest',
+      {
+        projectRoot: '/Users/username/projects/my-app',
+      },
+    ],
+  ],
+}
+
+export default config
+```
+
+**Note:** For both Vitest and Jest, specify the project root path when your test config is not at the project root (e.g., in workspaces or monorepos). This ensures TDD Guard can find the test results. See the reporter configuration docs for more details:
+
+- [Vitest configuration](reporters/vitest/README.md#configuration)
+- [Jest configuration](reporters/jest/README.md#configuration)
 
 </details>
 
@@ -165,7 +200,7 @@ TDD Guard runs with your user permissions and has access to your file system. We
 
 ## Roadmap
 
-- Add support for more testing frameworks (Jest, Mocha, unittest, etc.)
+- Add support for more testing frameworks (Mocha, unittest, etc.)
 - Add support for additional programming languages (Go, Rust, Java, etc.)
 - Encourage meaningful refactoring opportunities when tests are green
 - Add support for multiple concurrent subagents per project
