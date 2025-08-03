@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { JestReporter } from './JestReporter'
 import { FileStorage, MemoryStorage, Config as TDDConfig } from 'tdd-guard'
 import path from 'node:path'
@@ -14,10 +14,6 @@ describe('JestReporter', () => {
 
   beforeEach(() => {
     sut = setupJestReporter()
-  })
-
-  afterEach(() => {
-    sut.cleanup()
   })
 
   describe('constructor', () => {
@@ -192,15 +188,9 @@ function setupJestReporter() {
     return savedData ? JSON.parse(savedData) : null
   }
 
-  // Cleanup function
-  const cleanup = () => {
-    // Nothing to clean up for memory storage
-  }
-
   return {
     reporter,
     storage,
     getParsedData,
-    cleanup,
   }
 }
