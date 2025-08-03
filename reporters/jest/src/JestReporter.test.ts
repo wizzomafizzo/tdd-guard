@@ -7,6 +7,8 @@ import {
   createTestResult,
   createAggregatedResult,
   createUnhandledError,
+  createModuleError,
+  createTestResultWithModuleError,
 } from './JestReporter.test-data'
 
 describe('JestReporter', () => {
@@ -173,6 +175,101 @@ describe('JestReporter', () => {
       expect(parsed.unhandledErrors[0].message).toBe('Module not found')
       expect(parsed.unhandledErrors[0].name).toBe('Error')
       expect(parsed.unhandledErrors[0].stack).toBe('at test.js:1:1')
+    })
+
+    it('includes module import errors as failed tests', async () => {
+      const test = createTest()
+      const testResult = createTestResultWithModuleError()
+      const aggregatedResult = createAggregatedResult()
+
+      sut.reporter.onTestResult(test, testResult)
+      await sut.reporter.onRunComplete(new Set(), aggregatedResult)
+
+      const parsed = await sut.getParsedData()
+      const module = parsed.testModules[0]
+      expect(module.tests).toHaveLength(1)
+
+      const importErrorTest = module.tests[0]
+      expect(importErrorTest.name).toBe('Module failed to load (Error)')
+      expect(importErrorTest.fullName).toBe('Module failed to load (Error)')
+      expect(importErrorTest.state).toBe('failed')
+      expect(importErrorTest.errors).toHaveLength(1)
+      expect(importErrorTest.errors[0].message).toBe(
+        "Cannot find module './non-existent-module'"
+      )
+    })
+
+    it('preserves error stack trace from module import errors', async () => {
+      const test = createTest()
+      const moduleError = createModuleError({
+        message: "Cannot find module './helpers'",
+        stack:
+          "Error: Cannot find module './helpers'\n    at Function.Module._resolveFilename",
+        name: 'Error',
+      })
+      const testResult = createTestResultWithModuleError({
+        testExecError: moduleError,
+      })
+      const aggregatedResult = createAggregatedResult()
+
+      sut.reporter.onTestResult(test, testResult)
+      await sut.reporter.onRunComplete(new Set(), aggregatedResult)
+
+      const parsed = await sut.getParsedData()
+      const importErrorTest = parsed.testModules[0].tests[0]
+
+      expect(importErrorTest.errors[0].stack).toBe(
+        "Error: Cannot find module './helpers'\n    at Function.Module._resolveFilename"
+      )
+      expect(importErrorTest.errors[0].name).toBe('Error')
+    })
+
+    it('uses error type in test name for module import errors', async () => {
+      const test = createTest()
+      const testResult = createTestResultWithModuleError({
+        testExecError: createModuleError({
+          message: 'Module parse failed',
+          stack: 'SyntaxError: Unexpected token',
+          name: 'SyntaxError',
+        }),
+      })
+      const aggregatedResult = createAggregatedResult()
+
+      sut.reporter.onTestResult(test, testResult)
+      await sut.reporter.onRunComplete(new Set(), aggregatedResult)
+
+      const parsed = await sut.getParsedData()
+      const importErrorTest = parsed.testModules[0].tests[0]
+
+      expect(importErrorTest.name).toBe('Module failed to load (SyntaxError)')
+      expect(importErrorTest.fullName).toBe(
+        'Module failed to load (SyntaxError)'
+      )
+    })
+
+    it('handles SerializableError with type field for module import errors', async () => {
+      const test = createTest()
+      const testResult = createTestResultWithModuleError({
+        testExecError: createModuleError({
+          message: 'Module error',
+          stack: 'at test.js:1',
+          type: 'ReferenceError',
+          code: 'ERR_MODULE_NOT_FOUND',
+        }),
+      })
+      const aggregatedResult = createAggregatedResult()
+
+      sut.reporter.onTestResult(test, testResult)
+      await sut.reporter.onRunComplete(new Set(), aggregatedResult)
+
+      const parsed = await sut.getParsedData()
+      const importErrorTest = parsed.testModules[0].tests[0]
+
+      expect(importErrorTest.name).toBe(
+        'Module failed to load (ReferenceError)'
+      )
+      expect(importErrorTest.errors[0].name).toBe('ReferenceError')
+      expect(importErrorTest.errors[0].operator).toBe('ERR_MODULE_NOT_FOUND')
     })
   })
 })

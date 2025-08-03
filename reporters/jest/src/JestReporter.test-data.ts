@@ -163,3 +163,37 @@ export function createUnhandledError(
     // SerializableError might have additional properties but these are the required ones
   }
 }
+
+// Create a module error (testExecError) for import failures
+export function createModuleError(
+  overrides: Partial<{
+    name: string
+    message: string
+    stack: string
+    type: string
+    code: string
+  }> = {}
+): TestResult['testExecError'] {
+  return {
+    message: overrides.message ?? "Cannot find module './non-existent-module'",
+    stack:
+      overrides.stack ??
+      "Error: Cannot find module './non-existent-module'\n    at Resolver.resolveModule",
+    ...(overrides.name && { name: overrides.name }),
+    ...(overrides.type && { type: overrides.type }),
+    ...(overrides.code && { code: overrides.code }),
+  }
+}
+
+// Create a TestResult with module import error
+export function createTestResultWithModuleError(
+  overrides?: Partial<TestResult>
+): TestResult {
+  return createTestResult({
+    testExecError: createModuleError(),
+    testResults: [], // No test results when module fails to load
+    numFailingTests: 0,
+    numPassingTests: 0,
+    ...overrides,
+  })
+}

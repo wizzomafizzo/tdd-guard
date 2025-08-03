@@ -119,7 +119,7 @@ describe('Reporters', () => {
         name: ReporterName
         expected: string | undefined
       }> = [
-        { name: 'jest', expected: undefined },
+        { name: 'jest', expected: 'Module failed to load (Error)' },
         { name: 'vitest', expected: undefined },
         { name: 'phpunit', expected: 'testShouldAddNumbersCorrectly' },
         {
@@ -207,7 +207,7 @@ describe('Reporters', () => {
         name: ReporterName
         expected: string | undefined
       }> = [
-        { name: 'jest', expected: undefined },
+        { name: 'jest', expected: 'Module failed to load (Error)' },
         { name: 'vitest', expected: undefined },
         {
           name: 'phpunit',
@@ -259,7 +259,7 @@ describe('Reporters', () => {
         name: ReporterName
         expected: string | undefined
       }> = [
-        { name: 'jest', expected: undefined },
+        { name: 'jest', expected: 'failed' },
         { name: 'vitest', expected: undefined },
         { name: 'phpunit', expected: 'errored' },
         { name: 'pytest', expected: 'failed' },
@@ -360,7 +360,12 @@ describe('Reporters', () => {
         name: ReporterName
         expected: string[] | undefined
       }> = [
-        { name: 'jest', expected: undefined },
+        {
+          name: 'jest',
+          expected: [
+            "Cannot find module './non-existent-module' from 'single-import-error.test.js'",
+          ],
+        },
         { name: 'vitest', expected: undefined },
         { name: 'phpunit', expected: ['Class', 'not found'] },
         {

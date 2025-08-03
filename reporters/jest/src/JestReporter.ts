@@ -127,13 +127,54 @@ export class JestReporter extends BaseReporter {
     }
   }
 
+  private createTestFromExecError(execError: unknown): CapturedTest {
+    const errorObj = execError as Record<string, unknown>
+    const message = String(errorObj.message ?? 'Unknown error')
+
+    const error: CapturedError = {
+      message,
+      name: typeof errorObj.name === 'string' ? errorObj.name : 'Error',
+      stack: typeof errorObj.stack === 'string' ? errorObj.stack : undefined,
+    }
+
+    // Extract additional fields from Jest's SerializableError
+    if ('code' in errorObj && errorObj.code !== undefined) {
+      error.operator = String(errorObj.code)
+    }
+    if ('type' in errorObj && typeof errorObj.type === 'string') {
+      error.name = errorObj.type
+    }
+
+    const errorType = error.name ?? 'Error'
+    const testName = `Module failed to load (${errorType})`
+
+    return {
+      name: testName,
+      fullName: testName,
+      state: 'failed',
+      errors: [error],
+    }
+  }
+
   private buildTestModules(): CapturedModule[] {
-    return Array.from(this.testModules.entries()).map(([path, data]) => ({
-      moduleId: path,
-      tests: data.testResult.testResults.map((test: AssertionResult) =>
-        this.mapTestResult(test)
-      ),
-    }))
+    return Array.from(this.testModules.entries()).map(([path, data]) => {
+      const { testResult } = data
+
+      // Handle module/import errors
+      if (testResult.testExecError && testResult.testResults.length === 0) {
+        return {
+          moduleId: path,
+          tests: [this.createTestFromExecError(testResult.testExecError)],
+        }
+      }
+
+      return {
+        moduleId: path,
+        tests: testResult.testResults.map((test: AssertionResult) =>
+          this.mapTestResult(test)
+        ),
+      }
+    })
   }
 
   private buildUnhandledErrors(
