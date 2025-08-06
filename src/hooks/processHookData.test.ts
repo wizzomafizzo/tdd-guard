@@ -142,15 +142,16 @@ describe('processHookData', () => {
     })
   })
 
-  describe('Non-code file filtering', () => {
-    it('should skip validation for various non-code file types', async () => {
-      const nonCodeExtensions = ['.md', '.txt', '.log', '.json', '.yml', '.yaml', '.xml', '.html', '.css', '.rst']
-      
-      for (const ext of nonCodeExtensions) {
+  describe('Ignore patterns filtering', () => {
+    it('skips validation when using default ignore patterns', async () => {
+      for (const pattern of GuardManager.DEFAULT_IGNORE_PATTERNS) {
+        // Convert pattern to file path (e.g., '*.md' -> '/path/to/file.md')
+        const filePath = pattern.replace('*', '/path/to/file')
+        
         const nonCodeFileData = {
           ...EDIT_HOOK_DATA,
           tool_input: {
-            file_path: `/path/to/file${ext}`,
+            file_path: filePath,
             old_string: 'old content',
             new_string: 'new content'
           }
@@ -161,6 +162,42 @@ describe('processHookData', () => {
         expect(sut.validatorHasBeenCalled()).toBe(false)
         expect(result).toEqual(defaultResult)
       }
+    })
+
+    it.each([
+      {
+        description: 'files matching custom extensions',
+        filePath: 'file.custom',
+      },
+      {
+        description: 'files in ignored directories',
+        filePath: 'build/output.js',
+      },
+      {
+        description: 'files matching glob patterns',
+        filePath: 'src/api/schema.generated.ts',
+      },
+    ])('skips validation when using custom ignore patterns for $description', async ({ filePath }) => {
+      // Set up custom ignore patterns
+      const customPatterns = ['*.custom', 'build/**', '**/*.generated.ts']
+      await sut.storage.saveConfig(JSON.stringify({
+        guardEnabled: true,
+        ignorePatterns: customPatterns
+      }))
+
+      const fileData = {
+        ...EDIT_HOOK_DATA,
+        tool_input: {
+          file_path: filePath,
+          old_string: 'old content',
+          new_string: 'new content'
+        }
+      }
+
+      const result = await sut.process(fileData)
+      
+      expect(sut.validatorHasBeenCalled()).toBe(false)
+      expect(result).toEqual(defaultResult)
     })
   })
 

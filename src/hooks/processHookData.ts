@@ -26,27 +26,24 @@ export const defaultResult: ValidationResult = {
   reason: '',
 }
 
-const NON_CODE_EXTENSIONS = ['.md', '.txt', '.log', '.json', '.yml', '.yaml', '.xml', '.html', '.css', '.rst']
-
-function isNonCodeFile(parsedData: unknown): boolean {
+function extractFilePath(parsedData: unknown): string | null {
   if (!parsedData || typeof parsedData !== 'object') {
-    return false
+    return null
   }
   
   const data = parsedData as Record<string, unknown>
   const toolInput = data.tool_input
   
   if (!toolInput || typeof toolInput !== 'object' || !('file_path' in toolInput)) {
-    return false
+    return null
   }
   
   const filePath = (toolInput as Record<string, unknown>).file_path
   if (typeof filePath !== 'string') {
-    return false
+    return null
   }
   
-  const fileExt = filePath.toLowerCase().slice(filePath.lastIndexOf('.'))
-  return NON_CODE_EXTENSIONS.includes(fileExt)
+  return filePath
 }
 
 export async function processHookData(
@@ -55,15 +52,16 @@ export async function processHookData(
 ): Promise<ValidationResult> {
   const parsedData = JSON.parse(inputData)
   
-  // Skip validation for non-code files early
-  if (isNonCodeFile(parsedData)) {
-    return defaultResult
-  }
-  
   // Initialize dependencies
   const storage = deps.storage ?? new FileStorage()
   const guardManager = new GuardManager(storage)
   const userPromptHandler = deps.userPromptHandler ?? new UserPromptHandler(guardManager)
+  
+  // Skip validation for ignored files based on patterns
+  const filePath = extractFilePath(parsedData)
+  if (filePath && await guardManager.shouldIgnoreFile(filePath)) {
+    return defaultResult
+  }
   const sessionHandler = new SessionHandler(storage)
   
   // Process SessionStart events
