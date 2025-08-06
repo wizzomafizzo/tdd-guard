@@ -144,7 +144,7 @@ describe('GuardManager', () => {
     it('ignores files matching default patterns', async () => {
       for (const pattern of GuardManager.DEFAULT_IGNORE_PATTERNS) {
         // Convert pattern to file path (e.g., '*.md' -> 'file.md')
-        const filePath = pattern.replace('*', 'file')
+        const filePath = pattern.replaceAll('*', 'file')
         expect(await guardManager.shouldIgnoreFile(filePath)).toBe(true)
       }
     })

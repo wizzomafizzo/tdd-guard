@@ -146,7 +146,7 @@ describe('processHookData', () => {
     it('skips validation when using default ignore patterns', async () => {
       for (const pattern of GuardManager.DEFAULT_IGNORE_PATTERNS) {
         // Convert pattern to file path (e.g., '*.md' -> '/path/to/file.md')
-        const filePath = pattern.replace('*', '/path/to/file')
+        const filePath = pattern.replaceAll('*', '/path/to/file')
         
         const nonCodeFileData = {
           ...EDIT_HOOK_DATA,
