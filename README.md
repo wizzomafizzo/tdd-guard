@@ -181,6 +181,7 @@ Use the `/hooks` command in Claude Code:
 **Tip:** Also configure:
 
 - [Quick commands](docs/quick-commands.md) for `tdd-guard on/off`
+- [Ignore patterns](docs/ignore-patterns.md) to control which files are validated
 - [Session clearing](docs/session-clearing.md) for automatic cleanup on new sessions
 - [ESLint integration](docs/linting.md) for automated refactoring support
 
