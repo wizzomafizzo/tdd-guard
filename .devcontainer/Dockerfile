@@ -7,6 +7,7 @@ ARG CLAUDE_CODE_VERSION=0.11.0
 ARG COMPOSER_VERSION=2.8.10
 ARG GIT_DELTA_VERSION=0.18.2
 ARG ZSH_IN_DOCKER_VERSION=1.2.0
+ARG GO_VERSION=1.23.3
 
 # Install basic development tools and iptables/ipset
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -75,6 +76,22 @@ RUN curl -sS https://getcomposer.org/installer -o composer-setup.php && \
     php composer-setup.php --install-dir=/usr/local/bin --filename=composer --version=${COMPOSER_VERSION} && \
     rm composer-setup.php composer-setup.sig && \
     chmod +x /usr/local/bin/composer
+
+# Install Go
+RUN ARCH=$(dpkg --print-architecture) && \
+    case ${ARCH} in \
+        amd64) GOARCH=amd64 ;; \
+        arm64) GOARCH=arm64 ;; \
+        *) echo "Unsupported architecture: ${ARCH}" && exit 1 ;; \
+    esac && \
+    wget -q "https://go.dev/dl/go${GO_VERSION}.linux-${GOARCH}.tar.gz" && \
+    tar -C /usr/local -xzf "go${GO_VERSION}.linux-${GOARCH}.tar.gz" && \
+    rm "go${GO_VERSION}.linux-${GOARCH}.tar.gz"
+
+# Add Go to PATH
+ENV PATH="/usr/local/go/bin:${PATH}"
+ENV GOPATH="/home/node/go"
+ENV PATH="${GOPATH}/bin:${PATH}"
 
 RUN ARCH=$(dpkg --print-architecture) && \
   wget "https://github.com/dandavison/delta/releases/download/${GIT_DELTA_VERSION}/git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \

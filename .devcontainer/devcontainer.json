@@ -19,7 +19,8 @@
         "vitest.explorer",
         "ms-python.python",
         "anthropics.claude-code",
-        "bmewburn.vscode-intelephense-client"
+        "bmewburn.vscode-intelephense-client",
+        "golang.go"
       ],
       "settings": {
         "editor.formatOnSave": true,
