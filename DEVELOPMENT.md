@@ -11,6 +11,7 @@
 - Node.js 18+ and npm
 - Python 3.8+ (for pytest reporter)
 - PHP 8.1+ and Composer (for PHPUnit reporter)
+- Go 1.21+ (for Go reporter)
 
 ## Using Dev Containers
 
@@ -58,6 +59,9 @@ composer install -d reporters/phpunit
 # Set up Python virtual environment and install pytest
 python3 -m venv reporters/pytest/.venv
 reporters/pytest/.venv/bin/pip install -e reporters/pytest pytest
+
+# Build Go reporter
+go build -C reporters/go ./cmd/tdd-guard-go
 ```
 
 ### Running Tests
