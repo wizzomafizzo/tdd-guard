@@ -178,38 +178,21 @@ Use the `/hooks` command in Claude Code:
 6. Enter command: `tdd-guard`
 7. Choose where to save (Project settings recommended)
 
-**Tip:** Also configure:
+## Configuration
 
-- [Quick commands](docs/quick-commands.md) for `tdd-guard on/off`
-- [Ignore patterns](docs/ignore-patterns.md) to control which files are validated
-- [Session clearing](docs/session-clearing.md) for automatic cleanup on new sessions
-- [ESLint integration](docs/linting.md) for automated refactoring support
+**Note:** If TDD Guard can't find Claude, see [Claude Binary](docs/claude-binary.md) setup.
 
-### 4. Configure AI Model (optional)
+### Recommended Setup
 
-TDD Guard supports two AI models for validation:
+- [Quick commands](docs/quick-commands.md) - Toggle with `tdd-guard on/off`
+- [Session clearing](docs/session-clearing.md) - Automatic cleanup on new sessions
+- [Ignore patterns](docs/ignore-patterns.md) - Control which files are validated
 
-#### Claude Code CLI (default)
+### Advanced Options
 
-Uses your existing Claude Code authentication. No additional setup required.
-
-#### Anthropic HTTP API
-
-Direct API access provides faster validation.
-
-**Setup:**
-
-1. Get an Anthropic API key from [console.anthropic.com](https://console.anthropic.com/)
-   - **Note:** This is separate from Claude Code and requires Anthropic API credits
-   - Uses token-based billing instead of Claude Code subscription
-2. Set environment variables:
-
-```bash
-export TDD_GUARD_ANTHROPIC_API_KEY=your_api_key_here
-export MODEL_TYPE=anthropic_api
-```
-
-**Note:** TDD Guard uses the `TDD_GUARD_ANTHROPIC_API_KEY` environment variable (not the standard `ANTHROPIC_API_KEY`) to avoid conflicts with other Anthropic SDK usage in your project.
+- [ESLint integration](docs/linting.md) - Automated refactoring support
+- [AI Models](docs/ai-model.md) - Switch between Claude CLI and Anthropic API
+- [All Settings](docs/configuration.md) - Complete configuration reference
 
 ## Security Notice
 
@@ -230,11 +213,12 @@ TDD Guard runs with your user permissions and has access to your file system. We
 - Add support for more testing frameworks (Mocha, unittest, etc.)
 - Add support for additional programming languages (Go, Rust, Java, etc.)
 - Encourage meaningful refactoring opportunities when tests are green
-- Add support for multiple concurrent subagents per project
+- Add support for multiple concurrent sessions per project
 
 ## Development
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for setup instructions and development guidelines.
+- [Development Guide](DEVELOPMENT.md) - Setup instructions and development guidelines
+- [Architecture Decision Records](docs/adr/) - Technical design decisions and rationale
 
 ## Contributing
 
@@ -244,11 +228,6 @@ Contributions are welcome! Feel free to submit issues and pull requests.
 
 - Python/pytest support: [@Durafen](https://github.com/Durafen)
 - PHP/PHPUnit support: [@wazum](https://github.com/wazum)
-
-## Learn More
-
-- [Configuration Guide](docs/configuration.md) - Environment variables, model options, and troubleshooting
-- [Architecture Decision Records](docs/adr/) - Technical design decisions and rationale
 
 ## License
 
