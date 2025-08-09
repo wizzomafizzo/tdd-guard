@@ -13,3 +13,7 @@ public/
 hooks/
 test/artifacts/
 reporters/phpunit/
+reporters/go/**/*.go
+reporters/go/**/*.mod
+reporters/go/**/*.sum
+reporters/go/**/*.tsbuildinfo

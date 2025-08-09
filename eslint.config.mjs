@@ -132,6 +132,7 @@ export default [
       '.venv/**',
       'reporters/pytest/**',
       'reporters/phpunit/**',
+      'reporters/go/**',
       '**/*.d.ts',
       '**/*.tsbuildinfo',
     ],
