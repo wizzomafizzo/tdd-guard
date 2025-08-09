@@ -1,0 +1,331 @@
+package parser
+
+import (
+	"strings"
+	"testing"
+)
+
+// Test fixtures - common JSON events
+const (
+	passEvent = `{"Action":"pass","Package":"example.com/pkg","Test":"TestAdd"}`
+	failEvent = `{"Action":"fail","Package":"example.com/pkg","Test":"TestFail"}`
+	runEvent  = `{"Action":"run","Package":"example.com/pkg","Test":"TestAdd"}`
+)
+
+func TestParser(t *testing.T) {
+	t.Run("Creation", func(t *testing.T) {
+		t.Run("creates new parser", func(t *testing.T) {
+			parser := NewParser()
+			if parser == nil {
+				t.Fatal("Expected parser to be created")
+			}
+		})
+
+		t.Run("returns empty results initially", func(t *testing.T) {
+			parser := NewParser()
+			results := parser.GetResults()
+			if results == nil {
+				t.Fatal("Expected results to be non-nil")
+			}
+			if len(results) != 0 {
+				t.Fatalf("Expected empty results, got %d items", len(results))
+			}
+		})
+	})
+
+	t.Run("Parsing", func(t *testing.T) {
+		t.Run("accepts io.Reader", func(t *testing.T) {
+			parser := NewParser()
+			err := parser.Parse(strings.NewReader(""))
+			if err != nil {
+				t.Fatalf("Parse returned error: %v", err)
+			}
+		})
+
+		t.Run("handles invalid JSON", func(t *testing.T) {
+			results := parseJSON(t, "not json")
+			if len(results) != 0 {
+				t.Fatal("Expected no results for invalid JSON")
+			}
+		})
+	})
+
+	t.Run("Recording tests", func(t *testing.T) {
+		t.Run("records passing test", func(t *testing.T) {
+			results := parseJSON(t, passEvent)
+
+			if len(results) != 1 {
+				t.Fatalf("Expected 1 package, got %d", len(results))
+			}
+
+			tests := getPackageTests(t, results, "example.com/pkg")
+			if _, exists := tests["TestAdd"]; !exists {
+				t.Fatal("Expected test 'TestAdd' to be recorded")
+			}
+		})
+
+		t.Run("records failing test", func(t *testing.T) {
+			results := parseJSON(t, failEvent)
+			tests := getPackageTests(t, results, "example.com/pkg")
+
+			if _, exists := tests["TestFail"]; !exists {
+				t.Fatal("Expected test 'TestFail' to be recorded")
+			}
+		})
+
+		t.Run("ignores non-terminal actions", func(t *testing.T) {
+			results := parseJSON(t, runEvent)
+
+			// Package should exist but with no tests
+			if tests, exists := results["example.com/pkg"]; exists {
+				if _, hasTest := tests["TestAdd"]; hasTest {
+					t.Fatal("Should not record test with 'run' action")
+				}
+			}
+		})
+	})
+
+	t.Run("Test states", func(t *testing.T) {
+		testCases := []struct {
+			name     string
+			input    string
+			testName string
+			expected TestState
+		}{
+			{"passing test", passEvent, "TestAdd", StatePassed},
+			{"failing test", failEvent, "TestFail", StateFailed},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				results := parseJSON(t, tc.input)
+				tests := getPackageTests(t, results, "example.com/pkg")
+
+				state, exists := tests[tc.testName]
+				if !exists {
+					t.Fatalf("Test %s not found", tc.testName)
+				}
+				if state != tc.expected {
+					t.Errorf("Expected state %s, got %v", tc.expected, state)
+				}
+			})
+		}
+	})
+
+	t.Run("Multiple tests", func(t *testing.T) {
+		input := strings.Join([]string{
+			`{"Action":"pass","Package":"example.com/pkg","Test":"TestOne"}`,
+			`{"Action":"fail","Package":"example.com/pkg","Test":"TestTwo"}`,
+			`{"Action":"pass","Package":"example.com/pkg","Test":"TestThree"}`,
+		}, "\n")
+
+		results := parseJSON(t, input)
+		tests := getPackageTests(t, results, "example.com/pkg")
+
+		if len(tests) != 3 {
+			t.Fatalf("Expected 3 tests, got %d", len(tests))
+		}
+
+		// Verify individual test states
+		expectedStates := map[string]TestState{
+			"TestOne":   StatePassed,
+			"TestTwo":   StateFailed,
+			"TestThree": StatePassed,
+		}
+
+		for name, expectedState := range expectedStates {
+			if state, exists := tests[name]; !exists {
+				t.Errorf("Test %s not found", name)
+			} else if state != expectedState {
+				t.Errorf("Test %s: expected state %s, got %v", name, expectedState, state)
+			}
+		}
+	})
+
+	t.Run("Multiple packages", func(t *testing.T) {
+		input := strings.Join([]string{
+			`{"Action":"pass","Package":"example.com/pkg1","Test":"TestA"}`,
+			`{"Action":"pass","Package":"example.com/pkg2","Test":"TestB"}`,
+		}, "\n")
+
+		results := parseJSON(t, input)
+
+		if len(results) != 2 {
+			t.Fatalf("Expected 2 packages, got %d", len(results))
+		}
+
+		// Verify both packages exist
+		for _, pkg := range []string{"example.com/pkg1", "example.com/pkg2"} {
+			if _, exists := results[pkg]; !exists {
+				t.Errorf("Package %s not found", pkg)
+			}
+		}
+	})
+
+	t.Run("Subtest filtering", func(t *testing.T) {
+		t.Run("filters out parent test when one subtest exists", func(t *testing.T) {
+			// Simplest case: parent with one child
+			input := strings.Join([]string{
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestParent"}`,
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestParent/Child"}`,
+			}, "\n")
+
+			results := parseJSON(t, input)
+			tests := getPackageTests(t, results, "example.com/pkg")
+
+			// Should only have the child test, not the parent
+			if _, exists := tests["TestParent"]; exists {
+				t.Error("Expected TestParent to be filtered out when child exists")
+			}
+		})
+
+		t.Run("keeps test without children", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestSimple"}`,
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestParent"}`,
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestParent/Child"}`,
+			}, "\n")
+
+			results := parseJSON(t, input)
+			tests := getPackageTests(t, results, "example.com/pkg")
+
+			// TestSimple has no children, should be kept
+			if _, exists := tests["TestSimple"]; !exists {
+				t.Error("Expected TestSimple to exist (has no children)")
+			}
+		})
+
+		t.Run("filters parent with multiple children", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestParent"}`,
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestParent/Child1"}`,
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestParent/Child2"}`,
+			}, "\n")
+
+			results := parseJSON(t, input)
+			tests := getPackageTests(t, results, "example.com/pkg")
+
+			// Parent should be filtered out
+			if _, exists := tests["TestParent"]; exists {
+				t.Error("Expected TestParent to be filtered out when multiple children exist")
+			}
+		})
+
+		t.Run("filters intermediate level in nested tests", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestAPI"}`,
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestAPI/Users"}`,
+				`{"Action":"pass","Package":"example.com/pkg","Test":"TestAPI/Users/Create"}`,
+			}, "\n")
+
+			results := parseJSON(t, input)
+			tests := getPackageTests(t, results, "example.com/pkg")
+
+			// TestAPI/Users should be filtered out (has child)
+			if _, exists := tests["TestAPI/Users"]; exists {
+				t.Error("Expected TestAPI/Users to be filtered out when it has children")
+			}
+		})
+	})
+
+	t.Run("Compilation errors", func(t *testing.T) {
+		t.Run("records package with compilation failure", func(t *testing.T) {
+			// Package-level fail without a Test field means compilation error
+			input := `{"Action":"fail","Package":"example.com/pkg","Elapsed":0.001}`
+
+			results := parseJSON(t, input)
+
+			// Should record the package
+			if _, exists := results["example.com/pkg"]; !exists {
+				t.Fatal("Expected package to be recorded")
+			}
+		})
+
+		t.Run("creates CompilationError test entry", func(t *testing.T) {
+			input := `{"Action":"fail","Package":"example.com/pkg","Elapsed":0.001}`
+
+			results := parseJSON(t, input)
+			tests := getPackageTests(t, results, "example.com/pkg")
+
+			// Should have a CompilationError entry
+			if _, exists := tests["CompilationError"]; !exists {
+				t.Fatal("Expected 'CompilationError' test to be created")
+			}
+		})
+
+		t.Run("CompilationError has failed state", func(t *testing.T) {
+			input := `{"Action":"fail","Package":"example.com/pkg","Elapsed":0.001}`
+
+			results := parseJSON(t, input)
+			tests := getPackageTests(t, results, "example.com/pkg")
+
+			state := tests["CompilationError"]
+			if state != StateFailed {
+				t.Errorf("Expected state 'failed', got %v", state)
+			}
+		})
+
+		t.Run("captures error output messages", func(t *testing.T) {
+			// When compilation fails, Go emits output events before the fail event
+			input := strings.Join([]string{
+				`{"Action":"output","Package":"example.com/pkg","Output":"# example.com/pkg\n"}`,
+				`{"Action":"output","Package":"example.com/pkg","Output":"./main.go:3:8: package foo is not in std\n"}`,
+				`{"Action":"fail","Package":"example.com/pkg","Elapsed":0.001}`,
+			}, "\n")
+
+			parser := NewParser()
+			err := parser.Parse(strings.NewReader(input))
+			if err != nil {
+				t.Fatalf("Parse failed: %v", err)
+			}
+
+			// Check if we have error output stored
+			errorOutput := parser.GetErrorOutput("example.com/pkg")
+			if errorOutput == "" {
+				t.Fatal("Expected error output to be captured")
+			}
+		})
+
+		t.Run("combines multiple output lines", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"output","Package":"example.com/pkg","Output":"# example.com/pkg\n"}`,
+				`{"Action":"output","Package":"example.com/pkg","Output":"./main.go:3:8: package foo is not in std\n"}`,
+				`{"Action":"output","Package":"example.com/pkg","Output":"./main.go:4:8: package bar is not in std\n"}`,
+				`{"Action":"fail","Package":"example.com/pkg","Elapsed":0.001}`,
+			}, "\n")
+
+			parser := NewParser()
+			err := parser.Parse(strings.NewReader(input))
+			if err != nil {
+				t.Fatalf("Parse failed: %v", err)
+			}
+
+			errorOutput := parser.GetErrorOutput("example.com/pkg")
+			expected := "# example.com/pkg\n./main.go:3:8: package foo is not in std\n./main.go:4:8: package bar is not in std\n"
+			if errorOutput != expected {
+				t.Errorf("Expected output:\n%q\nGot:\n%q", expected, errorOutput)
+			}
+		})
+	})
+}
+
+// Helper functions
+
+func parseJSON(t *testing.T, input string) Results {
+	t.Helper()
+	parser := NewParser()
+	err := parser.Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
+	}
+	return parser.GetResults()
+}
+
+func getPackageTests(t *testing.T, results Results, pkg string) PackageResults {
+	t.Helper()
+	tests, exists := results[pkg]
+	if !exists {
+		t.Fatalf("Package %s not found", pkg)
+	}
+	return tests
+}
