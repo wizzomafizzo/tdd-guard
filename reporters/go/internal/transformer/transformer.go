@@ -30,11 +30,18 @@ type TestResult struct {
 }
 
 // Transformer transforms parser results to TDD Guard format
-type Transformer struct{}
+type Transformer struct {
+	compilationErrorMessage string
+}
 
 // NewTransformer creates a new transformer
 func NewTransformer() *Transformer {
 	return &Transformer{}
+}
+
+// SetCompilationErrorMessage sets the compilation error message
+func (t *Transformer) SetCompilationErrorMessage(msg string) {
+	t.compilationErrorMessage = msg
 }
 
 // Transform converts parser results to TDD Guard format
@@ -56,6 +63,10 @@ func (t *Transformer) Transform(results parser.Results, p *parser.Parser) *TestR
 			if testState == parser.StateFailed {
 				hasFailures = true
 				output := p.GetTestOutput(pkg, testName)
+				// Use compilation error message if this is a CompilationError test
+				if testName == "CompilationError" && t.compilationErrorMessage != "" {
+					output = t.compilationErrorMessage
+				}
 				if output != "" {
 					test.Errors = []TestError{{Message: output}}
 				}

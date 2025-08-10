@@ -37,14 +37,34 @@ func process(input io.Reader, projectRoot string) error {
 		}
 	}
 
+	// Use MixedReader to check for compilation errors
+	mixedReader := parser.NewMixedReader(input)
+
 	p := parser.NewParser()
-	err := p.Parse(input)
-	if err != nil {
-		return err
+
+	// Parse JSON lines
+	jsonInput := strings.Join(mixedReader.GetJSONLines(), "\n")
+	if jsonInput != "" {
+		err := p.Parse(strings.NewReader(jsonInput))
+		if err != nil {
+			return err
+		}
 	}
 
+	// Only add syntthetic test if compilation error detected
+	results := p.GetResults()
 	t := transformer.NewTransformer()
-	result := t.Transform(p.GetResults(), p)
+
+	if len(results) == 0 && mixedReader.HasCompilationError() {
+		pkg := mixedReader.GetCompilationErrorPackage()
+		results[pkg] = parser.PackageResults{
+			"CompilationError": parser.StateFailed,
+		}
+		// Pass error message to transformer
+		t.SetCompilationErrorMessage(mixedReader.GetCompilationErrorMessage())
+	}
+
+	result := t.Transform(results, p)
 
 	s := storage.NewStorage(projectRoot)
 	return s.Save(result)

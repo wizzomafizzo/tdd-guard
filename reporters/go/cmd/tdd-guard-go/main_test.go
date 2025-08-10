@@ -86,6 +86,97 @@ func TestProcess(t *testing.T) {
 			assertErrorContains(t, err, "current directory must be within project root")
 		})
 	})
+
+	t.Run("compilation error handling", func(t *testing.T) {
+		t.Run("produces non-empty output for compilation error", func(t *testing.T) {
+			input := `# command-line-arguments`
+
+			err := process(bytes.NewReader([]byte(input)), tempDir)
+			if err != nil {
+				t.Fatalf("Expected no error, got: %v", err)
+			}
+
+			outputPath := getTestFilePath(tempDir)
+			data, _ := os.ReadFile(outputPath)
+
+
+			if bytes.Contains(data, []byte(`"testModules":[]`)) {
+				t.Fatalf("Expected non-empty testModules, got: %s", data)
+			}
+		})
+
+		t.Run("only adds synthetic test for lines starting with #", func(t *testing.T) {
+			input := `some random error text`
+			err := process(bytes.NewReader([]byte(input)), tempDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			data, _ := os.ReadFile(getTestFilePath(tempDir))
+
+			if !bytes.Contains(data, []byte(`"testModules":[]`)) {
+				t.Fatalf("Expected empty testModules for non-# input, got: %s", data)
+			}
+		})
+
+		t.Run("uses package name from compilation error", func(t *testing.T) {
+			input := `# command-line-arguments`
+			err := process(bytes.NewReader([]byte(input)), tempDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			data, _ := os.ReadFile(getTestFilePath(tempDir))
+
+			if !bytes.Contains(data, []byte("command-line-arguments")) {
+				t.Fatalf("Expected command-line-arguments in output, got: %s", data)
+			}
+		})
+
+		t.Run("names the test CompilationError", func(t *testing.T) {
+			input := `# command-line-arguments`
+			err := process(bytes.NewReader([]byte(input)), tempDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			data, _ := os.ReadFile(getTestFilePath(tempDir))
+
+			if !bytes.Contains(data, []byte("CompilationError")) {
+				t.Fatalf("Expected CompilationError in output, got: %s", data)
+			}
+		})
+
+		t.Run("includes compilation error message", func(t *testing.T) {
+			input := `# command-line-arguments
+single_import_error_test.go:5:2: no required module`
+			err := process(bytes.NewReader([]byte(input)), tempDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			data, _ := os.ReadFile(getTestFilePath(tempDir))
+
+			if !bytes.Contains(data, []byte("single_import_error_test.go:5:2")) {
+				t.Fatalf("Expected error message in output, got: %s", data)
+			}
+		})
+
+		t.Run("uses actual error message from input", func(t *testing.T) {
+			input := `# command-line-arguments
+main.go:10:5: undefined: SomeFunction`
+			err := process(bytes.NewReader([]byte(input)), tempDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			data, _ := os.ReadFile(getTestFilePath(tempDir))
+
+			if !bytes.Contains(data, []byte("main.go:10:5: undefined: SomeFunction")) {
+				t.Fatalf("Expected actual error message in output, got: %s", data)
+			}
+		})
+	})
 }
 
 // Test helpers
