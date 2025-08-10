@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -32,10 +33,8 @@ func TestProcess(t *testing.T) {
 		})
 
 		t.Run("parses and transforms input", func(t *testing.T) {
-			runProcess(t, tempDir)
-
-			outputPath := getTestFilePath(tempDir)
-			data, _ := os.ReadFile(outputPath)
+			input := `{"Action":"pass","Package":"example.com/pkg","Test":"TestExample"}`
+			data := processAndReadOutput(t, input, tempDir)
 
 			// Check it contains expected transformed data
 			if !bytes.Contains(data, []byte(`"state":"passed"`)) {
@@ -87,17 +86,26 @@ func TestProcess(t *testing.T) {
 		})
 	})
 
-	t.Run("compilation error handling", func(t *testing.T) {
-		t.Run("produces non-empty output for compilation error", func(t *testing.T) {
-			input := `# command-line-arguments`
+	t.Run("pass-through output", func(t *testing.T) {
+		t.Run("passes input to stdout", func(t *testing.T) {
+			input := `{"Action":"pass","Package":"example.com/pkg","Test":"TestExample"}`
+			output := &bytes.Buffer{}
 
-			err := process(bytes.NewReader([]byte(input)), tempDir)
+			err := process(bytes.NewReader([]byte(input)), tempDir, output)
 			if err != nil {
 				t.Fatalf("Expected no error, got: %v", err)
 			}
 
-			outputPath := getTestFilePath(tempDir)
-			data, _ := os.ReadFile(outputPath)
+			if output.String() != input {
+				t.Errorf("Expected output '%s', got '%s'", input, output.String())
+			}
+		})
+	})
+
+	t.Run("compilation error handling", func(t *testing.T) {
+		t.Run("produces non-empty output for compilation error", func(t *testing.T) {
+			input := `# command-line-arguments`
+			data := processAndReadOutput(t, input, tempDir)
 
 			if bytes.Contains(data, []byte(`"testModules":[]`)) {
 				t.Fatalf("Expected non-empty testModules, got: %s", data)
@@ -106,12 +114,7 @@ func TestProcess(t *testing.T) {
 
 		t.Run("only adds synthetic test for lines starting with #", func(t *testing.T) {
 			input := `some random error text`
-			err := process(bytes.NewReader([]byte(input)), tempDir)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			data, _ := os.ReadFile(getTestFilePath(tempDir))
+			data := processAndReadOutput(t, input, tempDir)
 
 			if !bytes.Contains(data, []byte(`"testModules":[]`)) {
 				t.Fatalf("Expected empty testModules for non-# input, got: %s", data)
@@ -120,12 +123,7 @@ func TestProcess(t *testing.T) {
 
 		t.Run("uses package name from compilation error", func(t *testing.T) {
 			input := `# command-line-arguments`
-			err := process(bytes.NewReader([]byte(input)), tempDir)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			data, _ := os.ReadFile(getTestFilePath(tempDir))
+			data := processAndReadOutput(t, input, tempDir)
 
 			if !bytes.Contains(data, []byte("command-line-arguments")) {
 				t.Fatalf("Expected command-line-arguments in output, got: %s", data)
@@ -134,12 +132,7 @@ func TestProcess(t *testing.T) {
 
 		t.Run("names the test CompilationError", func(t *testing.T) {
 			input := `# command-line-arguments`
-			err := process(bytes.NewReader([]byte(input)), tempDir)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			data, _ := os.ReadFile(getTestFilePath(tempDir))
+			data := processAndReadOutput(t, input, tempDir)
 
 			if !bytes.Contains(data, []byte("CompilationError")) {
 				t.Fatalf("Expected CompilationError in output, got: %s", data)
@@ -149,12 +142,7 @@ func TestProcess(t *testing.T) {
 		t.Run("includes compilation error message", func(t *testing.T) {
 			input := `# command-line-arguments
 single_import_error_test.go:5:2: no required module`
-			err := process(bytes.NewReader([]byte(input)), tempDir)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			data, _ := os.ReadFile(getTestFilePath(tempDir))
+			data := processAndReadOutput(t, input, tempDir)
 
 			if !bytes.Contains(data, []byte("single_import_error_test.go:5:2")) {
 				t.Fatalf("Expected error message in output, got: %s", data)
@@ -164,12 +152,7 @@ single_import_error_test.go:5:2: no required module`
 		t.Run("uses actual error message from input", func(t *testing.T) {
 			input := `# command-line-arguments
 main.go:10:5: undefined: SomeFunction`
-			err := process(bytes.NewReader([]byte(input)), tempDir)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			data, _ := os.ReadFile(getTestFilePath(tempDir))
+			data := processAndReadOutput(t, input, tempDir)
 
 			if !bytes.Contains(data, []byte("main.go:10:5: undefined: SomeFunction")) {
 				t.Fatalf("Expected actual error message in output, got: %s", data)
@@ -182,7 +165,7 @@ main.go:10:5: undefined: SomeFunction`
 func runProcess(t *testing.T, projectRoot string) error {
 	t.Helper()
 	json := `{"Action":"pass","Package":"example.com/pkg","Test":"TestExample"}`
-	return process(bytes.NewReader([]byte(json)), projectRoot)
+	return process(bytes.NewReader([]byte(json)), projectRoot, io.Discard)
 }
 
 func assertFileExists(t *testing.T, projectRoot string) {
@@ -203,4 +186,14 @@ func assertErrorContains(t *testing.T, err error, expected string) {
 func getTestFilePath(projectRoot string) string {
 	parts := append([]string{projectRoot}, storage.TestResultsPath...)
 	return filepath.Join(parts...)
+}
+
+func processAndReadOutput(t *testing.T, input string, projectRoot string) []byte {
+	t.Helper()
+	err := process(bytes.NewReader([]byte(input)), projectRoot, io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, _ := os.ReadFile(getTestFilePath(projectRoot))
+	return data
 }

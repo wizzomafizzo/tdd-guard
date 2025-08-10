@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	tddio "github.com/nizos/tdd-guard/reporters/go/internal/io"
 	"github.com/nizos/tdd-guard/reporters/go/internal/parser"
 	"github.com/nizos/tdd-guard/reporters/go/internal/storage"
 	"github.com/nizos/tdd-guard/reporters/go/internal/transformer"
@@ -18,18 +20,25 @@ func main() {
 	flag.StringVar(&projectRoot, "project-root", "", "Project root directory (absolute path)")
 	flag.Parse()
 
-	if err := process(os.Stdin, projectRoot); err != nil {
+	if err := process(os.Stdin, projectRoot, os.Stdout); err != nil {
 		os.Exit(1)
 	}
 }
 
-func process(input io.Reader, projectRoot string) error {
+func process(input io.Reader, projectRoot string, output io.Writer) error {
 	if err := validateProjectRoot(projectRoot); err != nil {
 		return err
 	}
 
-	// Parse test output
-	mixedReader := parser.NewMixedReader(input)
+	// Buffer to collect input while passing through to output
+	buffer := &bytes.Buffer{}
+	teeReader := tddio.NewTeeReader(input, io.MultiWriter(output, buffer))
+
+	// Read all input through the tee reader
+	io.ReadAll(teeReader)
+
+	// Parse test output from buffer
+	mixedReader := parser.NewMixedReader(buffer)
 	results, p, err := parseTestResults(mixedReader)
 	if err != nil {
 		return err
