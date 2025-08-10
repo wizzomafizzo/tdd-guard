@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { mkdtempSync, writeFileSync, rmSync, copyFileSync } from 'node:fs'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { FileStorage, Config as TDDConfig } from 'tdd-guard'
@@ -533,27 +533,8 @@ async function runReporter(
     const tddConfig = new TDDConfig({ projectRoot: tempDir })
     const storage = new FileStorage(tddConfig)
 
-    // Create test framework configuration in temp directory
-    const configPath = join(tempDir, reporter.configFileName)
-    const reporterPath = join(__dirname, reporter.reporterPath).replace(
-      /\\/g,
-      '/'
-    )
-    writeFileSync(configPath, reporter.createConfig(tempDir, reporterPath))
-
-    // Copy test file
-    const filename = reporter.testScenarios[scenario]
-    const sourcePath = join(
-      __dirname,
-      'artifacts',
-      reporter.artifactDir,
-      filename
-    )
-    const destPath = join(tempDir, filename)
-    copyFileSync(sourcePath, destPath)
-
-    // Run the test framework
-    reporter.runCommand(tempDir, configPath, filename)
+    // Run the test for the given scenario
+    reporter.run(tempDir, scenario)
 
     // Get saved test data
     const savedData = await storage.getTest()

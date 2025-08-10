@@ -1,20 +1,47 @@
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, copyFileSync, symlinkSync } from 'node:fs'
+import { symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { ReporterConfig } from '../types'
+import type { ReporterConfig, TestScenarios } from '../types'
+import { copyTestArtifacts } from './helpers'
 
 export function createPhpunitReporter(): ReporterConfig {
+  const artifactDir = 'phpunit'
+  const testScenarios = {
+    singlePassing: 'SinglePassingTest.php',
+    singleFailing: 'SingleFailingTest.php',
+    singleImportError: 'SingleImportErrorTest.php',
+  }
+
   return {
     name: 'PHPUnitReporter',
-    reporterPath: '../phpunit/src/TddGuardExtension.php',
-    configFileName: 'phpunit.xml',
-    artifactDir: 'phpunit',
-    testScenarios: {
-      singlePassing: 'SinglePassingTest.php',
-      singleFailing: 'SingleFailingTest.php',
-      singleImportError: 'SingleImportErrorTest.php',
+    testScenarios,
+    run: (tempDir, scenario: keyof TestScenarios) => {
+      // Copy test file to tests subdirectory
+      copyTestArtifacts(artifactDir, testScenarios, scenario, tempDir, {
+        targetSubdir: 'tests',
+      })
+
+      // Write PHPUnit config
+      writeFileSync(join(tempDir, 'phpunit.xml'), createPhpunitConfig(tempDir))
+
+      // Create symlink to vendor directory
+      const reporterVendorPath = join(__dirname, '../../phpunit/vendor')
+      const tempVendorPath = join(tempDir, 'vendor')
+      symlinkSync(reporterVendorPath, tempVendorPath)
+
+      // Run PHPUnit
+      const phpunitPath = join(__dirname, '../../phpunit/vendor/bin/phpunit')
+      spawnSync(phpunitPath, ['-c', 'phpunit.xml'], {
+        cwd: tempDir,
+        env: { ...process.env },
+        stdio: 'pipe',
+      })
     },
-    createConfig: (tempDir) => `<?xml version="1.0" encoding="UTF-8"?>
+  }
+}
+
+function createPhpunitConfig(tempDir: string): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
@@ -32,27 +59,5 @@ export function createPhpunitReporter(): ReporterConfig {
         </bootstrap>
     </extensions>
 </phpunit>
-`,
-    runCommand: (tempDir, configPath, artifactPath) => {
-      // Create tests directory
-      const testsDir = join(tempDir, 'tests')
-      mkdirSync(testsDir, { recursive: true })
-
-      // Copy test file to tests directory
-      copyFileSync(join(tempDir, artifactPath), join(testsDir, artifactPath))
-
-      // Create symlink to vendor directory
-      const reporterVendorPath = join(__dirname, '../../phpunit/vendor')
-      const tempVendorPath = join(tempDir, 'vendor')
-      symlinkSync(reporterVendorPath, tempVendorPath)
-
-      // Run PHPUnit
-      const phpunitPath = join(__dirname, '../../phpunit/vendor/bin/phpunit')
-      spawnSync(phpunitPath, ['-c', configPath], {
-        cwd: tempDir,
-        env: { ...process.env },
-        stdio: 'pipe',
-      })
-    },
-  }
+`
 }
