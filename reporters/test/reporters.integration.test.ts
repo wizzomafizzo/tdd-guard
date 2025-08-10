@@ -9,6 +9,7 @@ import {
   createVitestReporter,
   createPhpunitReporter,
   createPytestReporter,
+  createGoReporter,
 } from './factories'
 
 // Test data structure for each reporter
@@ -19,7 +20,7 @@ interface ReporterTestData {
   importErrorResults: unknown
 }
 
-type ReporterName = 'jest' | 'vitest' | 'phpunit' | 'pytest'
+type ReporterName = 'jest' | 'vitest' | 'phpunit' | 'pytest' | 'go'
 
 describe('Reporters', () => {
   const reporterData: ReporterTestData[] = []
@@ -31,6 +32,7 @@ describe('Reporters', () => {
       createVitestReporter(),
       createPhpunitReporter(),
       createPytestReporter(),
+      createGoReporter(),
     ]
 
     // Run all reporters in parallel
@@ -45,6 +47,7 @@ describe('Reporters', () => {
         { name: 'vitest', expected: 'single-passing.test.js' },
         { name: 'phpunit', expected: 'SinglePassingTest.php' },
         { name: 'pytest', expected: 'test_single_passing.py' },
+        { name: 'go', expected: 'singlePassing' },
       ]
 
       it.each(reporters)('$name reports module path', ({ name, expected }) => {
@@ -59,6 +62,7 @@ describe('Reporters', () => {
         { name: 'vitest', expected: 'single-failing.test.js' },
         { name: 'phpunit', expected: 'SingleFailingTest.php' },
         { name: 'pytest', expected: 'test_single_failing.py' },
+        { name: 'go', expected: 'singleFailing' },
       ]
 
       it.each(reporters)('$name reports module path', ({ name, expected }) => {
@@ -73,6 +77,7 @@ describe('Reporters', () => {
         { name: 'vitest', expected: 'single-import-error.test.js' },
         { name: 'phpunit', expected: 'SingleImportErrorTest.php' },
         { name: 'pytest', expected: 'test_single_import_error.py' },
+        { name: 'go', expected: 'missingImport' },
       ]
 
       it.each(reporters)('$name reports module path', ({ name, expected }) => {
@@ -92,6 +97,10 @@ describe('Reporters', () => {
         { name: 'vitest', expected: 'should add numbers correctly' },
         { name: 'phpunit', expected: 'testShouldAddNumbersCorrectly' },
         { name: 'pytest', expected: 'test_should_add_numbers_correctly' },
+        {
+          name: 'go',
+          expected: 'TestCalculator/TestShouldAddNumbersCorrectly',
+        },
       ]
 
       it.each(reporters)('$name reports test name', ({ name, expected }) => {
@@ -106,6 +115,10 @@ describe('Reporters', () => {
         { name: 'vitest', expected: 'should add numbers correctly' },
         { name: 'phpunit', expected: 'testShouldAddNumbersCorrectly' },
         { name: 'pytest', expected: 'test_should_add_numbers_correctly' },
+        {
+          name: 'go',
+          expected: 'TestCalculator/TestShouldAddNumbersCorrectly',
+        },
       ]
 
       it.each(reporters)('$name reports test name', ({ name, expected }) => {
@@ -126,6 +139,7 @@ describe('Reporters', () => {
           name: 'pytest',
           expected: 'collection_error_test_single_import_error.py',
         },
+        { name: 'go', expected: 'CompilationError' },
       ]
 
       it.each(reporters)(
@@ -158,6 +172,11 @@ describe('Reporters', () => {
           expected:
             'test_single_passing.py::TestCalculator::test_should_add_numbers_correctly',
         },
+        {
+          name: 'go',
+          expected:
+            'singlePassingTestModule/TestCalculator/TestShouldAddNumbersCorrectly',
+        },
       ]
 
       it.each(reporters)(
@@ -188,6 +207,11 @@ describe('Reporters', () => {
           expected:
             'test_single_failing.py::TestCalculator::test_should_add_numbers_correctly',
         },
+        {
+          name: 'go',
+          expected:
+            'singleFailingTestModule/TestCalculator/TestShouldAddNumbersCorrectly',
+        },
       ]
 
       it.each(reporters)(
@@ -214,6 +238,7 @@ describe('Reporters', () => {
           expected: 'SingleImportErrorTest::testShouldAddNumbersCorrectly',
         },
         { name: 'pytest', expected: 'test_single_import_error.py' },
+        { name: 'go', expected: 'missingImportModule/CompilationError' },
       ]
 
       it.each(reporters)(
@@ -231,7 +256,13 @@ describe('Reporters', () => {
 
   describe('Test State Reporting', () => {
     describe('when assertions are passing', () => {
-      const reporters: ReporterName[] = ['jest', 'vitest', 'phpunit', 'pytest']
+      const reporters: ReporterName[] = [
+        'jest',
+        'vitest',
+        'phpunit',
+        'pytest',
+        'go',
+      ]
 
       it.each(reporters)('%s reports passing state', (reporter) => {
         const testStates = extractValues(
@@ -243,7 +274,13 @@ describe('Reporters', () => {
     })
 
     describe('when assertions are failing', () => {
-      const reporters: ReporterName[] = ['jest', 'vitest', 'phpunit', 'pytest']
+      const reporters: ReporterName[] = [
+        'jest',
+        'vitest',
+        'phpunit',
+        'pytest',
+        'go',
+      ]
 
       it.each(reporters)('%s reports failing state', (reporter) => {
         const testStates = extractValues(
@@ -263,6 +300,7 @@ describe('Reporters', () => {
         { name: 'vitest', expected: undefined },
         { name: 'phpunit', expected: 'failed' },
         { name: 'pytest', expected: 'failed' },
+        { name: 'go', expected: 'failed' },
       ]
 
       it.each(reporters)(
@@ -294,6 +332,10 @@ describe('Reporters', () => {
           expected: 'Failed asserting that 5 matches expected 6.',
         },
         { name: 'pytest', expected: ['assert 2 + 3 == 6', 'AssertionError'] },
+        {
+          name: 'go',
+          expected: 'single_failing_test.go:10: Expected 6 but got 5',
+        },
       ]
 
       it.each(reporters)(
@@ -324,6 +366,7 @@ describe('Reporters', () => {
         { name: 'vitest', expected: '6' },
         { name: 'phpunit', expected: undefined },
         { name: 'pytest', expected: undefined },
+        { name: 'go', expected: undefined },
       ]
 
       it.each(reporters)(
@@ -344,6 +387,7 @@ describe('Reporters', () => {
         { name: 'vitest', expected: '5' },
         { name: 'phpunit', expected: undefined },
         { name: 'pytest', expected: undefined },
+        { name: 'go', expected: undefined },
       ]
 
       it.each(reporters)(
@@ -371,6 +415,14 @@ describe('Reporters', () => {
         {
           name: 'pytest',
           expected: ['ModuleNotFoundError', 'non_existent_module'],
+        },
+        {
+          name: 'go',
+          expected: [
+            'single_import_error_test.go:5:2',
+            'no required module provides package',
+            'github.com/non-existent/module',
+          ],
         },
       ]
 
@@ -404,6 +456,7 @@ describe('Reporters', () => {
         { name: 'vitest', expected: 'passed' },
         { name: 'phpunit', expected: 'passed' },
         { name: 'pytest', expected: undefined }, // TODO: Fix
+        { name: 'go', expected: 'passed' },
       ]
 
       it.each(reporters)(
@@ -424,6 +477,7 @@ describe('Reporters', () => {
         { name: 'vitest', expected: 'failed' },
         { name: 'phpunit', expected: 'failed' },
         { name: 'pytest', expected: undefined }, // TODO: Fix
+        { name: 'go', expected: 'failed' },
       ]
 
       it.each(reporters)(
@@ -444,6 +498,7 @@ describe('Reporters', () => {
         { name: 'vitest', expected: 'failed' },
         { name: 'phpunit', expected: 'failed' },
         { name: 'pytest', expected: undefined }, // TODO: Fix
+        { name: 'go', expected: 'failed' },
       ]
 
       it.each(reporters)(
@@ -461,12 +516,13 @@ describe('Reporters', () => {
     scenario: 'passingResults' | 'failingResults' | 'importErrorResults',
     extractor: (data: unknown) => T
   ): Record<ReporterName, T | undefined> {
-    const [jest, vitest, phpunit, pytest] = reporterData
+    const [jest, vitest, phpunit, pytest, go] = reporterData
     return {
       jest: safeExtract(jest[scenario], extractor),
       vitest: safeExtract(vitest[scenario], extractor),
       phpunit: safeExtract(phpunit[scenario], extractor),
       pytest: safeExtract(pytest[scenario], extractor),
+      go: safeExtract(go[scenario], extractor),
     }
   }
 

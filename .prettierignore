@@ -17,3 +17,4 @@ reporters/go/**/*.go
 reporters/go/**/*.mod
 reporters/go/**/*.sum
 reporters/go/**/*.tsbuildinfo
+reporters/test/factories/go.ts
