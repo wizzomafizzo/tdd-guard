@@ -1,11 +1,12 @@
 import { spawnSync, execFileSync } from 'node:child_process'
 import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 import type { ReporterConfig, TestScenarios } from '../types'
 import { copyTestArtifacts } from './helpers'
 
 export function createGoReporter(): ReporterConfig {
-  // Absolute path to protect against accidental or malicious replacement of the executable
-  const goBinary = '/usr/local/go/bin/go'
+  // Use hardcoded absolute path for security when available, fall back to PATH for CI environments
+  const goBinary = existsSync('/usr/local/go/bin/go') ? '/usr/local/go/bin/go' : 'go'
   const artifactDir = 'go'
   const testScenarios = {
     singlePassing: 'passing',
