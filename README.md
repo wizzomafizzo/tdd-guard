@@ -23,7 +23,7 @@ TDD Guard monitors file operations in real-time and blocks any changes that viol
 
 - **Focus on solving problems** - TDD Guard enforces the rules while you design solutions
 - **Save context for what matters** - No more TDD instructions cluttering your CLAUDE.md
-- **Works with your stack** - TypeScript, JavaScript, Python, and PHP today. More languages coming soon
+- **Works with your stack** - TypeScript, JavaScript, Python, PHP, and Go today. More languages coming soon
 - **Control without context switches** - Toggle with `tdd-guard on/off` mid-session
 - **Flexible validation** - Use local Claude or configure Anthropic API
 
@@ -34,6 +34,7 @@ TDD Guard monitors file operations in real-time and blocks any changes that viol
   - JavaScript/TypeScript: Vitest or Jest
   - Python: pytest
   - PHP: PHPUnit 9.x, 10.x, 11.x, or 12.x
+  - Go: Go 1.21+
 
 ## Quick Start
 
@@ -166,6 +167,32 @@ For PHPUnit 10.x/11.x/12.x, add to your `phpunit.xml`:
 
 </details>
 
+<details>
+<summary><b>Go</b></summary>
+
+Install the tdd-guard-go reporter:
+
+```bash
+go install github.com/nizos/tdd-guard/reporters/go/cmd/tdd-guard-go@latest
+```
+
+Pipe `go test -json` output to the reporter:
+
+```bash
+go test -json ./... | tdd-guard-go -project-root /Users/username/projects/my-app
+```
+
+For Makefile integration:
+
+```makefile
+test:
+	go test -json ./... | tdd-guard-go -project-root /Users/username/projects/my-app
+```
+
+**Note:** The reporter acts as a filter that passes test output through unchanged while capturing results for TDD Guard. See the [Go reporter configuration](reporters/go/README.md#configuration) for more details.
+
+</details>
+
 ### 3. Configure Claude Code Hook
 
 Use the `/hooks` command in Claude Code:
@@ -211,7 +238,7 @@ TDD Guard runs with your user permissions and has access to your file system. We
 ## Roadmap
 
 - Add support for more testing frameworks (Mocha, unittest, etc.)
-- Add support for additional programming languages (Go, Rust, Java, etc.)
+- Add support for additional programming languages (Ruby, Rust, Java, C#, etc.)
 - Encourage meaningful refactoring opportunities when tests are green
 - Add support for multiple concurrent sessions per project
 
