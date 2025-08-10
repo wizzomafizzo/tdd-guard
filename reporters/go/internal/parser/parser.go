@@ -80,13 +80,6 @@ func (p *Parser) processEvent(event *TestEvent) {
 		p.errorOutputs[event.Package] += event.Output
 	}
 
-	// Handle package-level failure (compilation error)
-	if event.Test == "" && event.Action == "fail" {
-		// Package compilation failed, create synthetic test
-		p.results[event.Package]["CompilationError"] = StateFailed
-		return
-	}
-
 	// Skip events without test name
 	if event.Test == "" {
 		return

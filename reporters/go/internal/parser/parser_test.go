@@ -342,43 +342,7 @@ func TestParser(t *testing.T) {
 		})
 	})
 
-	t.Run("Compilation errors", func(t *testing.T) {
-		t.Run("records package with compilation failure", func(t *testing.T) {
-			// Package-level fail without a Test field means compilation error
-			input := `{"Action":"fail","Package":"example.com/pkg","Elapsed":0.001}`
-
-			results := parseJSON(t, input)
-
-			// Should record the package
-			if _, exists := results["example.com/pkg"]; !exists {
-				t.Fatal("Expected package to be recorded")
-			}
-		})
-
-		t.Run("creates CompilationError test entry", func(t *testing.T) {
-			input := `{"Action":"fail","Package":"example.com/pkg","Elapsed":0.001}`
-
-			results := parseJSON(t, input)
-			tests := getPackageTests(t, results, "example.com/pkg")
-
-			// Should have a CompilationError entry
-			if _, exists := tests["CompilationError"]; !exists {
-				t.Fatal("Expected 'CompilationError' test to be created")
-			}
-		})
-
-		t.Run("CompilationError has failed state", func(t *testing.T) {
-			input := `{"Action":"fail","Package":"example.com/pkg","Elapsed":0.001}`
-
-			results := parseJSON(t, input)
-			tests := getPackageTests(t, results, "example.com/pkg")
-
-			state := tests["CompilationError"]
-			if state != StateFailed {
-				t.Errorf("Expected state 'failed', got %v", state)
-			}
-		})
-
+	t.Run("Package-level output", func(t *testing.T) {
 		t.Run("captures error output messages", func(t *testing.T) {
 			// When compilation fails, Go emits output events before the fail event
 			input := strings.Join([]string{
