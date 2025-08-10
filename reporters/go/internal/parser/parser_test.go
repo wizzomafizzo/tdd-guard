@@ -228,6 +228,120 @@ func TestParser(t *testing.T) {
 		})
 	})
 
+	t.Run("Test output capture", func(t *testing.T) {
+		t.Run("captures output for specific test", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"run","Package":"example.com/pkg","Test":"ExampleTest"}`,
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"=== RUN   ExampleTest\n"}`,
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"    main_test.go:10: Expected 6 but got 5\n"}`,
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"--- FAIL: ExampleTest (0.00s)\n"}`,
+				`{"Action":"fail","Package":"example.com/pkg","Test":"ExampleTest","Elapsed":0}`,
+			}, "\n")
+
+			output := parseAndGetOutput(t, input)
+			if output == "" {
+				t.Fatal("Expected test output to be captured")
+			}
+		})
+
+		t.Run("returns empty string for non-existent test", func(t *testing.T) {
+			parser := NewParser()
+
+			testOutput := parser.GetTestOutput("example.com/pkg", "NonExistentTest")
+			if testOutput != "" {
+				t.Fatalf("Expected empty string for non-existent test, got %q", testOutput)
+			}
+		})
+
+		t.Run("returns empty string when test exists but has no output", func(t *testing.T) {
+			input := `{"Action":"pass","Package":"example.com/pkg","Test":"ExampleTest"}`
+
+			output := parseAndGetOutput(t, input)
+			if output != "" {
+				t.Fatalf("Expected empty string for test without output, got %q", output)
+			}
+		})
+
+		t.Run("returns actual output content", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"Expected 6 but got 5\n"}`,
+				`{"Action":"fail","Package":"example.com/pkg","Test":"ExampleTest"}`,
+			}, "\n")
+
+			output := parseAndGetOutput(t, input)
+			expected := "Expected 6 but got 5"
+			if output != expected {
+				t.Fatalf("Expected %q, got %q", expected, output)
+			}
+		})
+
+		t.Run("concatenates multiple output lines", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"Line 1\n"}`,
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"Line 2\n"}`,
+				`{"Action":"fail","Package":"example.com/pkg","Test":"ExampleTest"}`,
+			}, "\n")
+
+			output := parseAndGetOutput(t, input)
+			expected := "Line 1\nLine 2"
+			if output != expected {
+				t.Fatalf("Expected %q, got %q", expected, output)
+			}
+		})
+
+		t.Run("excludes RUN lines from output", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"=== RUN   ExampleTest\n"}`,
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"Error message\n"}`,
+				`{"Action":"fail","Package":"example.com/pkg","Test":"ExampleTest"}`,
+			}, "\n")
+
+			output := parseAndGetOutput(t, input)
+			if strings.Contains(output, "=== RUN") {
+				t.Fatalf("Output should not contain RUN line, got %q", output)
+			}
+		})
+
+		t.Run("excludes FAIL lines from output", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"Error message\n"}`,
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"--- FAIL: ExampleTest (0.00s)\n"}`,
+				`{"Action":"fail","Package":"example.com/pkg","Test":"ExampleTest"}`,
+			}, "\n")
+
+			output := parseAndGetOutput(t, input)
+			if strings.Contains(output, "--- FAIL") {
+				t.Fatalf("Output should not contain FAIL line, got %q", output)
+			}
+		})
+
+		t.Run("trims leading whitespace from error lines", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"    test.go:10: Expected 6 but got 5\n"}`,
+				`{"Action":"fail","Package":"example.com/pkg","Test":"ExampleTest"}`,
+			}, "\n")
+
+			output := parseAndGetOutput(t, input)
+			expected := "test.go:10: Expected 6 but got 5"
+			if output != expected {
+				t.Fatalf("Expected %q, got %q", expected, output)
+			}
+		})
+
+		t.Run("trims trailing newline from output", func(t *testing.T) {
+			input := strings.Join([]string{
+				`{"Action":"output","Package":"example.com/pkg","Test":"ExampleTest","Output":"test.go:10: Error message\n"}`,
+				`{"Action":"fail","Package":"example.com/pkg","Test":"ExampleTest"}`,
+			}, "\n")
+
+			output := parseAndGetOutput(t, input)
+			expected := "test.go:10: Error message"
+			if output != expected {
+				t.Fatalf("Expected %q, got %q", expected, output)
+			}
+		})
+	})
+
 	t.Run("Compilation errors", func(t *testing.T) {
 		t.Run("records package with compilation failure", func(t *testing.T) {
 			// Package-level fail without a Test field means compilation error
@@ -328,4 +442,16 @@ func getPackageTests(t *testing.T, results Results, pkg string) PackageResults {
 		t.Fatalf("Package %s not found", pkg)
 	}
 	return tests
+}
+
+// parseAndGetOutput is a helper for test output capture tests
+// It uses the default package "example.com/pkg" and test name ExampleTest"
+func parseAndGetOutput(t *testing.T, input string) string {
+	t.Helper()
+	parser := NewParser()
+	err := parser.Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
+	}
+	return parser.GetTestOutput("example.com/pkg", "ExampleTest")
 }

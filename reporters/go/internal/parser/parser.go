@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"io"
+	"strings"
 )
 
 // TestEvent represents a test event from go test -json
@@ -34,6 +35,7 @@ type Results map[string]PackageResults
 type Parser struct {
 	results      Results
 	errorOutputs map[string]string
+	testOutputs  map[string]map[string]string // Track test output content
 }
 
 // NewParser creates a new parser
@@ -41,6 +43,7 @@ func NewParser() *Parser {
 	return &Parser{
 		results:      make(Results),
 		errorOutputs: make(map[string]string),
+		testOutputs:  make(map[string]map[string]string),
 	}
 }
 
@@ -89,10 +92,30 @@ func (p *Parser) processEvent(event *TestEvent) {
 		return
 	}
 
+	// Track output events
+	if event.Action == "output" {
+		if p.testOutputs[event.Package] == nil {
+			p.testOutputs[event.Package] = make(map[string]string)
+		}
+		// Skip RUN and FAIL lines
+		if strings.HasPrefix(event.Output, "=== RUN") || strings.HasPrefix(event.Output, "--- FAIL") {
+			return
+		}
+		// Trim leading whitespace and append to existing output
+		p.testOutputs[event.Package][event.Test] += strings.TrimLeft(event.Output, " \t")
+	}
+
 	// Record test state for terminal actions
 	switch event.Action {
 	case "pass":
 		p.results[event.Package][event.Test] = StatePassed
+		// Track that this test exists (but has no output if not already tracked)
+		if p.testOutputs[event.Package] == nil {
+			p.testOutputs[event.Package] = make(map[string]string)
+		}
+		if _, exists := p.testOutputs[event.Package][event.Test]; !exists {
+			p.testOutputs[event.Package][event.Test] = ""
+		}
 	case "fail":
 		p.results[event.Package][event.Test] = StateFailed
 	case "skip":
@@ -134,4 +157,17 @@ func (p *Parser) GetResults() Results {
 // GetErrorOutput returns captured error output for a package
 func (p *Parser) GetErrorOutput(pkg string) string {
 	return p.errorOutputs[pkg]
+}
+
+// GetTestOutput returns captured output for a specific test
+func (p *Parser) GetTestOutput(pkg, test string) string {
+	if p.testOutputs[pkg] == nil {
+		return ""
+	}
+	output, exists := p.testOutputs[pkg][test]
+	if !exists {
+		return ""
+	}
+	// Trim trailing whitespace/newlines
+	return strings.TrimRight(output, "\n")
 }

@@ -44,7 +44,7 @@ func process(input io.Reader, projectRoot string) error {
 	}
 
 	t := transformer.NewTransformer()
-	result := t.Transform(p.GetResults())
+	result := t.Transform(p.GetResults(), p)
 
 	s := storage.NewStorage(projectRoot)
 	return s.Save(result)

@@ -4,11 +4,17 @@ import (
 	"github.com/nizos/tdd-guard/reporters/go/internal/parser"
 )
 
+// TestError represents an error from a test
+type TestError struct {
+	Message string `json:"message"`
+}
+
 // Test represents a single test
 type Test struct {
-	Name     string `json:"name"`
-	FullName string `json:"fullName"`
-	State    string `json:"state"`
+	Name     string      `json:"name"`
+	FullName string      `json:"fullName"`
+	State    string      `json:"state"`
+	Errors   []TestError `json:"errors,omitempty"`
 }
 
 // TestModule represents a module with its tests
@@ -32,7 +38,7 @@ func NewTransformer() *Transformer {
 }
 
 // Transform converts parser results to TDD Guard format
-func (t *Transformer) Transform(results parser.Results) *TestResult {
+func (t *Transformer) Transform(results parser.Results, p *parser.Parser) *TestResult {
 	modules := []TestModule{}
 	hasFailures := false
 
@@ -45,11 +51,17 @@ func (t *Transformer) Transform(results parser.Results) *TestResult {
 				FullName: pkg + "/" + testName,
 				State:    string(testState),
 			}
-			tests = append(tests, test)
 
+			// Add error messages for failed tests
 			if testState == parser.StateFailed {
 				hasFailures = true
+				output := p.GetTestOutput(pkg, testName)
+				if output != "" {
+					test.Errors = []TestError{{Message: output}}
+				}
 			}
+
+			tests = append(tests, test)
 		}
 
 		module := TestModule{

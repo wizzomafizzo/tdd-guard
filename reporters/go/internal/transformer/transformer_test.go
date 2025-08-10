@@ -1,6 +1,7 @@
 package transformer
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/nizos/tdd-guard/reporters/go/internal/parser"
@@ -107,6 +108,53 @@ func TestTransformer(t *testing.T) {
 			}
 		})
 
+		t.Run("Error messages", func(t *testing.T) {
+			t.Run("failed test has errors field", func(t *testing.T) {
+				results := createSingleTest("TestFail", parser.StateFailed)
+				output := transformResults(t, results)
+				test := getFirstTest(t, output)
+
+				// Check if the Errors field exists (will fail compilation if not)
+				if test.Errors == nil {
+					// This is OK - errors can be nil if no error message
+				}
+			})
+
+			t.Run("Transform accepts parser parameter", func(t *testing.T) {
+				p := parser.NewParser()
+				results := createSingleTest("TestFail", parser.StateFailed)
+				transformer := NewTransformer()
+
+				output := transformer.Transform(results, p)
+				if output == nil {
+					t.Fatal("Expected non-nil output")
+				}
+			})
+
+			t.Run("includes error message for failed test", func(t *testing.T) {
+				// Create a parser with a failed test and output
+				p := parser.NewParser()
+				input := strings.Join([]string{
+					`{"Action":"output","Package":"example.com/pkg","Test":"TestFail","Output":"Expected 6 but got 5\n"}`,
+					`{"Action":"fail","Package":"example.com/pkg","Test":"TestFail"}`,
+				}, "\n")
+
+				err := p.Parse(strings.NewReader(input))
+				if err != nil {
+					t.Fatalf("Parse failed: %v", err)
+				}
+
+				results := p.GetResults()
+				transformer := NewTransformer()
+				output := transformer.Transform(results, p)
+
+				test := getFirstTest(t, output)
+				if len(test.Errors) == 0 {
+					t.Fatal("Expected errors to be populated for failed test with output")
+				}
+			})
+		})
+
 		t.Run("Result reason", func(t *testing.T) {
 			t.Run("is always set", func(t *testing.T) {
 				results := createSingleTest(testName, parser.StatePassed)
@@ -165,7 +213,8 @@ func TestTransformer(t *testing.T) {
 func transformResults(t *testing.T, results parser.Results) *TestResult {
 	t.Helper()
 	transformer := NewTransformer()
-	return transformer.Transform(results)
+	p := parser.NewParser()
+	return transformer.Transform(results, p)
 }
 
 func createSingleTest(name string, state parser.TestState) parser.Results {
