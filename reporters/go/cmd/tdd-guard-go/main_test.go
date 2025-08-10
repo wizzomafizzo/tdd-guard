@@ -99,7 +99,6 @@ func TestProcess(t *testing.T) {
 			outputPath := getTestFilePath(tempDir)
 			data, _ := os.ReadFile(outputPath)
 
-
 			if bytes.Contains(data, []byte(`"testModules":[]`)) {
 				t.Fatalf("Expected non-empty testModules, got: %s", data)
 			}

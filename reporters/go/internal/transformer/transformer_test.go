@@ -125,7 +125,7 @@ func TestTransformer(t *testing.T) {
 				results := createSingleTest("TestFail", parser.StateFailed)
 				transformer := NewTransformer()
 
-				output := transformer.Transform(results, p)
+				output := transformer.Transform(results, p, nil)
 				if output == nil {
 					t.Fatal("Expected non-nil output")
 				}
@@ -146,7 +146,7 @@ func TestTransformer(t *testing.T) {
 
 				results := p.GetResults()
 				transformer := NewTransformer()
-				output := transformer.Transform(results, p)
+				output := transformer.Transform(results, p, nil)
 
 				test := getFirstTest(t, output)
 				if len(test.Errors) == 0 {
@@ -214,7 +214,7 @@ func transformResults(t *testing.T, results parser.Results) *TestResult {
 	t.Helper()
 	transformer := NewTransformer()
 	p := parser.NewParser()
-	return transformer.Transform(results, p)
+	return transformer.Transform(results, p, nil)
 }
 
 func createSingleTest(name string, state parser.TestState) parser.Results {

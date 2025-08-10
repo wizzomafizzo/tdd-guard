@@ -70,49 +70,78 @@ func (p *Parser) processEvent(event *TestEvent) {
 		return
 	}
 
-	// Get or create package results
-	if p.results[event.Package] == nil {
-		p.results[event.Package] = make(PackageResults)
-	}
+	p.ensurePackageExists(event.Package)
 
-	// Capture package-level output (for compilation errors)
-	if event.Test == "" && event.Action == "output" {
-		p.errorOutputs[event.Package] += event.Output
-	}
-
-	// Skip events without test name
 	if event.Test == "" {
+		p.processPackageEvent(event)
 		return
 	}
 
-	// Track output events
+	p.processTestEvent(event)
+}
+
+// ensurePackageExists creates package maps if they don't exist
+func (p *Parser) ensurePackageExists(pkg string) {
+	if p.results[pkg] == nil {
+		p.results[pkg] = make(PackageResults)
+	}
+}
+
+// processPackageEvent handles package-level events (no test name)
+func (p *Parser) processPackageEvent(event *TestEvent) {
 	if event.Action == "output" {
-		if p.testOutputs[event.Package] == nil {
-			p.testOutputs[event.Package] = make(map[string]string)
-		}
-		// Skip RUN and FAIL lines
-		if strings.HasPrefix(event.Output, "=== RUN") || strings.HasPrefix(event.Output, "--- FAIL") {
-			return
-		}
-		// Trim leading whitespace and append to existing output
-		p.testOutputs[event.Package][event.Test] += strings.TrimLeft(event.Output, " \t")
+		p.errorOutputs[event.Package] += event.Output
+	}
+}
+
+// processTestEvent handles test-specific events
+func (p *Parser) processTestEvent(event *TestEvent) {
+	switch event.Action {
+	case "output":
+		p.captureTestOutput(event)
+	case "pass", "fail", "skip":
+		p.recordTestState(event)
+	}
+}
+
+// captureTestOutput captures output for a specific test
+func (p *Parser) captureTestOutput(event *TestEvent) {
+	if p.testOutputs[event.Package] == nil {
+		p.testOutputs[event.Package] = make(map[string]string)
 	}
 
-	// Record test state for terminal actions
+	// Skip RUN and FAIL lines
+	if strings.HasPrefix(event.Output, "=== RUN") || strings.HasPrefix(event.Output, "--- FAIL") {
+		return
+	}
+
+	// Trim leading whitespace and append to existing output
+	p.testOutputs[event.Package][event.Test] += strings.TrimLeft(event.Output, " \t")
+}
+
+// recordTestState records the final state of a test
+func (p *Parser) recordTestState(event *TestEvent) {
+	var state TestState
 	switch event.Action {
 	case "pass":
-		p.results[event.Package][event.Test] = StatePassed
-		// Track that this test exists (but has no output if not already tracked)
-		if p.testOutputs[event.Package] == nil {
-			p.testOutputs[event.Package] = make(map[string]string)
-		}
-		if _, exists := p.testOutputs[event.Package][event.Test]; !exists {
-			p.testOutputs[event.Package][event.Test] = ""
-		}
+		state = StatePassed
+		p.ensureTestOutputExists(event.Package, event.Test)
 	case "fail":
-		p.results[event.Package][event.Test] = StateFailed
+		state = StateFailed
 	case "skip":
-		p.results[event.Package][event.Test] = StateSkipped
+		state = StateSkipped
+	}
+
+	p.results[event.Package][event.Test] = state
+}
+
+// ensureTestOutputExists ensures test output map exists for passed tests
+func (p *Parser) ensureTestOutputExists(pkg, test string) {
+	if p.testOutputs[pkg] == nil {
+		p.testOutputs[pkg] = make(map[string]string)
+	}
+	if _, exists := p.testOutputs[pkg][test]; !exists {
+		p.testOutputs[pkg][test] = ""
 	}
 }
 
@@ -121,30 +150,40 @@ func (p *Parser) GetResults() Results {
 	filtered := make(Results)
 
 	for pkg, tests := range p.results {
-		filteredTests := make(PackageResults)
-
-		for testName, testState := range tests {
-			// Check if this test has any children
-			hasChildren := false
-			for otherTest := range tests {
-				if len(otherTest) > len(testName) &&
-					otherTest[:len(testName)] == testName &&
-					otherTest[len(testName)] == '/' {
-					hasChildren = true
-					break
-				}
-			}
-
-			// Only include tests without children
-			if !hasChildren {
-				filteredTests[testName] = testState
-			}
-		}
-
-		filtered[pkg] = filteredTests
+		filtered[pkg] = filterParentTests(tests)
 	}
 
 	return filtered
+}
+
+// filterParentTests removes tests that have subtests from the results
+func filterParentTests(tests PackageResults) PackageResults {
+	filtered := make(PackageResults)
+
+	for testName, testState := range tests {
+		if !hasSubtests(testName, tests) {
+			filtered[testName] = testState
+		}
+	}
+
+	return filtered
+}
+
+// hasSubtests checks if a test has any subtests
+func hasSubtests(testName string, allTests PackageResults) bool {
+	for otherTest := range allTests {
+		if isSubtestOf(otherTest, testName) {
+			return true
+		}
+	}
+	return false
+}
+
+// isSubtestOf checks if child is a subtest of parent
+func isSubtestOf(child, parent string) bool {
+	return len(child) > len(parent) &&
+		child[:len(parent)] == parent &&
+		child[len(parent)] == '/'
 }
 
 // GetErrorOutput returns captured error output for a package

@@ -10,14 +10,13 @@ func TestMixedReader_PassesJSONToParser(t *testing.T) {
 	reader := strings.NewReader(input)
 
 	mr := NewMixedReader(reader)
-	jsonLines := mr.GetJSONLines()
 
-	if len(jsonLines) != 1 {
-		t.Fatalf("Expected 1 JSON line, got %d", len(jsonLines))
+	if len(mr.JSONLines) != 1 {
+		t.Fatalf("Expected 1 JSON line, got %d", len(mr.JSONLines))
 	}
 
-	if jsonLines[0] != input {
-		t.Errorf("Expected JSON line to be %q, got %q", input, jsonLines[0])
+	if mr.JSONLines[0] != input {
+		t.Errorf("Expected JSON line to be %q, got %q", input, mr.JSONLines[0])
 	}
 }
 
@@ -26,10 +25,9 @@ func TestMixedReader_ReadsActualInput(t *testing.T) {
 	reader := strings.NewReader(input)
 
 	mr := NewMixedReader(reader)
-	jsonLines := mr.GetJSONLines()
 
-	if jsonLines[0] != input {
-		t.Errorf("Expected JSON line to be %q, got %q", input, jsonLines[0])
+	if mr.JSONLines[0] != input {
+		t.Errorf("Expected JSON line to be %q, got %q", input, mr.JSONLines[0])
 	}
 }
 
@@ -38,14 +36,13 @@ func TestMixedReader_BuffersNonJSONLines(t *testing.T) {
 	reader := strings.NewReader(input)
 
 	mr := NewMixedReader(reader)
-	nonJSON := mr.GetNonJSONLines()
 
-	if len(nonJSON) != 1 {
-		t.Fatalf("Expected 1 non-JSON line, got %d", len(nonJSON))
+	if len(mr.NonJSONLines) != 1 {
+		t.Fatalf("Expected 1 non-JSON line, got %d", len(mr.NonJSONLines))
 	}
 
-	if nonJSON[0] != "# command-line-arguments" {
-		t.Errorf("Expected non-JSON line to be %q, got %q", "# command-line-arguments", nonJSON[0])
+	if mr.NonJSONLines[0] != "# command-line-arguments" {
+		t.Errorf("Expected non-JSON line to be %q, got %q", "# command-line-arguments", mr.NonJSONLines[0])
 	}
 }
 
@@ -56,19 +53,17 @@ func TestMixedReader_SeparatesJSONFromNonJSON(t *testing.T) {
 	reader := strings.NewReader(input)
 
 	mr := NewMixedReader(reader)
-	jsonLines := mr.GetJSONLines()
-	nonJSON := mr.GetNonJSONLines()
 
-	if len(jsonLines) != 2 {
-		t.Fatalf("Expected 2 JSON lines, got %d", len(jsonLines))
+	if len(mr.JSONLines) != 2 {
+		t.Fatalf("Expected 2 JSON lines, got %d", len(mr.JSONLines))
 	}
 
-	if len(nonJSON) != 1 {
-		t.Fatalf("Expected 1 non-JSON line, got %d", len(nonJSON))
+	if len(mr.NonJSONLines) != 1 {
+		t.Fatalf("Expected 1 non-JSON line, got %d", len(mr.NonJSONLines))
 	}
 
-	if nonJSON[0] != "# error line" {
-		t.Errorf("Expected non-JSON line to be %q, got %q", "# error line", nonJSON[0])
+	if mr.NonJSONLines[0] != "# error line" {
+		t.Errorf("Expected non-JSON line to be %q, got %q", "# error line", mr.NonJSONLines[0])
 	}
 }
 
@@ -80,7 +75,7 @@ FAIL	command-line-arguments [setup failed]`
 
 	mr := NewMixedReader(reader)
 
-	if !mr.HasCompilationError() {
+	if mr.CompilationError == nil {
 		t.Fatal("Expected compilation error to be detected")
 	}
 }
@@ -91,7 +86,7 @@ func TestMixedReader_NoCompilationErrorForNormalOutput(t *testing.T) {
 
 	mr := NewMixedReader(reader)
 
-	if mr.HasCompilationError() {
+	if mr.CompilationError != nil {
 		t.Fatal("Expected no compilation error for normal JSON output")
 	}
 }
@@ -104,9 +99,11 @@ FAIL	command-line-arguments [setup failed]`
 
 	mr := NewMixedReader(reader)
 
-	pkg := mr.GetCompilationErrorPackage()
-	if pkg != "command-line-arguments" {
-		t.Errorf("Expected package name %q, got %q", "command-line-arguments", pkg)
+	if mr.CompilationError == nil {
+		t.Fatal("Expected compilation error")
+	}
+	if mr.CompilationError.Package != "command-line-arguments" {
+		t.Errorf("Expected package name %q, got %q", "command-line-arguments", mr.CompilationError.Package)
 	}
 }
 
@@ -117,9 +114,11 @@ error.go:10:5: undefined: SomeFunction`
 
 	mr := NewMixedReader(reader)
 
-	pkg := mr.GetCompilationErrorPackage()
-	if pkg != "github.com/example/pkg" {
-		t.Errorf("Expected package name %q, got %q", "github.com/example/pkg", pkg)
+	if mr.CompilationError == nil {
+		t.Fatal("Expected compilation error")
+	}
+	if mr.CompilationError.Package != "github.com/example/pkg" {
+		t.Errorf("Expected package name %q, got %q", "github.com/example/pkg", mr.CompilationError.Package)
 	}
 }
 
@@ -131,10 +130,12 @@ FAIL	command-line-arguments [setup failed]`
 
 	mr := NewMixedReader(reader)
 
-	msg := mr.GetCompilationErrorMessage()
+	if mr.CompilationError == nil {
+		t.Fatal("Expected compilation error")
+	}
 	expected := "single_import_error_test.go:5:2: no required module provides package github.com/non-existent/module"
-	if msg != expected {
-		t.Errorf("Expected error message %q, got %q", expected, msg)
+	if mr.CompilationError.Message != expected {
+		t.Errorf("Expected error message %q, got %q", expected, mr.CompilationError.Message)
 	}
 }
 
@@ -145,9 +146,25 @@ main.go:10:5: undefined: SomeFunction`
 
 	mr := NewMixedReader(reader)
 
-	msg := mr.GetCompilationErrorMessage()
+	if mr.CompilationError == nil {
+		t.Fatal("Expected compilation error")
+	}
 	expected := "main.go:10:5: undefined: SomeFunction"
-	if msg != expected {
-		t.Errorf("Expected error message %q, got %q", expected, msg)
+	if mr.CompilationError.Message != expected {
+		t.Errorf("Expected error message %q, got %q", expected, mr.CompilationError.Message)
+	}
+}
+
+func TestMixedReader_HandlesShortLines(t *testing.T) {
+	// This could cause a panic if we try to access line[:4] on "OK"
+	input := `# pkg
+OK`
+	reader := strings.NewReader(input)
+
+	mr := NewMixedReader(reader)
+
+	// Should not panic
+	if mr.CompilationError != nil {
+		// OK is not an error message, just checking it doesn't panic
 	}
 }

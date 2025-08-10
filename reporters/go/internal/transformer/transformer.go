@@ -30,65 +30,68 @@ type TestResult struct {
 }
 
 // Transformer transforms parser results to TDD Guard format
-type Transformer struct {
-	compilationErrorMessage string
-}
+type Transformer struct{}
 
 // NewTransformer creates a new transformer
 func NewTransformer() *Transformer {
 	return &Transformer{}
 }
 
-// SetCompilationErrorMessage sets the compilation error message
-func (t *Transformer) SetCompilationErrorMessage(msg string) {
-	t.compilationErrorMessage = msg
-}
-
 // Transform converts parser results to TDD Guard format
-func (t *Transformer) Transform(results parser.Results, p *parser.Parser) *TestResult {
+func (t *Transformer) Transform(results parser.Results, p *parser.Parser, compilationError *parser.CompilationError) *TestResult {
 	modules := []TestModule{}
-	hasFailures := false
+	reason := "passed"
 
-	for pkg, packageTests := range results {
-		tests := []Test{}
-
-		for testName, testState := range packageTests {
-			test := Test{
-				Name:     testName,
-				FullName: pkg + "/" + testName,
-				State:    string(testState),
-			}
-
-			// Add error messages for failed tests
-			if testState == parser.StateFailed {
-				hasFailures = true
-				output := p.GetTestOutput(pkg, testName)
-				// Use compilation error message if this is a CompilationError test
-				if testName == "CompilationError" && t.compilationErrorMessage != "" {
-					output = t.compilationErrorMessage
-				}
-				if output != "" {
-					test.Errors = []TestError{{Message: output}}
-				}
-			}
-
-			tests = append(tests, test)
-		}
-
+	for pkg, tests := range results {
 		module := TestModule{
 			ModuleID: pkg,
-			Tests:    tests,
+			Tests:    transformTests(pkg, tests, p, compilationError),
 		}
 		modules = append(modules, module)
-	}
 
-	reason := "passed"
-	if hasFailures {
-		reason = "failed"
+		// Update reason if any test failed
+		for _, state := range tests {
+			if state == parser.StateFailed {
+				reason = "failed"
+			}
+		}
 	}
 
 	return &TestResult{
 		TestModules: modules,
 		Reason:      reason,
 	}
+}
+
+// transformTests converts package test results to Test structs
+func transformTests(pkg string, tests parser.PackageResults, p *parser.Parser, compilationError *parser.CompilationError) []Test {
+	result := make([]Test, 0, len(tests))
+
+	for name, state := range tests {
+		test := Test{
+			Name:     name,
+			FullName: pkg + "/" + name,
+			State:    string(state),
+		}
+
+		// Add error message for failed tests
+		if state == parser.StateFailed {
+			if msg := getTestErrorMessage(pkg, name, p, compilationError); msg != "" {
+				test.Errors = []TestError{{Message: msg}}
+			}
+		}
+
+		result = append(result, test)
+	}
+
+	return result
+}
+
+// getTestErrorMessage gets the error message for a failed test
+func getTestErrorMessage(pkg, name string, p *parser.Parser, compilationError *parser.CompilationError) string {
+	// Special case: synthetic CompilationError test
+	if name == "CompilationError" && compilationError != nil {
+		return compilationError.Message
+	}
+	return p.GetTestOutput(pkg, name)
 }
