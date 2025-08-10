@@ -15,14 +15,6 @@ This automated enforcement maintains code quality without cluttering prompts wit
 
 ## Development Workflow
 
-### Pre-commit Hooks
-
-The project uses husky and lint-staged to ensure code quality before commits:
-
-- **Automatic formatting**: Prettier formats all staged files
-- **Linting**: ESLint checks and fixes TypeScript files
-- **Commit message validation**: Enforces conventional commit format
-
 ### Commit Guidelines
 
 - **Atomic commits**: Each commit represents one logical change with its tests
@@ -34,27 +26,27 @@ Example: `feat: add network request filtering to reduce noise in captured data` 
 
 ## Project Structure
 
-The codebase is organized as a monorepo using npm workspaces, with modular packages and language-specific reporters:
+The codebase is organized with core functionality in src/ and language-specific reporters:
 
 ```
-packages/                         # Core functionality as npm workspaces
-├── contracts/                    # @tdd-guard/contracts - Types and Zod schemas
-├── config/                       # @tdd-guard/config - Configuration management
-└── storage/                      # @tdd-guard/storage - Storage abstractions
-
 reporters/                        # Language-specific test reporters
+├── go/                           # tdd-guard-go - Go test reporter
 ├── jest/                         # tdd-guard-jest - Jest reporter (npm)
 ├── phpunit/                      # tdd-guard/phpunit - PHPUnit reporter (composer)
-├── vitest/                       # tdd-guard-vitest - Vitest reporter (npm)
-└── pytest/                       # tdd-guard-pytest - Pytest reporter (pip)
+├── pytest/                       # tdd-guard-pytest - Pytest reporter (pip)
+├── test/                         # Shared test artifacts and integration tests
+└── vitest/                       # tdd-guard-vitest - Vitest reporter (npm)
 
 src/                              # Main CLI application
 ├── cli/                          # Hook entry point and context builder
+├── config/                       # Configuration management
+├── contracts/                    # Types and Zod schemas
 ├── guard/                        # Guard enable/disable management
 ├── hooks/                        # Claude Code hook parsing and processing
 ├── linters/                      # ESLint integration for code quality
 ├── processors/                   # Test result and lint processing
 ├── providers/                    # Model and linter client factories
+├── storage/                      # Storage abstractions
 ├── validation/                   # TDD principle validation
 │   ├── validator.ts              # Sends context to AI model and parses response
 │   ├── context/                  # Formats operations for AI validation
@@ -62,24 +54,17 @@ src/                              # Main CLI application
 │   └── models/                   # Claude CLI and Anthropic API clients
 └── index.ts                      # Package entry point
 
-test/
-├── integration/                  # End-to-end validation scenario tests
-└── utils/                        # Test factories and helper utilities
-
-docs/
-├── adr/                          # Architecture Decision Records
-└── CONFIGURATION.md              # Detailed configuration guide
+test/                             # Main test suite (hooks, integration, utils)
+docs/                             # Documentation (ADRs, configuration, etc.)
 ```
 
-### Monorepo Architecture
+### Architecture
 
-TDD Guard uses npm workspaces to separate concerns:
+TDD Guard is organized as a TypeScript project with integrated language-specific reporters:
 
-- **packages/**: Core functionality (@tdd-guard/contracts, config, storage)
-- **reporters/**: Language-specific test reporters (phpunit, vitest, pytest)
-- **src/**: Main CLI application
-
-Dependencies between workspaces are managed automatically.
+- **src/**: Core functionality including contracts, config, storage, and validation
+- **reporters/**: Language-specific test reporters (go, jest, phpunit, pytest, vitest)
+- **test/**: Comprehensive test suite with integration tests and utilities
 
 ### Testing
 
@@ -93,10 +78,11 @@ Dependencies between workspaces are managed automatically.
 #### Commands
 
 ```bash
-npm run build             # Build all workspaces and main package
+npm run build             # Build main package and workspace reporters (jest, vitest)
 npm run test              # All unit tests and base integration tests
 npm run test:unit         # Fast unit tests only
 npm run test:integration  # Slow integration tests (run after major prompt changes)
+npm run test:reporters    # Test all reporter implementations
 npm run lint              # Check code style and quality
 npm run format            # Auto-format code with Prettier
 npm run checks            # Run all checks: typecheck, lint, format, and test
