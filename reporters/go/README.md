@@ -4,7 +4,7 @@ Go test reporter that captures test results for TDD Guard validation.
 
 ## Requirements
 
-- Go 1.21+
+- Go 1.24+
 - [TDD Guard](https://github.com/nizos/tdd-guard) installed globally
 
 ## Installation
@@ -20,7 +20,7 @@ go install github.com/nizos/tdd-guard/reporters/go/cmd/tdd-guard-go@latest
 Pipe `go test -json` output to the reporter:
 
 ```bash
-go test -json ./... | tdd-guard-go
+go test -json 2>&1 ./... | tdd-guard-go
 ```
 
 ### Project Root Configuration
@@ -28,7 +28,7 @@ go test -json ./... | tdd-guard-go
 For projects where tests run in subdirectories, specify the project root:
 
 ```bash
-go test -json ./... | tdd-guard-go -project-root /absolute/path/to/project/root
+go test -json 2>&1 ./... | tdd-guard-go -project-root /absolute/path/to/project/root
 ```
 
 ### Configuration Rules
@@ -43,7 +43,7 @@ Add to your `Makefile`:
 
 ```makefile
 test:
-	go test -json ./... | tdd-guard-go -project-root $(shell pwd)
+	go test -json 2>&1 ./... | tdd-guard-go -project-root /absolute/path/to/project/root
 ```
 
 ## How It Works
