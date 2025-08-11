@@ -112,7 +112,7 @@ export async function processHookData(
     }
   }
 
-  return await performValidation(deps, hookResult.data)
+  return await performValidation(deps)
 }
 
 async function processHookEvent(parsedData: unknown, storage?: Storage): Promise<void> {
@@ -131,9 +131,9 @@ function shouldSkipValidation(hookData: HookData): boolean {
   return !operationResult.success || isTodoWriteOperation(operationResult.data)
 }
 
-async function performValidation(deps: ProcessHookDataDeps, hookData?: unknown): Promise<ValidationResult> {
+async function performValidation(deps: ProcessHookDataDeps): Promise<ValidationResult> {
   if (deps.validator && deps.storage) {
-    const context = await buildContext(deps.storage, hookData)
+    const context = await buildContext(deps.storage)
     return await deps.validator(context)
   }
   
