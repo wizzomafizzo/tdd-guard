@@ -179,14 +179,14 @@ go install github.com/nizos/tdd-guard/reporters/go/cmd/tdd-guard-go@latest
 Pipe `go test -json` output to the reporter:
 
 ```bash
-go test -json 2>&1 ./... | tdd-guard-go -project-root /Users/username/projects/my-app
+go test -json ./... 2>&1 | tdd-guard-go -project-root /Users/username/projects/my-app
 ```
 
 For Makefile integration:
 
 ```makefile
 test:
-	go test -json 2>&1 ./... | tdd-guard-go -project-root /Users/username/projects/my-app
+	go test -json ./... 2>&1 | tdd-guard-go -project-root /Users/username/projects/my-app
 ```
 
 **Note:** The reporter acts as a filter that passes test output through unchanged while capturing results for TDD Guard. See the [Go reporter configuration](reporters/go/README.md#configuration) for more details.
