@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"bufio"
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -338,6 +340,109 @@ func TestParser(t *testing.T) {
 			expected := "test.go:10: Error message"
 			if output != expected {
 				t.Fatalf("Expected %q, got %q", expected, output)
+			}
+		})
+	})
+
+	t.Run("Build events", func(t *testing.T) {
+		t.Run("TestEvent includes ImportPath field", func(t *testing.T) {
+			input := `{"Action":"build-output","ImportPath":"example.com/pkg","Output":"# example.com/pkg\n"}`
+
+			reader := strings.NewReader(input)
+			scanner := bufio.NewScanner(reader)
+
+			if scanner.Scan() {
+				var event TestEvent
+				err := json.Unmarshal(scanner.Bytes(), &event)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal: %v", err)
+				}
+
+				if event.ImportPath != "example.com/pkg" {
+					t.Errorf("Expected ImportPath to be 'example.com/pkg', got '%s'", event.ImportPath)
+				}
+			}
+		})
+
+		t.Run("TestEvent includes FailedBuild field", func(t *testing.T) {
+			input := `{"Action":"fail","Package":"example.com/pkg","FailedBuild":"example.com/pkg"}`
+
+			reader := strings.NewReader(input)
+			scanner := bufio.NewScanner(reader)
+
+			if scanner.Scan() {
+				var event TestEvent
+				err := json.Unmarshal(scanner.Bytes(), &event)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal: %v", err)
+				}
+
+				if event.FailedBuild != "example.com/pkg" {
+					t.Errorf("Expected FailedBuild to be 'example.com/pkg', got '%s'", event.FailedBuild)
+				}
+			}
+		})
+
+		t.Run("captures build-output events", func(t *testing.T) {
+			parser := NewParser()
+
+			input := `{"Action":"build-output","ImportPath":"example.com/pkg","Output":"compilation error\n"}`
+			err := parser.Parse(strings.NewReader(input))
+			if err != nil {
+				t.Fatalf("Parse failed: %v", err)
+			}
+
+			// We need a way to verify the build output was captured
+			// For now, let's add a GetBuildFailure method
+			buildOutput := parser.GetBuildFailure("example.com/pkg")
+			if buildOutput != "compilation error\n" {
+				t.Errorf("Expected build output 'compilation error\\n', got %q", buildOutput)
+			}
+		})
+
+		t.Run("creates CompilationError test for build failure", func(t *testing.T) {
+			parser := NewParser()
+
+			input := `{"Action":"fail","Package":"example.com/pkg","FailedBuild":"example.com/pkg"}`
+			err := parser.Parse(strings.NewReader(input))
+			if err != nil {
+				t.Fatalf("Parse failed: %v", err)
+			}
+
+			results := parser.GetResults()
+			tests := results["example.com/pkg"]
+
+			state, exists := tests["CompilationError"]
+			if !exists {
+				t.Fatal("Expected CompilationError test to be created")
+			}
+
+			if state != StateFailed {
+				t.Errorf("Expected CompilationError to have state 'failed', got %v", state)
+			}
+		})
+
+		t.Run("GetTestOutput returns build failure for CompilationError", func(t *testing.T) {
+			parser := NewParser()
+
+			// First capture build output
+			buildOutput := `{"Action":"build-output","ImportPath":"example.com/pkg","Output":"undefined: someFunc\n"}`
+			err := parser.Parse(strings.NewReader(buildOutput))
+			if err != nil {
+				t.Fatalf("Parse failed: %v", err)
+			}
+
+			// Then process the build failure
+			failEvent := `{"Action":"fail","Package":"example.com/pkg","FailedBuild":"example.com/pkg"}`
+			err = parser.Parse(strings.NewReader(failEvent))
+			if err != nil {
+				t.Fatalf("Parse failed: %v", err)
+			}
+
+			// GetTestOutput should return the build failure message for CompilationError
+			output := parser.GetTestOutput("example.com/pkg", "CompilationError")
+			if output != "undefined: someFunc" {
+				t.Errorf("Expected 'undefined: someFunc', got %q", output)
 			}
 		})
 	})

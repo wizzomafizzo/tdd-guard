@@ -9,11 +9,13 @@ import (
 
 // TestEvent represents a test event from go test -json
 type TestEvent struct {
-	Action  string  `json:"Action"`
-	Package string  `json:"Package"`
-	Test    string  `json:"Test"`
-	Elapsed float64 `json:"Elapsed"`
-	Output  string  `json:"Output"`
+	Action      string  `json:"Action"`
+	Package     string  `json:"Package"`
+	Test        string  `json:"Test"`
+	Elapsed     float64 `json:"Elapsed"`
+	Output      string  `json:"Output"`
+	ImportPath  string  `json:"ImportPath"`
+	FailedBuild string  `json:"FailedBuild"`
 }
 
 // TestState represents the state of a test
@@ -33,17 +35,19 @@ type Results map[string]PackageResults
 
 // Parser parses go test JSON output
 type Parser struct {
-	results      Results
-	errorOutputs map[string]string
-	testOutputs  map[string]map[string]string // Track test output content
+	results       Results
+	errorOutputs  map[string]string
+	testOutputs   map[string]map[string]string // Track test output content
+	buildFailures map[string]string            // Track build failures and their output
 }
 
 // NewParser creates a new parser
 func NewParser() *Parser {
 	return &Parser{
-		results:      make(Results),
-		errorOutputs: make(map[string]string),
-		testOutputs:  make(map[string]map[string]string),
+		results:       make(Results),
+		errorOutputs:  make(map[string]string),
+		testOutputs:   make(map[string]map[string]string),
+		buildFailures: make(map[string]string),
 	}
 }
 
@@ -65,6 +69,19 @@ func (p *Parser) Parse(reader io.Reader) error {
 
 // processEvent handles a single test event
 func (p *Parser) processEvent(event *TestEvent) {
+	// Handle build events (they have ImportPath instead of Package)
+	if event.ImportPath != "" && event.Action == "build-output" {
+		p.buildFailures[event.ImportPath] += event.Output
+		return
+	}
+
+	// Handle build failure events
+	if event.Action == "fail" && event.FailedBuild != "" {
+		p.ensurePackageExists(event.Package)
+		p.results[event.Package]["CompilationError"] = StateFailed
+		return
+	}
+
 	// Skip events without package
 	if event.Package == "" {
 		return
@@ -193,6 +210,17 @@ func (p *Parser) GetErrorOutput(pkg string) string {
 
 // GetTestOutput returns captured output for a specific test
 func (p *Parser) GetTestOutput(pkg, test string) string {
+	// Special case for CompilationError - get build failure message
+	if test == "CompilationError" {
+		// Find the build failure for this package
+		for _, msg := range p.buildFailures {
+			// The build failure message contains the error details
+			if msg != "" {
+				return strings.TrimSpace(msg)
+			}
+		}
+	}
+
 	if p.testOutputs[pkg] == nil {
 		return ""
 	}
@@ -202,4 +230,9 @@ func (p *Parser) GetTestOutput(pkg, test string) string {
 	}
 	// Trim trailing whitespace/newlines
 	return strings.TrimRight(output, "\n")
+}
+
+// GetBuildFailure returns captured build failure output for a package
+func (p *Parser) GetBuildFailure(importPath string) string {
+	return p.buildFailures[importPath]
 }
