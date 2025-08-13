@@ -5,11 +5,11 @@
 [![Security](https://github.com/nizos/tdd-guard/actions/workflows/security.yml/badge.svg)](https://github.com/nizos/tdd-guard/actions/workflows/security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Automated TDD enforcement for Claude Code.
+Automated Test-Driven Development enforcement for Claude Code.
 
 ## Overview
 
-TDD Guard monitors file operations in real-time and blocks any changes that violate TDD principles. By analyzing test results, todos, and code changes, it ensures Claude Code follows the red-green-refactor cycle without manual reminders.
+TDD Guard ensures Claude Code follows Test-Driven Development principles. When your agent tries to skip tests or over-implement, TDD Guard blocks the action and explains what needs to happen instead—enforcing the red-green-refactor cycle automatically.
 
 <p align="center">
   <a href="https://nizar.se/uploads/videos/tdd-guard-demo.mp4">
@@ -19,22 +19,21 @@ TDD Guard monitors file operations in real-time and blocks any changes that viol
   <em>Click to watch TDD Guard in action</em>
 </p>
 
-## Why TDD Guard?
+## Features
 
-- **Focus on solving problems** - TDD Guard enforces the rules while you design solutions
-- **Save context for what matters** - No more TDD instructions cluttering your CLAUDE.md
-- **Works with your stack** - TypeScript, JavaScript, Python, PHP, and Go today. More languages coming soon
-- **Control without context switches** - Toggle with `tdd-guard on/off` mid-session
-- **Flexible validation** - Use local Claude or configure Anthropic API
+- **Test-First Enforcement** - Blocks implementation without failing tests
+- **Minimal Implementation** - Prevents code beyond current test requirements
+- **Lint Integration** - Enforces refactoring using your linting rules
+- **Multi-Language Support** - TypeScript, JavaScript, Python, PHP, and Go
+- **Session Control** - Toggle on and off mid-session
+- **Configurable Validation** - Configure which files to validate with ignore patterns
+- **Flexible Validation** - Use local Claude or Anthropic API
 
 ## Requirements
 
 - Node.js 18+
-- Test Runner:
-  - JavaScript/TypeScript: Vitest or Jest
-  - Python: pytest
-  - PHP: PHPUnit 9.x, 10.x, 11.x, or 12.x
-  - Go: Go 1.24+
+- Claude Code or Anthropic API key
+- Test framework (Jest, Vitest, pytest, PHPUnit, or Go 1.24+)
 
 ## Quick Start
 
@@ -44,7 +43,7 @@ TDD Guard monitors file operations in real-time and blocks any changes that viol
 npm install -g tdd-guard
 ```
 
-### 2. Set Up Test Reporter
+### 2. Add Test Reporter
 
 TDD Guard needs to capture test results from your test runner. Choose your language below:
 
@@ -199,27 +198,25 @@ Use the `/hooks` command in Claude Code:
 
 1. Type `/hooks` in Claude Code
 2. Select `PreToolUse - Before tool execution`
-3. Choose `+ Add new matcher...`
-4. Enter: `Write|Edit|MultiEdit|TodoWrite`
-5. Select `+ Add new hook...`
-6. Enter command: `tdd-guard`
-7. Choose where to save (Project settings recommended)
+3. Choose `+ Add new matcher...` and enter: `Write|Edit|MultiEdit|TodoWrite`
+4. Select `+ Add new hook...` and enter: `tdd-guard`
+5. Choose where to save (Project settings recommended)
 
 ## Configuration
 
-**Note:** If TDD Guard can't find Claude, see [Claude Binary](docs/claude-binary.md) setup.
+**Quick Setup:**
 
-### Recommended Setup
-
-- [Quick commands](docs/quick-commands.md) - Toggle with `tdd-guard on/off`
+- [Toggle commands](docs/quick-commands.md) - Enable/disable with `tdd-guard on/off`
 - [Session clearing](docs/session-clearing.md) - Automatic cleanup on new sessions
 - [Ignore patterns](docs/ignore-patterns.md) - Control which files are validated
 
-### Advanced Options
+**Advanced:**
 
 - [ESLint integration](docs/linting.md) - Automated refactoring support
 - [AI Models](docs/ai-model.md) - Switch between Claude CLI and Anthropic API
 - [All Settings](docs/configuration.md) - Complete configuration reference
+
+**Note:** If TDD Guard can't find Claude, see [Claude Binary Setup](docs/claude-binary.md).
 
 ## Security Notice
 
@@ -230,10 +227,6 @@ As stated in the [Claude Code Hooks documentation](https://docs.anthropic.com/en
 We share this information for transparency. Please read the full [security considerations](https://docs.anthropic.com/en/docs/claude-code/hooks#security-considerations) before using hooks.
 
 TDD Guard runs with your user permissions and has access to your file system. We follow security best practices including automated security scanning, dependency audits, and test-driven development. Review the source code if you have security concerns.
-
-## Known Limitations
-
-- Not tested with multiple concurrent sessions in the same project
 
 ## Roadmap
 
