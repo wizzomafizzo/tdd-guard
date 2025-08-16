@@ -103,6 +103,44 @@ func TestProcess(t *testing.T) {
 	})
 
 	t.Run("compilation error handling", func(t *testing.T) {
+		t.Run("handles JSON-only build failure correctly", func(t *testing.T) {
+			// This simulates a build failure that produces JSON output
+			// The package fails but has no test entries
+			input := `{"Action":"fail","Package":"example.com/pkg","Elapsed":0}`
+			data := processAndReadOutput(t, input, tempDir)
+
+			// Should mark as failed
+			if !bytes.Contains(data, []byte(`"reason":"failed"`)) {
+				t.Fatalf("Expected reason to be 'failed' for build failure, got: %s", data)
+			}
+
+			// Should add CompilationError test entry
+			if !bytes.Contains(data, []byte(`"CompilationError"`)) {
+				t.Fatalf("Expected CompilationError test entry for JSON-only failure, got: %s", data)
+			}
+		})
+
+		t.Run("captures each compilation error as separate error entry", func(t *testing.T) {
+			// Multiple error lines should each be a separate error in the errors array
+			input := `# example.com/pkg
+example.go:9:8: undefined: NewFormatter
+example.go:10:12: undefined: TestEvent
+{"Action":"fail","Package":"example.com/pkg","Elapsed":0}`
+			data := processAndReadOutput(t, input, tempDir)
+
+			// Check for separate error entries in the JSON structure
+			if !bytes.Contains(data, []byte(`"message":"example.go:9:8: undefined: NewFormatter"`)) {
+				t.Fatalf("Expected first error as separate entry, got: %s", data)
+			}
+			if !bytes.Contains(data, []byte(`"message":"example.go:10:12: undefined: TestEvent"`)) {
+				t.Fatalf("Expected second error as separate entry, got: %s", data)
+			}
+			// Ensure they're not concatenated
+			if bytes.Contains(data, []byte(`NewFormatter\nexample.go`)) {
+				t.Fatalf("Errors should not be concatenated, got: %s", data)
+			}
+		})
+
 		t.Run("produces non-empty output for compilation error", func(t *testing.T) {
 			input := `# command-line-arguments`
 			data := processAndReadOutput(t, input, tempDir)
@@ -156,6 +194,19 @@ main.go:10:5: undefined: SomeFunction`
 
 			if !bytes.Contains(data, []byte("main.go:10:5: undefined: SomeFunction")) {
 				t.Fatalf("Expected actual error message in output, got: %s", data)
+			}
+		})
+
+		t.Run("does not add CompilationError for passing package with no tests", func(t *testing.T) {
+			// Package passes but has no tests (like an empty test file)
+			input := `{"Action":"pass","Package":"example.com/pkg","Elapsed":0}`
+			data := processAndReadOutput(t, input, tempDir)
+
+			if bytes.Contains(data, []byte(`"CompilationError"`)) {
+				t.Fatalf("Should not add CompilationError for passing package, got: %s", data)
+			}
+			if !bytes.Contains(data, []byte(`"reason":"passed"`)) {
+				t.Fatalf("Expected reason to be 'passed' for empty passing package, got: %s", data)
 			}
 		})
 	})

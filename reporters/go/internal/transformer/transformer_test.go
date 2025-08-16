@@ -254,3 +254,50 @@ func transformAndGetFirstTest(t *testing.T, state parser.TestState) Test {
 	output := transformResults(t, results)
 	return getFirstTest(t, output)
 }
+
+func TestTransformer_CompilationErrorWithMultipleMessages(t *testing.T) {
+	// Test that multiple compilation error messages are transformed correctly
+	results := parser.Results{
+		"example.com/pkg": parser.PackageResults{
+			"CompilationError": parser.StateFailed,
+		},
+	}
+
+	compilationError := &parser.CompilationError{
+		Package: "example.com/pkg",
+		Messages: []string{
+			"example.go:9:8: undefined: NewFormatter",
+			"example.go:10:12: undefined: TestEvent",
+		},
+	}
+
+	transformer := NewTransformer()
+	output := transformer.Transform(results, parser.NewParser(), compilationError)
+
+	if len(output.TestModules) != 1 {
+		t.Fatalf("Expected 1 module, got %d", len(output.TestModules))
+	}
+
+	module := output.TestModules[0]
+	if len(module.Tests) != 1 {
+		t.Fatalf("Expected 1 test, got %d", len(module.Tests))
+	}
+
+	test := module.Tests[0]
+	if test.Name != "CompilationError" {
+		t.Errorf("Expected test name 'CompilationError', got %q", test.Name)
+	}
+
+	// Check that we have multiple error entries
+	if len(test.Errors) != 2 {
+		t.Fatalf("Expected 2 error messages, got %d", len(test.Errors))
+	}
+
+	if test.Errors[0].Message != "example.go:9:8: undefined: NewFormatter" {
+		t.Errorf("Expected first error message to be 'example.go:9:8: undefined: NewFormatter', got %q", test.Errors[0].Message)
+	}
+
+	if test.Errors[1].Message != "example.go:10:12: undefined: TestEvent" {
+		t.Errorf("Expected second error message to be 'example.go:10:12: undefined: TestEvent', got %q", test.Errors[1].Message)
+	}
+}

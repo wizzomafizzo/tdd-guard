@@ -74,11 +74,9 @@ func transformTests(pkg string, tests parser.PackageResults, p *parser.Parser, c
 			State:    string(state),
 		}
 
-		// Add error message for failed tests
+		// Add error messages for failed tests
 		if state == parser.StateFailed {
-			if msg := getTestErrorMessage(pkg, name, p, compilationError); msg != "" {
-				test.Errors = []TestError{{Message: msg}}
-			}
+			test.Errors = getTestErrors(pkg, name, p, compilationError)
 		}
 
 		result = append(result, test)
@@ -87,11 +85,19 @@ func transformTests(pkg string, tests parser.PackageResults, p *parser.Parser, c
 	return result
 }
 
-// getTestErrorMessage gets the error message for a failed test
-func getTestErrorMessage(pkg, name string, p *parser.Parser, compilationError *parser.CompilationError) string {
+// getTestErrors gets the error messages for a failed test
+func getTestErrors(pkg, name string, p *parser.Parser, compilationError *parser.CompilationError) []TestError {
 	// Special case: synthetic CompilationError test
 	if name == "CompilationError" && compilationError != nil {
-		return compilationError.Message
+		errors := make([]TestError, 0, len(compilationError.Messages))
+		for _, msg := range compilationError.Messages {
+			errors = append(errors, TestError{Message: msg})
+		}
+		return errors
 	}
-	return p.GetTestOutput(pkg, name)
+	// Regular test failure
+	if output := p.GetTestOutput(pkg, name); output != "" {
+		return []TestError{{Message: output}}
+	}
+	return nil
 }

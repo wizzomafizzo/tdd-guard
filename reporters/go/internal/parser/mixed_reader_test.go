@@ -134,8 +134,8 @@ FAIL	command-line-arguments [setup failed]`
 		t.Fatal("Expected compilation error")
 	}
 	expected := "single_import_error_test.go:5:2: no required module provides package github.com/non-existent/module"
-	if mr.CompilationError.Message != expected {
-		t.Errorf("Expected error message %q, got %q", expected, mr.CompilationError.Message)
+	if len(mr.CompilationError.Messages) != 1 || mr.CompilationError.Messages[0] != expected {
+		t.Errorf("Expected error message %q, got %v", expected, mr.CompilationError.Messages)
 	}
 }
 
@@ -150,8 +150,36 @@ main.go:10:5: undefined: SomeFunction`
 		t.Fatal("Expected compilation error")
 	}
 	expected := "main.go:10:5: undefined: SomeFunction"
-	if mr.CompilationError.Message != expected {
-		t.Errorf("Expected error message %q, got %q", expected, mr.CompilationError.Message)
+	if len(mr.CompilationError.Messages) != 1 || mr.CompilationError.Messages[0] != expected {
+		t.Errorf("Expected error message %q, got %v", expected, mr.CompilationError.Messages)
+	}
+}
+
+func TestMixedReader_CapturesMultipleErrorLines(t *testing.T) {
+	// Test that multiple error lines are captured
+	input := `# example.com/pkg
+example.go:9:8: undefined: NewFormatter
+example.go:10:12: undefined: TestEvent
+{"Action":"fail","Package":"example.com/pkg","Elapsed":0}`
+	reader := strings.NewReader(input)
+
+	mr := NewMixedReader(reader)
+
+	if mr.CompilationError == nil {
+		t.Fatal("Expected compilation error")
+	}
+
+	// Should capture both error lines
+	if len(mr.CompilationError.Messages) != 2 {
+		t.Fatalf("Expected 2 error messages, got %d", len(mr.CompilationError.Messages))
+	}
+
+	if mr.CompilationError.Messages[0] != "example.go:9:8: undefined: NewFormatter" {
+		t.Errorf("Expected first error message to be 'example.go:9:8: undefined: NewFormatter', got %q", mr.CompilationError.Messages[0])
+	}
+
+	if mr.CompilationError.Messages[1] != "example.go:10:12: undefined: TestEvent" {
+		t.Errorf("Expected second error message to be 'example.go:10:12: undefined: TestEvent', got %q", mr.CompilationError.Messages[1])
 	}
 }
 

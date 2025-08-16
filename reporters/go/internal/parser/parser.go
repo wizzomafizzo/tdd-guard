@@ -109,6 +109,13 @@ func (p *Parser) processPackageEvent(event *TestEvent) {
 	if event.Action == "output" {
 		p.errorOutputs[event.Package] += event.Output
 	}
+	// Handle package-level fail (build failure without FailedBuild flag)
+	if event.Action == "fail" {
+		// Package failed but has no tests - this is a build failure
+		if len(p.results[event.Package]) == 0 {
+			p.results[event.Package]["CompilationError"] = StateFailed
+		}
+	}
 }
 
 // processTestEvent handles test-specific events

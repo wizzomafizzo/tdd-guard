@@ -16,8 +16,8 @@ type MixedReader struct {
 
 // CompilationError represents a compilation error if one occurred
 type CompilationError struct {
-	Package string
-	Message string
+	Package  string
+	Messages []string
 }
 
 // NewMixedReader creates a new MixedReader and processes the input
@@ -46,15 +46,24 @@ func NewMixedReader(reader io.Reader) *MixedReader {
 			continue
 		}
 
-		// Capture error message (first non-FAIL line after header)
-		if foundErrorHeader && mr.CompilationError == nil && isErrorMessage(line) {
-			mr.CompilationError = newCompilationError(errorPkg, line)
+		// Capture error messages (all non-FAIL lines after header)
+		if foundErrorHeader && isErrorMessage(line) {
+			if mr.CompilationError == nil {
+				mr.CompilationError = &CompilationError{
+					Package:  errorPkg,
+					Messages: []string{},
+				}
+			}
+			mr.CompilationError.Messages = append(mr.CompilationError.Messages, line)
 		}
 	}
 
 	// If we found error header but no error message, still create CompilationError
 	if foundErrorHeader && mr.CompilationError == nil {
-		mr.CompilationError = newCompilationError(errorPkg, "")
+		mr.CompilationError = &CompilationError{
+			Package:  errorPkg,
+			Messages: []string{},
+		}
 	}
 
 	return mr
@@ -82,12 +91,4 @@ func extractPackageName(line string) string {
 // isErrorMessage checks if line is a valid error message
 func isErrorMessage(line string) bool {
 	return line != "" && !strings.HasPrefix(line, "FAIL")
-}
-
-// newCompilationError creates a new CompilationError
-func newCompilationError(pkg, msg string) *CompilationError {
-	return &CompilationError{
-		Package: pkg,
-		Message: msg,
-	}
 }

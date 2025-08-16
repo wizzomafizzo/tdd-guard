@@ -469,6 +469,27 @@ func TestParser(t *testing.T) {
 			}
 		})
 
+		t.Run("marks package as failed when package-level fail with no tests", func(t *testing.T) {
+			// This simulates a build failure that produces JSON output
+			// The package fails but has no test entries
+			input := `{"Action":"fail","Package":"example.com/pkg","Elapsed":0}`
+
+			parser := NewParser()
+			err := parser.Parse(strings.NewReader(input))
+			if err != nil {
+				t.Fatalf("Parse failed: %v", err)
+			}
+
+			results := parser.GetResults()
+			if pkg, exists := results["example.com/pkg"]; exists {
+				if pkg["CompilationError"] != StateFailed {
+					t.Fatal("Expected CompilationError to be failed for package-level failure")
+				}
+			} else {
+				t.Fatal("Expected package to exist in results")
+			}
+		})
+
 		t.Run("combines multiple output lines", func(t *testing.T) {
 			input := strings.Join([]string{
 				`{"Action":"output","Package":"example.com/pkg","Output":"# example.com/pkg\n"}`,
