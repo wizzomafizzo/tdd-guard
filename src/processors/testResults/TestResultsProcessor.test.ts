@@ -25,6 +25,46 @@ describe('TestResultsProcessor', () => {
   })
 
   describe('scenarios', () => {
+    it('should format all error messages for a failing test', () => {
+      const processor = new TestResultsProcessor()
+      const testResults = {
+        testModules: [
+          {
+            moduleId: '/src/example.test.ts',
+            tests: [
+              {
+                name: 'CompilationError',
+                fullName: 'CompilationError',
+                state: 'failed',
+                errors: [
+                  { message: 'example.go:9:8: undefined: NewFormatter' },
+                  { message: 'example.go:10:12: undefined: TestEvent' },
+                  { message: 'example.go:11:5: undefined: SomeOtherThing' },
+                ],
+              },
+            ],
+          },
+        ],
+        reason: 'failed',
+      }
+
+      const result = processor.process(JSON.stringify(testResults))
+
+      // Check that key elements are present
+      expect(result).toContain('/src/example.test.ts')
+      expect(result).toContain('CompilationError')
+      expect(result).toContain('example.go')
+      expect(result).toContain('undefined: NewFormatter')
+      expect(result).toContain('undefined: TestEvent')
+      expect(result).toContain('undefined: SomeOtherThing')
+
+      // Check summary
+      expect(result).toContain('Test Files')
+      expect(result).toContain('1 failed')
+      expect(result).toContain('Tests')
+      expect(result).toContain('1 failed')
+    })
+
     it('2 passing tests in the same file', () => {
       const processor = new TestResultsProcessor()
       const testResults = testData.passingTestResults()

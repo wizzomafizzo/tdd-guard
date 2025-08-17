@@ -130,7 +130,9 @@ export class TestResultsProcessor {
     let output = `   × ${test.fullName} 0ms\n`
 
     if (test.errors && test.errors.length > 0) {
-      output += `     → ${test.errors[0].message}\n`
+      for (const error of test.errors) {
+        output += `     → ${error.message}\n`
+      }
     }
 
     return output
