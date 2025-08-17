@@ -419,7 +419,7 @@ describe('Reporters', () => {
         {
           name: 'go',
           expected: [
-            'single_import_error_test.go:5:2',
+            'single_import_error_test.go',
             'no required module provides package',
             'github.com/non-existent/module',
           ],

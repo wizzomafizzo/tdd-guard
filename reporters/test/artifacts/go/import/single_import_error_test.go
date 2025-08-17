@@ -1,8 +1,8 @@
 package missingImportModule
 
 import (
-	"testing"
 	"github.com/non-existent/module"
+	"testing"
 )
 
 func TestCalculator(t *testing.T) {
