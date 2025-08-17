@@ -5,8 +5,9 @@
     "args": {
       "TZ": "${localEnv:TZ:Europe/Stockholm}",
       "CLAUDE_CODE_VERSION": "latest",
+      "COMPOSER_VERSION": "2.8.10",
       "GIT_DELTA_VERSION": "0.18.2",
-      "ZSH_IN_DOCKER_VERSION": "1.2.0",
+      "ZSH_IN_DOCKER_VERSION": "1.2.1",
       "GO_VERSION": "1.24.0"
     }
   },
@@ -19,7 +20,7 @@
         "eamodio.gitlens",
         "vitest.explorer",
         "ms-python.python",
-        "anthropics.claude-code",
+        "Anthropic.claude-code",
         "bmewburn.vscode-intelephense-client",
         "golang.go"
       ],
