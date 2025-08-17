@@ -14,7 +14,7 @@
 #   - NPM: registry.npmjs.org
 #   - PyPI: pypi.org, files.pythonhosted.org
 #   - Packagist: packagist.org, repo.packagist.org, getcomposer.org
-#   - Go: proxy.golang.org, sum.golang.org, go.dev, storage.googleapis.com
+#   - Go: proxy.golang.org, sum.golang.org, go.dev, storage.googleapis.com, honnef.co
 # - Claude/Anthropic services: api.anthropic.com, sentry.io, statsig.com
 # - JetBrains plugin marketplace: plugins.jetbrains.com
 # - Host network (for Docker operations)
@@ -114,6 +114,7 @@ for domain in \
     "sum.golang.org" \
     "go.dev" \
     "storage.googleapis.com" \
+    "honnef.co" \
     "plugins.jetbrains.com"; do
     echo "Resolving $domain..."
     # Retry DNS resolution with exponential backoff
