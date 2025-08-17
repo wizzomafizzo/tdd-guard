@@ -86,9 +86,9 @@ func TestProcess(t *testing.T) {
 		})
 	})
 
-	t.Run("pass-through output", func(t *testing.T) {
-		t.Run("passes input to stdout", func(t *testing.T) {
-			input := `{"Action":"pass","Package":"example.com/pkg","Test":"TestExample"}`
+	t.Run("formatted output", func(t *testing.T) {
+		t.Run("formats package pass event", func(t *testing.T) {
+			input := `{"Action":"pass","Package":"example.com/pkg","Elapsed":0.003}`
 			output := &bytes.Buffer{}
 
 			err := process(bytes.NewReader([]byte(input)), tempDir, output)
@@ -96,8 +96,38 @@ func TestProcess(t *testing.T) {
 				t.Fatalf("Expected no error, got: %v", err)
 			}
 
-			if output.String() != input {
-				t.Errorf("Expected output '%s', got '%s'", input, output.String())
+			expected := "ok  \texample.com/pkg\t0.003s\n"
+			if output.String() != expected {
+				t.Errorf("Expected formatted output '%s', got '%s'", expected, output.String())
+			}
+		})
+
+		t.Run("passes through compilation errors", func(t *testing.T) {
+			input := "# command-line-arguments"
+			output := &bytes.Buffer{}
+
+			err := process(bytes.NewReader([]byte(input)), tempDir, output)
+			if err != nil {
+				t.Fatalf("Expected no error, got: %v", err)
+			}
+
+			expected := "# command-line-arguments\n"
+			if output.String() != expected {
+				t.Errorf("Expected '%s', got '%s'", expected, output.String())
+			}
+		})
+
+		t.Run("filters out JSON start events", func(t *testing.T) {
+			input := `{"Action":"start","Package":"example.com/pkg"}`
+			output := &bytes.Buffer{}
+
+			err := process(bytes.NewReader([]byte(input)), tempDir, output)
+			if err != nil {
+				t.Fatalf("Expected no error, got: %v", err)
+			}
+
+			if output.String() != "" {
+				t.Errorf("Expected empty output for start event, got '%s'", output.String())
 			}
 		})
 	})

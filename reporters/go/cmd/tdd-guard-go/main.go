@@ -1,14 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/nizos/tdd-guard/reporters/go/internal/formatter"
 	tddio "github.com/nizos/tdd-guard/reporters/go/internal/io"
 	"github.com/nizos/tdd-guard/reporters/go/internal/parser"
 	"github.com/nizos/tdd-guard/reporters/go/internal/storage"
@@ -30,12 +34,15 @@ func process(input io.Reader, projectRoot string, output io.Writer) error {
 		return err
 	}
 
-	// Buffer to collect input while passing through to output
+	// Buffer to collect input
 	buffer := &bytes.Buffer{}
-	teeReader := tddio.NewTeeReader(input, io.MultiWriter(output, buffer))
+	teeReader := tddio.NewTeeReader(input, buffer)
 
-	// Read all input through the tee reader
+	// Read all input to buffer
 	io.ReadAll(teeReader)
+
+	// Format and output
+	formatAndOutput(bytes.NewReader(buffer.Bytes()), output)
 
 	// Parse test output from buffer
 	mixedReader := parser.NewMixedReader(buffer)
@@ -55,6 +62,28 @@ func process(input io.Reader, projectRoot string, output io.Writer) error {
 
 	s := storage.NewStorage(projectRoot)
 	return s.Save(result)
+}
+
+func formatAndOutput(input io.Reader, output io.Writer) {
+	f := formatter.NewFormatter()
+	scanner := bufio.NewScanner(input)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Try to parse as JSON
+		var event parser.TestEvent
+		if err := json.Unmarshal([]byte(line), &event); err == nil {
+			// It's JSON - format it
+			formatted := f.Format(event)
+			if formatted != "" {
+				fmt.Fprintln(output, formatted)
+			}
+		} else {
+			// Not JSON - pass through as-is
+			fmt.Fprintln(output, line)
+		}
+	}
 }
 
 func validateProjectRoot(projectRoot string) error {
