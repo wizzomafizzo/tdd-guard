@@ -7,7 +7,7 @@ ARG CLAUDE_CODE_VERSION=0.11.0
 ARG COMPOSER_VERSION=2.8.10
 ARG GIT_DELTA_VERSION=0.18.2
 ARG ZSH_IN_DOCKER_VERSION=1.2.0
-ARG GO_VERSION=1.23.3
+ARG GO_VERSION=1.24.0
 
 # Install basic development tools and iptables/ipset
 RUN apt-get update && apt-get install -y --no-install-recommends \

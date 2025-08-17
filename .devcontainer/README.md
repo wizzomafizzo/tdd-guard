@@ -16,7 +16,7 @@ A consistent, isolated environment for developing TDD Guard.
 | Node.js 20         | Main CLI & Vitest/Jest reporters                |
 | Python 3.11 + pipx | Pytest reporter                                 |
 | PHP 8.2 + Composer | PHPUnit reporter                                |
-| Go 1.23            | Go reporter                                     |
+| Go 1.24            | Go reporter                                     |
 | Claude Code        | AI assistance                                   |
 | Dev tools          | Git, zsh, fzf, Docker, gh, vim, nano, git-delta |
 
