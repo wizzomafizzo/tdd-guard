@@ -38,6 +38,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   php-cli \
   php-mbstring \
   php-xml \
+  ruby \
+  ruby-dev \
+  build-essential \
   curl \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -76,6 +79,9 @@ RUN curl -sS https://getcomposer.org/installer -o composer-setup.php && \
     php composer-setup.php --install-dir=/usr/local/bin --filename=composer --version=${COMPOSER_VERSION} && \
     rm composer-setup.php composer-setup.sig && \
     chmod +x /usr/local/bin/composer
+
+# Install Bundler for Ruby
+RUN gem install bundler
 
 # Install Go
 RUN ARCH=$(dpkg --print-architecture) && \
