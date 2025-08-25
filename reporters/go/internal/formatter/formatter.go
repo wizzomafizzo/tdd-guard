@@ -28,7 +28,7 @@ func (f *Formatter) initHandlers() {
 		"start":        returnEmpty,
 		"run":          returnEmpty,
 		"build-output": f.handleBuildOutput,
-		"build-fail":   returnEmpty,
+		"build-fail":   f.handleBuildFail,
 		"output":       f.handleOutput,
 		"pass":         f.handlePass,
 		"fail":         f.handleFail,
@@ -47,6 +47,13 @@ func (f *Formatter) handleBuildOutput(event parser.TestEvent) string {
 	return trimNewline(event.Output)
 }
 
+func (f *Formatter) handleBuildFail(event parser.TestEvent) string {
+	if event.Package != "" {
+		return fmt.Sprintf("BUILD FAILED\t%s", event.Package)
+	}
+	return "BUILD FAILED"
+}
+
 // handleOutput filters redundant output lines and preserves error messages.
 // Removes duplicate package summaries (we generate our own from pass/fail events)
 // and test execution markers while keeping actual test failures and error details.
@@ -63,11 +70,8 @@ func (f *Formatter) handleOutput(event parser.TestEvent) string {
 	case strings.HasPrefix(output, "ok  \t"):
 		return "" // Filtered - we generate from pass event
 	case strings.HasPrefix(output, "FAIL\t"):
-		// Keep compilation failures, filter test failures (generated from fail event)
-		if strings.Contains(output, "[setup failed]") {
-			return trimNewline(output)
-		}
-		return ""
+		// Keep all FAIL output to preserve error information
+		return trimNewline(output)
 	}
 
 	if event.Test != "" {
@@ -98,15 +102,19 @@ func (f *Formatter) handlePass(event parser.TestEvent) string {
 }
 
 // handleFail generates the "FAIL" summary line for failed package tests.
-// Avoids duplicate output for build failures which are already shown as "[setup failed]".
+// Shows build failures with package information for better error visibility.
 func (f *Formatter) handleFail(event parser.TestEvent) string {
 	if event.Package != "" && event.Test == "" {
 		if event.FailedBuild != "" {
-			return "" // Already shown as "FAIL ... [setup failed]" in output event
+			return fmt.Sprintf("FAIL\t%s [build failed]", event.Package)
 		}
 		return fmt.Sprintf("FAIL\t%s\t%.3fs", event.Package, event.Elapsed)
 	}
-	return "" // Filter individual test failures (details shown in output)
+	// Show individual test failure summaries for better error tracking
+	if event.Test != "" {
+		return fmt.Sprintf("FAIL\t%s/%s", event.Package, event.Test)
+	}
+	return ""
 }
 
 func (f *Formatter) handleUnknown(event parser.TestEvent) string {
