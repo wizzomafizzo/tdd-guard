@@ -90,15 +90,16 @@ func TestFormatter(t *testing.T) {
 		}
 	})
 
-	t.Run("TestSkipPackageFailWithBuildFailure", func(t *testing.T) {
+	t.Run("TestShowPackageFailWithBuildFailure", func(t *testing.T) {
 		result := formatEvent(t, parser.TestEvent{
 			Action:      "fail",
 			Package:     "command-line-arguments",
 			Elapsed:     0,
 			FailedBuild: "github.com/non-existent/module",
 		})
-		if result != "" {
-			t.Fatalf("Expected build failure package fail to be filtered, got '%s'", result)
+		expected := "FAIL\tcommand-line-arguments [build failed]"
+		if result != expected {
+			t.Fatalf("Expected '%s', got '%s'", expected, result)
 		}
 	})
 
@@ -114,15 +115,16 @@ func TestFormatter(t *testing.T) {
 		}
 	})
 
-	t.Run("TestFilterTestLevelFailEvents", func(t *testing.T) {
+	t.Run("TestShowTestLevelFailEvents", func(t *testing.T) {
 		result := formatEvent(t, parser.TestEvent{
 			Action:  "fail",
 			Package: "command-line-arguments",
 			Test:    "TestCalculator",
 			Elapsed: 0.001,
 		})
-		if result != "" {
-			t.Fatalf("Expected test-level fail events to be filtered out, got '%s'", result)
+		expected := "FAIL\tcommand-line-arguments/TestCalculator"
+		if result != expected {
+			t.Fatalf("Expected '%s', got '%s'", expected, result)
 		}
 	})
 
@@ -174,14 +176,15 @@ func TestFormatter(t *testing.T) {
 		}
 	})
 
-	t.Run("TestFilterPackageFailOutput", func(t *testing.T) {
+	t.Run("TestShowPackageFailOutput", func(t *testing.T) {
 		result := formatEvent(t, parser.TestEvent{
 			Action:  "output",
 			Package: "example.com/pkg",
 			Output:  "FAIL\texample.com/pkg\t0.002s\n",
 		})
-		if result != "" {
-			t.Fatalf("Expected package FAIL output to be filtered out, got '%s'", result)
+		expected := "FAIL\texample.com/pkg\t0.002s"
+		if result != expected {
+			t.Fatalf("Expected '%s', got '%s'", expected, result)
 		}
 	})
 
@@ -208,10 +211,11 @@ func TestFormatter(t *testing.T) {
 		}
 	})
 
-	t.Run("TestFilterBuildFailEvents", func(t *testing.T) {
+	t.Run("TestShowBuildFailEvents", func(t *testing.T) {
 		result := formatEvent(t, parser.TestEvent{Action: "build-fail"})
-		if result != "" {
-			t.Fatalf("Expected build-fail events to be filtered out, got '%s'", result)
+		expected := "BUILD FAILED"
+		if result != expected {
+			t.Fatalf("Expected '%s', got '%s'", expected, result)
 		}
 	})
 
