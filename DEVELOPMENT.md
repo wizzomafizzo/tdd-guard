@@ -13,6 +13,7 @@
 - PHP 8.1+ and Composer (for PHPUnit reporter)
 - Go 1.21+ (for Go reporter)
 - Ruby 2.7+ and Bundler (for RSpec reporter)
+- Rust 1.70+ and Cargo (for Rust reporter)
 
 ## Using Dev Containers
 
@@ -66,6 +67,9 @@ go build -C reporters/go ./cmd/tdd-guard-go
 
 # Install RSpec dependencies
 bundle install --gemfile=reporters/rspec/Gemfile
+
+# Build Rust reporter
+cargo build --release --manifest-path reporters/rust/Cargo.toml
 ```
 
 ### Running Tests
@@ -112,3 +116,11 @@ If you get Ruby errors:
 - Ensure Ruby 2.7+ is installed: `ruby --version`
 - Ensure Bundler is installed: `bundle --version`
 - If Bundler is missing: `gem install bundler`
+
+### Rust Issues
+
+If you get Rust errors:
+
+- Ensure Rust 1.70+ is installed: `rustc --version`
+- Ensure Cargo is installed: `cargo --version`
+- If Rust is missing: Install from [rustup.rs](https://rustup.rs/)
