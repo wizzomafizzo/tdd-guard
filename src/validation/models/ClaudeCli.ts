@@ -24,6 +24,9 @@ export class ClaudeCli implements IModelClient {
       '5',
       '--model',
       'sonnet',
+      '--disallowed-tools',
+      'TodoWrite',
+      '--strict-mcp-config',
     ]
     const claudeDir = join(process.cwd(), '.claude')
 
