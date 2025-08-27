@@ -22,7 +22,8 @@
         "ms-python.python",
         "Anthropic.claude-code",
         "bmewburn.vscode-intelephense-client",
-        "golang.go"
+        "golang.go",
+        "Shopify.ruby-lsp"
       ],
       "settings": {
         "editor.formatOnSave": true,

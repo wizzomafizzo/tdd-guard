@@ -37,6 +37,9 @@ describe('ClaudeCli', () => {
         '5',
         '--model',
         'sonnet',
+        '--disallowed-tools',
+        'TodoWrite',
+        '--strict-mcp-config',
       ])
     })
   })
