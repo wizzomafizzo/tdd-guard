@@ -125,7 +125,38 @@ describe('ClaudeCli', () => {
         throw new Error('Command failed')
       })
 
-      await expect(client.ask('test')).rejects.toThrow('Command failed')
+      await expect(client.ask('test')).rejects.toThrow(
+        'Claude CLI execution failed'
+      )
+    })
+
+    test('provides detailed error information when Claude CLI execution fails', async () => {
+      const mockError = new Error('Command failed') as Error & {
+        code?: number
+        signal?: string | null
+        stderr?: Buffer | string
+        stdout?: Buffer | string
+      }
+      mockError.code = 1
+      mockError.signal = null
+      mockError.stderr = 'Error: Model not available'
+      mockError.stdout = 'Attempting to connect...'
+
+      mockExecFileSync.mockImplementation(() => {
+        throw mockError
+      })
+
+      await expect(client.ask('test')).rejects.toThrow(
+        /Claude CLI execution failed/
+      )
+      await expect(client.ask('test')).rejects.toThrow(/Command:.*claude/)
+      await expect(client.ask('test')).rejects.toThrow(/Exit code: 1/)
+      await expect(client.ask('test')).rejects.toThrow(
+        /Stderr: Error: Model not available/
+      )
+      await expect(client.ask('test')).rejects.toThrow(
+        /Stdout: Attempting to connect\.\.\./
+      )
     })
 
     test('throws error when CLI output is not valid JSON', async () => {

@@ -34,16 +34,44 @@ export class ClaudeCli implements IModelClient {
       mkdirSync(claudeDir, { recursive: true })
     }
 
-    const output = execFileSync(claudeBinary, args, {
-      encoding: 'utf-8',
-      timeout: 60000,
-      input: prompt,
-      cwd: claudeDir,
-    })
+    try {
+      const output = execFileSync(claudeBinary, args, {
+        encoding: 'utf-8',
+        timeout: 60000,
+        input: prompt,
+        cwd: claudeDir,
+      })
 
-    // Parse the Claude CLI response and extract the result field
-    const response = JSON.parse(output)
+      // Parse the Claude CLI response and extract the result field
+      const response = JSON.parse(output)
 
-    return response.result
+      return response.result
+    } catch (error: unknown) {
+      // Create a more informative error message
+      const command = `${claudeBinary} ${args.join(' ')}`
+      let errorDetails = `Command: ${command}`
+
+      if (error && typeof error === 'object') {
+        const err = error as Record<string, unknown>
+
+        if (typeof err.code === 'number') {
+          errorDetails += `\nExit code: ${err.code}`
+        }
+
+        if (typeof err.signal === 'string') {
+          errorDetails += `\nSignal: ${err.signal}`
+        }
+
+        if (err.stderr) {
+          errorDetails += `\nStderr: ${err.stderr.toString()}`
+        }
+
+        if (err.stdout) {
+          errorDetails += `\nStdout: ${err.stdout.toString()}`
+        }
+      }
+
+      throw new Error(`Claude CLI execution failed.\n${errorDetails}`)
+    }
   }
 }
