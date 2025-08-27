@@ -82,7 +82,7 @@ describe('ESLint', () => {
   })
 
   describe('linter.lint with artifact files', () => {
-    const artifactsDir = join(process.cwd(), 'test', 'artifacts')
+    const artifactsDir = join(process.cwd(), 'test', 'artifacts', 'javascript')
     const configPath = join(artifactsDir, 'eslint.config.js')
 
     test('detects issues in file with lint problems', async () => {
