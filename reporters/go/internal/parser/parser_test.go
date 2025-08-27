@@ -592,6 +592,96 @@ func TestTruncateTestOutput(t *testing.T) {
 			t.Error("Should indicate multiple races")
 		}
 	})
+	
+	t.Run("prioritizes file location when truncating many lines", func(t *testing.T) {
+		// Create output with >500 chars and >5 lines where file location is in line 6
+		lines := []string{
+			strings.Repeat("very long test output line 1 with lots of content to exceed 500 chars ", 3),
+			strings.Repeat("very long test output line 2 with lots of content to exceed 500 chars ", 3), 
+			strings.Repeat("very long test output line 3 with lots of content to exceed 500 chars ", 3),
+			strings.Repeat("very long test output line 4 with lots of content to exceed 500 chars ", 3),
+			strings.Repeat("very long test output line 5 with lots of content to exceed 500 chars ", 3),
+			"    critical_test.go:123: This is the important error location", // Line 6 - would be lost!
+			"test output line 7",
+			"test output line 8",
+		}
+		longOutput := strings.Join(lines, "\n")
+		t.Logf("Total length: %d chars", len(longOutput))
+		
+		result := truncateTestOutput(longOutput)
+		t.Logf("Truncated output: %q", result)
+		
+		// Current implementation takes first 5 lines and truncates - file location may be lost
+		if !strings.Contains(result, "critical_test.go:123") {
+			t.Errorf("File location should be preserved for AI parsing, but was lost in truncation. Got: %q", result)
+		}
+	})
+	
+	t.Run("containsGoFileLocation detects file location patterns", func(t *testing.T) {
+		testCases := []struct {
+			line     string
+			expected bool
+		}{
+			{"    test.go:123: error message", true},
+			{"    test.go:123:45: error with column", true},
+			{"ordinary output line", false},
+			{"test.go without line number", false},
+			{"some.txt:123: not a go file", false},
+		}
+		
+		for _, tc := range testCases {
+			result := containsGoFileLocation(tc.line)
+			if result != tc.expected {
+				t.Errorf("containsGoFileLocation(%q) = %v, expected %v", tc.line, result, tc.expected)
+			}
+		}
+	})
+	
+	t.Run("selectLinesForTruncation prioritizes file locations", func(t *testing.T) {
+		lines := []string{
+			"line 1",
+			"line 2",
+			"    test.go:123: important error",
+			"line 4", 
+			"line 5",
+			"    another.go:456: another error",
+		}
+		
+		selected := selectLinesForTruncation(lines, 3)
+		
+		// Should include both file location lines plus one regular line
+		if len(selected) != 3 {
+			t.Errorf("Expected 3 lines selected, got %d", len(selected))
+		}
+		
+		// File locations should be prioritized
+		if !strings.Contains(selected[0], "test.go:123") {
+			t.Errorf("Expected first file location to be prioritized, got: %v", selected)
+		}
+		if !strings.Contains(selected[1], "another.go:456") {
+			t.Errorf("Expected second file location to be prioritized, got: %v", selected)
+		}
+	})
+
+	t.Run("preserves file location in race condition output", func(t *testing.T) {
+		// Race condition output with file location - should preserve location for AI parsing
+		raceOutput := `=== PAUSE TestExample
+    race_test.go:25: race detected during execution of test
+    Some additional race output
+    More race details`
+		
+		result := truncateTestOutput(raceOutput)
+		
+		// Should preserve the file:line location for AI parsing, not just generic message
+		if !strings.Contains(result, "race_test.go:25") {
+			t.Errorf("Expected race condition to preserve file location for AI parsing, got: %q", result)
+		}
+		
+		// Should still indicate it's a race condition
+		if !strings.Contains(result, "race detected during execution of test") {
+			t.Errorf("Expected race condition to preserve race detection message, got: %q", result)
+		}
+	})
 }
 
 // Helper functions
