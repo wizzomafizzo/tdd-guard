@@ -12,6 +12,29 @@ const (
 	passEvent = `{"Action":"pass","Package":"example.com/pkg","Test":"TestAdd"}`
 	failEvent = `{"Action":"fail","Package":"example.com/pkg","Test":"TestFail"}`
 	runEvent  = `{"Action":"run","Package":"example.com/pkg","Test":"TestAdd"}`
+	
+	// Race condition test output fixture
+	raceConditionOutput = `=== PAUSE TestProcessSessionStartWorksWithClear
+=== CONT  TestProcessSessionStartWorksWithClear
+github.com/rs/zerolog.(*Event).msg()
+/home/callan/go/pkg/mod/github.com/rs/zerolog@v1.34.0/event.go:151 +0x419
+github.com/rs/zerolog.(*Event).Msg()
+/home/callan/go/pkg/mod/github.com/rs/zerolog@v1.34.0/event.go:110 +0x2ee
+github.com/wizzomafizzo/bumpers/internal/cli.(*App).ProcessUserPrompt()
+/home/callan/dev/bumpers/internal/cli/commands.go:51 +0x2bb
+github.com/wizzomafizzo/bumpers/internal/cli.TestProcessUserPromptWithCommandGeneration()
+/home/callan/dev/bumpers/internal/cli/app_test.go:1534 +0x149
+testing.tRunner()
+/usr/lib/golang/src/testing/testing.go:1792 +0x225
+==================
+WARNING: DATA RACE
+Read at 0x00c00013e000 by goroutine 39:
+strings.(*Builder).copyCheck()
+/usr/lib/golang/src/strings/builder.go:27 +0x37
+strings.(*Builder).Write()
+/usr/lib/golang/src/strings/builder.go:82 +0x32
+==================
+testing.go:1490: race detected during execution of test`
 )
 
 func TestParser(t *testing.T) {
@@ -510,6 +533,64 @@ func TestParser(t *testing.T) {
 				t.Errorf("Expected output:\n%q\nGot:\n%q", expected, errorOutput)
 			}
 		})
+	})
+}
+
+func TestTruncateTestOutput(t *testing.T) {
+	t.Run("truncates race condition output", func(t *testing.T) {
+		truncated := truncateTestOutput(raceConditionOutput)
+		
+		// Should contain race detection info but not stack traces
+		if !strings.Contains(truncated, "race detected during execution of test") {
+			t.Error("Should preserve race detection message")
+		}
+		
+		// Should not contain verbose stack traces
+		if strings.Contains(truncated, "/home/callan/go/pkg/mod/github.com/rs/zerolog") {
+			t.Error("Should not contain stack trace paths")
+		}
+		
+		// Should be much shorter
+		if len(truncated) > 200 {
+			t.Errorf("Truncated output too long: %d chars, expected under 200", len(truncated))
+		}
+	})
+	
+	t.Run("preserves short output unchanged", func(t *testing.T) {
+		shortOutput := "TestFailed: expected 5, got 3"
+		result := truncateTestOutput(shortOutput)
+		
+		if result != shortOutput {
+			t.Errorf("Expected short output unchanged, got %q", result)
+		}
+	})
+	
+	t.Run("truncates very long output", func(t *testing.T) {
+		longOutput := strings.Repeat("This is a very long error message. ", 50) // ~1750 chars
+		result := truncateTestOutput(longOutput)
+		
+		if len(result) > 600 {
+			t.Errorf("Output not truncated enough: %d chars, expected under 600", len(result))
+		}
+		
+		if !strings.Contains(result, "[truncated") {
+			t.Error("Should indicate truncation occurred")
+		}
+	})
+	
+	t.Run("handles multiple race conditions", func(t *testing.T) {
+		multiRaceOutput := raceConditionOutput + "\n" + raceConditionOutput
+		result := truncateTestOutput(multiRaceOutput)
+		
+		// Should summarize multiple races
+		raceCount := strings.Count(result, "race detected")
+		if raceCount != 1 {
+			t.Errorf("Expected 1 race summary, got %d", raceCount)
+		}
+		
+		if !strings.Contains(result, "Multiple race conditions detected") {
+			t.Error("Should indicate multiple races")
+		}
 	})
 }
 
