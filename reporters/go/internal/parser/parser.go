@@ -3,6 +3,7 @@ package parser
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 )
@@ -223,7 +224,8 @@ func (p *Parser) GetTestOutput(pkg, test string) string {
 		for _, msg := range p.buildFailures {
 			// The build failure message contains the error details
 			if msg != "" {
-				return strings.TrimSpace(msg)
+				trimmed := strings.TrimSpace(msg)
+				return truncateTestOutput(trimmed)
 			}
 		}
 	}
@@ -235,11 +237,41 @@ func (p *Parser) GetTestOutput(pkg, test string) string {
 	if !exists {
 		return ""
 	}
-	// Trim trailing whitespace/newlines
-	return strings.TrimRight(output, "\n")
+	// Trim trailing whitespace/newlines and truncate if necessary
+	trimmed := strings.TrimRight(output, "\n")
+	return truncateTestOutput(trimmed)
 }
 
 // GetBuildFailure returns captured build failure output for a package
 func (p *Parser) GetBuildFailure(importPath string) string {
 	return p.buildFailures[importPath]
+}
+
+func truncateTestOutput(output string) string {
+	// Handle race conditions specially
+	if strings.Contains(output, "race detected during execution of test") {
+		raceCount := strings.Count(output, "race detected during execution of test")
+		if raceCount == 1 {
+			return "race detected during execution of test"
+		}
+		return fmt.Sprintf("Multiple race conditions detected - race detected during execution of test (%d races found)", raceCount)
+	}
+	
+	// For short output, return unchanged
+	const maxLength = 500
+	if len(output) <= maxLength {
+		return output
+	}
+	
+	// For long output, truncate and indicate
+	lines := strings.Split(output, "\n")
+	if len(lines) <= 5 {
+		// Truncate by character count
+		return output[:maxLength-50] + fmt.Sprintf(" [truncated %d chars]", len(output)-maxLength+50)
+	}
+	
+	// Take first 5 lines and indicate truncation
+	firstLines := strings.Join(lines[:5], "\n")
+	remainingLines := len(lines) - 5
+	return fmt.Sprintf("%s\n[truncated %d more lines]", firstLines, remainingLines)
 }
