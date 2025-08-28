@@ -16,6 +16,7 @@
 #   - Packagist: packagist.org, repo.packagist.org, getcomposer.org
 #   - Go: proxy.golang.org, sum.golang.org, go.dev, storage.googleapis.com, honnef.co
 #   - Ruby: rubygems.org
+#   - Rust: crates.io, static.crates.io, index.crates.io
 # - Claude/Anthropic services: api.anthropic.com, sentry.io, statsig.com
 # - JetBrains plugin marketplace: plugins.jetbrains.com
 # - Host network (for Docker operations)
@@ -117,6 +118,9 @@ for domain in \
     "storage.googleapis.com" \
     "honnef.co" \
     "rubygems.org" \
+    "crates.io" \
+    "static.crates.io" \
+    "index.crates.io" \
     "plugins.jetbrains.com"; do
     echo "Resolving $domain..."
     # Retry DNS resolution with exponential backoff

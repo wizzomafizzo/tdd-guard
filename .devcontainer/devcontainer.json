@@ -8,7 +8,8 @@
       "COMPOSER_VERSION": "2.8.10",
       "GIT_DELTA_VERSION": "0.18.2",
       "ZSH_IN_DOCKER_VERSION": "1.2.1",
-      "GO_VERSION": "1.24.0"
+      "GO_VERSION": "1.24.0",
+      "RUST_VERSION": "1.89.0"
     }
   },
   "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
@@ -23,7 +24,8 @@
         "Anthropic.claude-code",
         "bmewburn.vscode-intelephense-client",
         "golang.go",
-        "Shopify.ruby-lsp"
+        "Shopify.ruby-lsp",
+        "rust-lang.rust-analyzer"
       ],
       "settings": {
         "editor.formatOnSave": true,

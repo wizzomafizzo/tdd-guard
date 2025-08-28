@@ -8,6 +8,7 @@ ARG COMPOSER_VERSION=2.8.10
 ARG GIT_DELTA_VERSION=0.18.2
 ARG ZSH_IN_DOCKER_VERSION=1.2.1
 ARG GO_VERSION=1.24.0
+ARG RUST_VERSION=1.89.0
 
 # Install basic development tools and iptables/ipset
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -98,6 +99,19 @@ RUN ARCH=$(dpkg --print-architecture) && \
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="/home/node/go"
 ENV PATH="${GOPATH}/bin:${PATH}"
+
+# Install Rust
+ENV RUSTUP_HOME=/opt/rust/rustup
+ENV CARGO_HOME=/opt/rust/cargo
+ENV PATH="${CARGO_HOME}/bin:${PATH}"
+RUN mkdir -p /opt/rust && \
+    chown node:node /opt/rust && \
+    su node -c "export RUSTUP_HOME=${RUSTUP_HOME} CARGO_HOME=${CARGO_HOME} && \
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+        sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal --no-modify-path && \
+        ${CARGO_HOME}/bin/rustup component add rustfmt clippy && \
+        ${CARGO_HOME}/bin/cargo install cargo-nextest --locked" && \
+    chmod -R go+rX /opt/rust
 
 RUN ARCH=$(dpkg --print-architecture) && \
   wget "https://github.com/dandavison/delta/releases/download/${GIT_DELTA_VERSION}/git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \

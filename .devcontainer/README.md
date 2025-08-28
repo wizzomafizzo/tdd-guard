@@ -17,6 +17,7 @@ A consistent, isolated environment for developing TDD Guard.
 | Python 3.11 + pipx | Pytest reporter                                 |
 | PHP 8.2 + Composer | PHPUnit reporter                                |
 | Go 1.24            | Go reporter                                     |
+| Rust 1.89          | Rust reporter with cargo-nextest                |
 | Ruby 3.x + Bundler | RSpec reporter                                  |
 | Claude Code        | AI assistance                                   |
 | Dev tools          | Git, zsh, fzf, Docker, gh, vim, nano, git-delta |
