@@ -2,7 +2,7 @@
 
 use clap::Parser;
 use std::fs;
-use std::io::{self, BufRead, BufReader, Write, IsTerminal};
+use std::io::{self, BufRead, BufReader, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 
@@ -359,6 +359,7 @@ mod tests {
         assert!(super::decide_passthrough(false, true, false));
     }
 
+    #[test]
     fn test_detect_runner() {
         assert_eq!(detect_runner("nextest"), "nextest");
         assert_eq!(detect_runner("cargo"), "cargo");

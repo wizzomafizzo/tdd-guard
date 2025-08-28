@@ -6,6 +6,18 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { FileStorage, Config as TDDConfig } from 'tdd-guard'
 import type { ReporterConfig, TestResultData, TestScenarios } from './types'
+
+// Extended test error type that includes Rust-specific fields
+type TestError = {
+  message: string
+  expected?: string
+  actual?: string
+  // Rust-specific fields
+  code?: string
+  location?: string
+  help?: string
+  note?: string
+}
 import {
   createJestReporter,
   createVitestReporter,
@@ -368,7 +380,8 @@ describe('Reporters', () => {
         },
         {
           name: 'rust',
-          expected: 'thread \'calculator_tests::should_add_numbers_correctly\' panicked at src/lib.rs:12:9:',
+          expected:
+            "thread 'calculator_tests::should_add_numbers_correctly' panicked at src/lib.rs:12:9:",
         },
       ]
 
@@ -561,9 +574,9 @@ describe('Reporters', () => {
         const results = extractValues(
           'importErrorResults',
           extract.firstError
-        ) as any
+        ) as Record<ReporterName, TestError | undefined>
         const rustError = results.rust
-        if (rustError && rustError.code) {
+        if (rustError?.code) {
           expect(rustError.code).toMatch(/E\d{4}/)
         }
       })
@@ -572,9 +585,9 @@ describe('Reporters', () => {
         const results = extractValues(
           'importErrorResults',
           extract.firstError
-        ) as any
+        ) as Record<ReporterName, TestError | undefined>
         const rustError = results.rust
-        if (rustError && rustError.location) {
+        if (rustError?.location) {
           expect(rustError.location).toContain('src/lib.rs')
         }
       })

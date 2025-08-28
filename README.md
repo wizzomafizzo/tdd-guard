@@ -252,31 +252,6 @@ We share this information for transparency. Please read the full [security consi
 
 TDD Guard runs with your user permissions and has access to your file system. We follow security best practices including automated security scanning, dependency audits, and test-driven development. Review the source code if you have security concerns.
 
-## Troubleshooting
-
-### Permission denied error on macOS/Linux
-
-If you encounter a "Permission denied" error when running `tdd-guard` after global installation, this is due to missing execute permissions in the published package. This is a known issue that will be fixed in future releases.
-
-**Temporary workaround:**
-```bash
-chmod +x $(npm config get prefix)/bin/tdd-guard
-```
-
-This command adds execute permissions to the installed CLI file. After running this, `tdd-guard` should work normally.
-
-### Claude Code cannot find tdd-guard
-
-If Claude Code reports that it cannot find the `tdd-guard` command, ensure that:
-
-1. The package is installed globally: `npm list -g tdd-guard`
-2. Your npm global bin directory is in your PATH: `echo $PATH`
-3. If needed, add npm's global bin directory to your PATH in your shell profile:
-   ```bash
-   # Add to ~/.bashrc, ~/.zshrc, or equivalent
-   export PATH=$(npm config get prefix)/bin:$PATH
-   ```
-
 ## Roadmap
 
 - Add support for more testing frameworks (Mocha, unittest, etc.)
