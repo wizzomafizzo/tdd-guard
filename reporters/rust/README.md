@@ -12,10 +12,16 @@ Rust test reporter that captures test results for TDD Guard validation.
 
 ## Installation
 
-Install TDD Guard globally to get all reporters including this Rust reporter:
+### Step 1: Install TDD Guard
 
 ```bash
 npm install -g tdd-guard
+```
+
+### Step 2: Install the Rust reporter
+
+```bash
+cargo install tdd-guard-rust
 ```
 
 ## Usage
