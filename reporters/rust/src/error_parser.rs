@@ -22,10 +22,23 @@ lazy_static! {
     static ref SIMPLE_ERROR_RE: Regex = Regex::new(r"error:\s*(.+)").unwrap();
     static ref HELP_RE: Regex = Regex::new(r"^\s*help:\s*(.+)").unwrap();
     static ref NOTE_RE: Regex = Regex::new(r"^\s*note:\s*(.+)").unwrap();
+    static ref ANSI_ESCAPE_RE: Regex = Regex::new(r"\x1b\[[0-9;]*m").unwrap();
+}
+
+/// Strip ANSI escape codes from a string
+fn strip_ansi_codes(s: &str) -> String {
+    ANSI_ESCAPE_RE.replace_all(s, "").to_string()
 }
 
 /// Parse a buffer of lines to extract compilation errors
 pub fn parse_error_buffer(lines: &[String]) -> Vec<CompilationError> {
+    // Preprocess: strip ANSI codes from all lines once
+    let cleaned: Vec<String> = lines
+        .iter()
+        .map(|line| strip_ansi_codes(line))
+        .collect();
+    let lines = &cleaned[..];
+    
     let mut errors = Vec::new();
     let mut current_error: Option<CompilationError> = None;
 
@@ -274,5 +287,23 @@ mod tests {
             errors[0].note.as_deref(),
             Some("extra context\nmore context")
         );
+    }
+
+
+    #[test]
+    fn test_parse_error_with_ansi_colors() {
+        let lines = vec![
+            "\u{1b}[0m\u{1b}[1m\u{1b}[38;5;9merror[E0432]\u{1b}[0m\u{1b}[0m\u{1b}[1m: unresolved import `non_existent_module`\u{1b}[0m".to_string(),
+            "\u{1b}[0m \u{1b}[0m\u{1b}[0m\u{1b}[1m\u{1b}[38;5;12m--> \u{1b}[0m\u{1b}[0msrc/lib.rs:1:5\u{1b}[0m".to_string(),
+        ];
+        
+        let errors = parse_error_buffer(&lines);
+        
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].code, Some("E0432".to_string()));
+        assert_eq!(errors[0].message, "unresolved import `non_existent_module`");
+        assert_eq!(errors[0].file, Some("src/lib.rs".to_string()));
+        assert_eq!(errors[0].line, Some(1));
+        assert_eq!(errors[0].column, Some(5));
     }
 }
