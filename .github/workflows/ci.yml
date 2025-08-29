@@ -170,7 +170,9 @@ jobs:
           components: rustfmt, clippy
 
       - name: Install cargo-nextest
-        run: cargo install cargo-nextest --locked
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
 
       - name: Build Rust reporter
         working-directory: reporters/rust
