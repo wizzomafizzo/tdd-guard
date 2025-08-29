@@ -278,6 +278,7 @@ Contributions are welcome! Feel free to submit issues and pull requests.
 
 - Python/pytest support: [@Durafen](https://github.com/Durafen)
 - PHP/PHPUnit support: [@wazum](https://github.com/wazum)
+- Rust/cargo support: [@104hp6u](https://github.com/104hp6u)
 
 ## License
 
