@@ -163,6 +163,19 @@ jobs:
           python3 -m venv .venv
           .venv/bin/pip install -e . pytest
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.89.0
+          components: rustfmt, clippy
+
+      - name: Install cargo-nextest
+        run: cargo install cargo-nextest --locked
+
+      - name: Build Rust reporter
+        working-directory: reporters/rust
+        run: cargo build --release
+
       - name: Run reporter tests
         run: npm run test:reporters
 
