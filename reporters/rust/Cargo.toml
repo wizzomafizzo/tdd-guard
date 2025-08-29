@@ -6,6 +6,11 @@ authors = ["SvO <104hp6u@gmail.com>"]
 description = "Rust test reporter for TDD Guard validation"
 license = "MIT"
 repository = "https://github.com/nizos/tdd-guard"
+homepage = "https://github.com/nizos/tdd-guard"
+documentation = "https://github.com/nizos/tdd-guard/tree/main/reporters/rust"
+readme = "README.md"
+keywords = ["testing", "tdd", "tdd-guard", "reporter", "cargo-test"]
+categories = ["development-tools::testing", "command-line-utilities"]
 
 [[bin]]
 name = "tdd-guard-rust"
