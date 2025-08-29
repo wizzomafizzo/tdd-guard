@@ -195,7 +195,13 @@ test:
 <details>
 <summary><b>Rust</b></summary>
 
-The Rust reporter is included with TDD Guard. Use it to capture test results from `cargo test` or `cargo nextest`:
+Install the tdd-guard-rust reporter:
+
+```bash
+cargo install tdd-guard-rust
+```
+
+Use it to capture test results from `cargo test` or `cargo nextest`:
 
 ```bash
 # With nextest (recommended)
