@@ -1,7 +1,7 @@
 import { Storage } from '../storage/Storage'
 import { FileStorage } from '../storage/FileStorage'
 import { SessionStartSchema } from '../contracts/schemas/toolSchemas'
-import { TDD_CORE_PRINCIPLES } from '../validation/prompts/tdd-core-principles'
+import { RULES } from '../validation/prompts/rules'
 
 export class SessionHandler {
   private readonly storage: Storage
@@ -25,7 +25,7 @@ export class SessionHandler {
   private async ensureInstructionsExist(): Promise<void> {
     const existingInstructions = await this.storage.getInstructions()
     if (!existingInstructions) {
-      await this.storage.saveInstructions(TDD_CORE_PRINCIPLES)
+      await this.storage.saveInstructions(RULES)
     }
   }
 }

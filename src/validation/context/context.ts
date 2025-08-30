@@ -11,19 +11,20 @@ import {
 } from '../../contracts/schemas/toolSchemas'
 import { TestResultsProcessor } from '../../processors'
 import { formatLintDataForContext } from '../../processors/lintProcessor'
-import { detectFileType } from '../../hooks/fileTypeDetection'
 
 // Import core prompts (always included)
-import { ROLE_AND_CONTEXT } from '../prompts/role-and-context'
-import { TDD_CORE_PRINCIPLES } from '../prompts/tdd-core-principles'
-import { FILE_TYPE_RULES } from '../prompts/file-type-rules'
-import { RESPONSE_FORMAT } from '../prompts/response-format'
+import { ROLE } from '../prompts/role'
+import { RULES } from '../prompts/rules'
+import { FILE_TYPES } from '../prompts/file-types'
+import { RESPONSE } from '../prompts/response'
 
-// Import operation-specific analysis
-import { EDIT_ANALYSIS } from '../prompts/edit-analysis'
-import { MULTI_EDIT_ANALYSIS } from '../prompts/multi-edit-analysis'
-import { WRITE_ANALYSIS } from '../prompts/write-analysis'
-import { TODO_ANALYSIS } from '../prompts/todo-analysis'
+// Import operation-specific context
+import { EDIT } from '../prompts/operations/edit'
+import { MULTI_EDIT } from '../prompts/operations/multi-edit'
+import { WRITE } from '../prompts/operations/write'
+import { TODOS } from '../prompts/tools/todos'
+import { TEST_RESULTS } from '../prompts/tools/test-results'
+import { LINT_RESULTS } from '../prompts/tools/lint-results'
 
 export function generateDynamicContext(context: Context): string {
   const operation: ToolOperation = JSON.parse(context.modifications)
@@ -31,103 +32,47 @@ export function generateDynamicContext(context: Context): string {
   // Build prompt in correct order
   const sections: string[] = [
     // 1. Core sections (always included)
-    ROLE_AND_CONTEXT,
-    context.instructions ?? TDD_CORE_PRINCIPLES,
-    FILE_TYPE_RULES,
+    ROLE,
+    context.instructions ?? RULES,
+    FILE_TYPES,
 
-    // 2. Operation-specific analysis (only for current operation)
-    getOperationAnalysis(operation),
-
-    // 3. Changes under review
-    '\n## Changes to Review\n',
+    // 2. Operation-specific context and changes
     formatOperation(operation),
 
-    // 4. Additional context
-    formatTestOutput(context.test ?? '', operation),
-    context.todo ? TODO_ANALYSIS : '',
-    context.todo ? formatTodoList(context.todo) : '',
-    context.lint ? formatLintOutput(context.lint) : '',
+    // 3. Additional context
+    formatTestSection(context.test),
+    formatTodoSection(context.todo),
+    formatLintSection(context.lint),
 
-    // 5. Response format
-    RESPONSE_FORMAT,
+    // 4. Response format
+    RESPONSE,
   ]
 
   return sections.filter(Boolean).join('\n')
 }
 
-function getOperationAnalysis(operation: ToolOperation): string {
-  if (isEditOperation(operation)) {
-    return EDIT_ANALYSIS
-  }
-
-  if (isMultiEditOperation(operation)) {
-    return MULTI_EDIT_ANALYSIS
-  }
-
-  if (isWriteOperation(operation)) {
-    return WRITE_ANALYSIS
-  }
-
-  return ''
-}
-
 function formatOperation(operation: ToolOperation): string {
   if (isEditOperation(operation)) {
-    return formatEditOperation(operation)
+    return EDIT + formatEditOperation(operation)
   }
 
   if (isMultiEditOperation(operation)) {
-    return formatMultiEditOperation(operation)
+    return MULTI_EDIT + formatMultiEditOperation(operation)
   }
 
   if (isWriteOperation(operation)) {
-    return formatWriteOperation(operation)
+    return WRITE + formatWriteOperation(operation)
   }
 
   return ''
 }
 
-// Context section descriptions
-const EDIT_MODIFICATIONS_DESCRIPTION = `This section shows the code changes being proposed. Compare the old content with the new content to identify what's being added, removed, or modified.`
-
-const WRITE_MODIFICATIONS_DESCRIPTION = `This section shows the new file being created. Analyze the content to determine if it follows TDD principles for new file creation.`
-
-const TEST_OUTPUT_DESCRIPTION = `This section shows the output from the most recent test run BEFORE this modification.
-
-IMPORTANT: This test output is from PREVIOUS work, not from the changes being reviewed. The modification has NOT been executed yet.
-
-Use this to understand:
-- Which tests are failing and why (from previous work)
-- What error messages indicate about missing implementation
-- Whether tests are passing (indicating refactor phase may be appropriate)
-
-Note: Test output may be from unrelated features. This does NOT prevent starting new test-driven work.`
-
-const TODO_LIST_DESCRIPTION = `This section shows the developer's task list. Use this to understand:
-- What the developer is currently working on (in_progress)
-- What has been completed (completed)
-- What is planned next (pending)
-Note: Multiple pending "add test" todos don't justify adding multiple tests at once.`
-
-const LINT_OUTPUT_DESCRIPTION = `This section shows the current code quality status from static analysis.
-
-IMPORTANT: This lint output reflects the CURRENT state of the codebase BEFORE the proposed modification.
-
-Use this to understand:
-- Current code quality issues that need attention
-- Whether code quality should be addressed before new features
-- Patterns of issues that may indicate architectural concerns
-
-Note: During TDD red phase (failing tests), focus on making tests pass before addressing lint issues.
-During green phase (passing tests), lint issues should be addressed before proceeding to new features.`
-
 function formatEditOperation(operation: EditOperation): string {
-  return [
-    EDIT_MODIFICATIONS_DESCRIPTION,
-    formatSection('File Path', operation.tool_input.file_path),
-    formatSection('Old Content', operation.tool_input.old_string),
-    formatSection('New Content', operation.tool_input.new_string),
-  ].join('\n')
+  return (
+    formatSection('File Path', operation.tool_input.file_path) +
+    formatSection('Old Content', operation.tool_input.old_string) +
+    formatSection('New Content', operation.tool_input.new_string)
+  )
 }
 
 function formatMultiEditOperation(operation: MultiEditOperation): string {
@@ -135,93 +80,67 @@ function formatMultiEditOperation(operation: MultiEditOperation): string {
     .map((edit, index) => formatEdit(edit, index + 1))
     .join('')
 
-  return [
-    EDIT_MODIFICATIONS_DESCRIPTION,
-    formatSection('File Path', operation.tool_input.file_path),
-    '\n### Edits\n',
-    editsFormatted,
-  ].join('\n')
+  return `${formatSection(
+    'File Path',
+    operation.tool_input.file_path
+  )}\n### Edits\n${editsFormatted}`
 }
 
 function formatWriteOperation(operation: WriteOperation): string {
-  return [
-    WRITE_MODIFICATIONS_DESCRIPTION,
-    formatSection('File Path', operation.tool_input.file_path),
-    formatSection('New File Content', operation.tool_input.content),
-  ].join('\n')
+  return (
+    formatSection('File Path', operation.tool_input.file_path) +
+    formatSection('New File Content', operation.tool_input.content)
+  )
 }
 
 function formatEdit(
   edit: { old_string: string; new_string: string },
   index: number
 ): string {
-  const fenceMarker = '```'
-  return [
-    `\n#### Edit ${index}:\n`,
-    `**Old Content:**\n${fenceMarker}\n${edit.old_string}\n${fenceMarker}\n`,
-    `**New Content:**\n${fenceMarker}\n${edit.new_string}\n${fenceMarker}\n`,
-  ].join('')
+  return (
+    `\n#### Edit ${index}:\n` +
+    `**Old Content:**\n${codeBlock(edit.old_string)}` +
+    `**New Content:**\n${codeBlock(edit.new_string)}`
+  )
 }
 
-function formatTestOutput(
-  testOutput: string,
-  operation: ToolOperation
-): string {
-  // Handle empty or missing test output
-  if (!testOutput || testOutput.trim() === '') {
-    return [
-      '\n### Test Output\n',
-      TEST_OUTPUT_DESCRIPTION,
-      '\n```\n',
-      'No test output available. Tests must be run before implementing.',
-      '\n```\n',
-    ].join('')
-  }
+function formatTestSection(testOutput?: string): string {
+  if (!testOutput) return ''
 
-  const processor = new TestResultsProcessor()
+  const output = testOutput.trim()
+    ? new TestResultsProcessor().process(testOutput)
+    : 'No test output available. Tests must be run before implementing.'
 
-  // Use existing file type detection
-  const fileType = detectFileType({ tool_input: operation.tool_input })
-  const framework = fileType === 'python' ? 'pytest' : 'vitest'
-
-  const formattedOutput = processor.process(testOutput, framework)
-
-  return [
-    '\n### Test Output\n',
-    TEST_OUTPUT_DESCRIPTION,
-    '\n```\n',
-    formattedOutput,
-    '\n```\n',
-  ].join('')
+  return TEST_RESULTS + codeBlock(output)
 }
 
-function formatTodoList(todoJson: string): string {
+function formatTodoSection(todoJson?: string): string {
+  if (!todoJson) return ''
+
   const todoOperation = JSON.parse(todoJson)
   const todos: Todo[] = todoOperation.tool_input?.todos ?? []
 
   const todoItems = todos
     .map(
       (todo, index) =>
-        `\n${index + 1}. [${todo.status}] ${todo.content} (${todo.priority})`
+        `${index + 1}. [${todo.status}] ${todo.content} (${todo.priority})`
     )
-    .join('')
+    .join('\n')
 
-  return ['\n### Todo List\n', TODO_LIST_DESCRIPTION, todoItems, '\n'].join('')
+  return `${TODOS}${todoItems}\n`
 }
 
-function formatLintOutput(lintData: ProcessedLintData): string {
-  const formattedLintData = formatLintDataForContext(lintData)
+function formatLintSection(lintData?: ProcessedLintData): string {
+  if (!lintData) return ''
 
-  return [
-    '\n### Code Quality Status\n',
-    LINT_OUTPUT_DESCRIPTION,
-    '\n```\n',
-    formattedLintData,
-    '\n```\n',
-  ].join('')
+  const formattedLintData = formatLintDataForContext(lintData)
+  return LINT_RESULTS + codeBlock(formattedLintData)
 }
 
 function formatSection(title: string, content: string): string {
-  const fenceMarker = '```'
-  return `\n### ${title}\n${fenceMarker}\n${content}\n${fenceMarker}\n`
+  return `\n### ${title}\n${codeBlock(content)}`
+}
+
+function codeBlock(content: string): string {
+  return `\`\`\`\n${content}\n\`\`\`\n`
 }

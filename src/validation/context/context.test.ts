@@ -1,73 +1,81 @@
-import { describe, test, expect } from 'vitest'
+import { describe, test, expect, beforeEach } from 'vitest'
 import { testData } from '@testUtils'
 import { generateDynamicContext } from './context'
-import { ROLE_AND_CONTEXT } from '../prompts/role-and-context'
-import { TDD_CORE_PRINCIPLES } from '../prompts/tdd-core-principles'
-import { FILE_TYPE_RULES } from '../prompts/file-type-rules'
-import { RESPONSE_FORMAT } from '../prompts/response-format'
-import { EDIT_ANALYSIS } from '../prompts/edit-analysis'
-import { MULTI_EDIT_ANALYSIS } from '../prompts/multi-edit-analysis'
-import { WRITE_ANALYSIS } from '../prompts/write-analysis'
-import { TODO_ANALYSIS } from '../prompts/todo-analysis'
+import { ToolOperation } from '../../contracts/schemas/toolSchemas'
+import { ROLE } from '../prompts/role'
+import { RULES } from '../prompts/rules'
+import { FILE_TYPES } from '../prompts/file-types'
+import { RESPONSE } from '../prompts/response'
+import { EDIT } from '../prompts/operations/edit'
+import { MULTI_EDIT } from '../prompts/operations/multi-edit'
+import { WRITE } from '../prompts/operations/write'
+import { TODOS } from '../prompts/tools/todos'
+import { TEST_RESULTS } from '../prompts/tools/test-results'
 
 describe('generateDynamicContext', () => {
   describe('when Edit operation', () => {
-    test('should format Edit operation with file path, old content, and new content', () => {
-      const editOperation = testData.editOperation()
-      const context = {
-        modifications: JSON.stringify(editOperation),
-      }
+    let editOperation: ReturnType<typeof testData.editOperation>
+    let result: string
 
-      const result = generateDynamicContext(context)
+    beforeEach(() => {
+      editOperation = testData.editOperation()
+      result = generateContextResult(editOperation)
+    })
 
-      // Check core sections are included
-      expect(result).toContain(ROLE_AND_CONTEXT)
-      expect(result).toContain(TDD_CORE_PRINCIPLES)
-      expect(result).toContain(FILE_TYPE_RULES)
-      expect(result).toContain(EDIT_ANALYSIS)
-      expect(result).toContain(RESPONSE_FORMAT)
+    test('should include core prompts', () => {
+      expectCorePrompts(result)
+    })
 
-      // Check modifications section
-      expect(result).toContain('## Changes to Review')
-      expect(result).toContain(
-        'This section shows the code changes being proposed'
-      )
+    test('should include Edit operation context', () => {
+      expect(EDIT.length).toBeGreaterThan(0)
+      expect(result).toContain(EDIT)
+    })
+
+    test('should format file path section', () => {
       expect(result).toContain('### File Path')
-      expect(result).toContain('```')
       expect(result).toContain(editOperation.tool_input.file_path)
+    })
+
+    test('should format old content section', () => {
       expect(result).toContain('### Old Content')
       expect(result).toContain(editOperation.tool_input.old_string)
+    })
+
+    test('should format new content section', () => {
       expect(result).toContain('### New Content')
       expect(result).toContain(editOperation.tool_input.new_string)
     })
   })
 
   describe('when MultiEdit operation', () => {
-    test('should format MultiEdit operation with file path and edits array', () => {
-      const multiEditOperation = testData.multiEditOperation()
-      const context = {
-        modifications: JSON.stringify(multiEditOperation),
-      }
+    let multiEditOperation: ReturnType<typeof testData.multiEditOperation>
+    let result: string
 
-      const result = generateDynamicContext(context)
+    beforeEach(() => {
+      multiEditOperation = testData.multiEditOperation()
+      result = generateContextResult(multiEditOperation)
+    })
 
-      // Check core sections are included
-      expect(result).toContain(ROLE_AND_CONTEXT)
-      expect(result).toContain(TDD_CORE_PRINCIPLES)
-      expect(result).toContain(FILE_TYPE_RULES)
-      expect(result).toContain(MULTI_EDIT_ANALYSIS)
-      expect(result).toContain(RESPONSE_FORMAT)
+    test('should include core prompts', () => {
+      expectCorePrompts(result)
+    })
 
-      // Check modifications section
-      expect(result).toContain('## Changes to Review')
-      expect(result).toContain(
-        'This section shows the code changes being proposed'
-      )
+    test('should include MultiEdit operation context', () => {
+      expect(MULTI_EDIT.length).toBeGreaterThan(0)
+      expect(result).toContain(MULTI_EDIT)
+    })
+
+    test('should format file path section', () => {
       expect(result).toContain('### File Path')
-      expect(result).toContain('```')
       expect(result).toContain(multiEditOperation.tool_input.file_path)
+    })
+
+    test('should format edits section', () => {
       expect(result).toContain('### Edits')
       expect(result).toContain('#### Edit 1:')
+    })
+
+    test('should format first edit with old and new content', () => {
       expect(result).toContain('**Old Content:**')
       expect(result).toContain(
         multiEditOperation.tool_input.edits[0].old_string
@@ -80,212 +88,251 @@ describe('generateDynamicContext', () => {
   })
 
   describe('when Write operation', () => {
-    test('should format Write operation with file path and content', () => {
-      const writeOperation = testData.writeOperation()
-      const context = {
-        modifications: JSON.stringify(writeOperation),
-      }
+    let writeOperation: ReturnType<typeof testData.writeOperation>
+    let result: string
 
-      const result = generateDynamicContext(context)
+    beforeEach(() => {
+      writeOperation = testData.writeOperation()
+      result = generateContextResult(writeOperation)
+    })
 
-      // Check core sections are included
-      expect(result).toContain(ROLE_AND_CONTEXT)
-      expect(result).toContain(TDD_CORE_PRINCIPLES)
-      expect(result).toContain(FILE_TYPE_RULES)
-      expect(result).toContain(WRITE_ANALYSIS)
-      expect(result).toContain(RESPONSE_FORMAT)
+    test('should include core prompts', () => {
+      expectCorePrompts(result)
+    })
 
-      // Check modifications section
-      expect(result).toContain('## Changes to Review')
-      expect(result).toContain('This section shows the new file being created')
+    test('should include Write operation context', () => {
+      expect(WRITE.length).toBeGreaterThan(0)
+      expect(result).toContain(WRITE)
+    })
+
+    test('should format file path section', () => {
       expect(result).toContain('### File Path')
-      expect(result).toContain('```')
       expect(result).toContain(writeOperation.tool_input.file_path)
+    })
+
+    test('should format new file content section', () => {
       expect(result).toContain('### New File Content')
       expect(result).toContain(writeOperation.tool_input.content)
     })
   })
 
   describe('when test output is provided', () => {
-    test('should append test information with description', () => {
-      const editOperation = testData.editOperation()
-      const testOutput = JSON.stringify(testData.failedTestResults())
-      const context = {
-        modifications: JSON.stringify(editOperation),
-        test: testOutput,
-      }
+    let editOperation: ReturnType<typeof testData.editOperation>
+    let testResults: ReturnType<typeof testData.failedTestResults>
+    let result: string
 
-      const result = generateDynamicContext(context)
-
-      expect(result).toContain('### Test Output')
-      expect(result).toContain(
-        'This section shows the output from the most recent test run'
-      )
-      expect(result).toContain('Which tests are failing and why')
-      expect(result).toContain('```')
-      // Should contain formatted output, not raw JSON
-      expect(result).toContain(' Test Files  1 failed (1)')
+    beforeEach(() => {
+      editOperation = testData.editOperation()
+      testResults = testData.failedTestResults()
+      result = generateContextResult(editOperation, {
+        test: JSON.stringify(testResults),
+      })
     })
 
-    test('should format JSON test results using TestResultsProcessor', () => {
-      const editOperation = testData.editOperation()
-      const testResults = testData.failedTestResults()
-      const context = {
-        modifications: JSON.stringify(editOperation),
-        test: JSON.stringify(testResults),
-      }
+    test('should include test results context', () => {
+      expect(TEST_RESULTS.length).toBeGreaterThan(0)
+      expect(result).toContain(TEST_RESULTS)
+    })
 
-      const result = generateDynamicContext(context)
+    test('should include test output description', () => {
+      expect(result).toContain('Results from the most recent test run')
+    })
 
-      expect(result).toContain('### Test Output')
-      // Should contain formatted output from TestResultsProcessor
+    test('should format test results using TestResultsProcessor', () => {
       expect(result).toContain(' ❯ /src/example.test.ts (1 tests | 1 failed)')
       expect(result).toContain('   × Calculator > should calculate sum')
       expect(result).toContain('     → expected 5 to be 6')
+    })
+
+    test('should include test summary', () => {
       expect(result).toContain(' Test Files  1 failed (1)')
       expect(result).toContain('      Tests  1 failed (1)')
-      // Should NOT contain raw JSON
+    })
+
+    test('should not contain raw JSON', () => {
       expect(result).not.toContain('"testModules"')
       expect(result).not.toContain('"moduleId"')
     })
   })
 
   describe('when todo is provided', () => {
-    test('should append todo information with description', () => {
-      const editOperation = testData.editOperation()
-      const todoWriteOperation = testData.todoWriteOperation()
-      const todoJson = JSON.stringify(todoWriteOperation)
-      const context = {
-        modifications: JSON.stringify(editOperation),
-        todo: todoJson,
-      }
+    let editOperation: ReturnType<typeof testData.editOperation>
+    let todoWriteOperation: ReturnType<typeof testData.todoWriteOperation>
+    let result: string
 
-      const result = generateDynamicContext(context)
-
-      expect(result).toContain('### Todo List')
-      expect(result).toContain("This section shows the developer's task list")
-      expect(result).toContain('What the developer is currently working on')
-      expect(result).toContain('[pending] Implement feature (high)')
+    beforeEach(() => {
+      editOperation = testData.editOperation()
+      todoWriteOperation = testData.todoWriteOperation()
+      result = generateContextResult(editOperation, {
+        todo: JSON.stringify(todoWriteOperation),
+      })
     })
 
-    test('should include TODO_ANALYSIS instructions when todos are present', () => {
-      const editOperation = testData.editOperation()
-      const todoWriteOperation = testData.todoWriteOperation()
-      const todoJson = JSON.stringify(todoWriteOperation)
-      const context = {
-        modifications: JSON.stringify(editOperation),
-        todo: todoJson,
-      }
+    test('should include todo context', () => {
+      expect(TODOS.length).toBeGreaterThan(0)
+      expect(result).toContain(TODOS)
+    })
 
-      const result = generateDynamicContext(context)
+    test('should include todo description and note', () => {
+      expect(result).toContain("Developer's task tracking")
+      expect(result).toContain('Todo items indicate intent')
+    })
 
-      expect(TODO_ANALYSIS.length).toBeGreaterThan(0)
-      expect(result).toContain(TODO_ANALYSIS)
+    test('should format todo items', () => {
+      expect(result).toContain('[pending] Implement feature (high)')
     })
   })
 
   describe('when todo is not provided', () => {
-    test('should not include TODO_ANALYSIS when todos are absent', () => {
+    let result: string
+
+    beforeEach(() => {
       const editOperation = testData.editOperation()
-      const context = {
-        modifications: JSON.stringify(editOperation),
-      }
+      result = generateContextResult(editOperation)
+    })
 
-      const result = generateDynamicContext(context)
-
-      expect(result).not.toContain(TODO_ANALYSIS)
+    test('should not include todo context', () => {
+      expect(result).not.toContain(TODOS)
     })
   })
 
   describe('prompt ordering', () => {
     test('should assemble prompts in correct order', () => {
       const editOperation = testData.editOperation()
-      const context = {
-        modifications: JSON.stringify(editOperation),
-      }
-
-      const result = generateDynamicContext(context)
+      const result = generateContextResult(editOperation)
 
       // Verify order by checking indexOf
-      const roleIndex = result.indexOf('You are a Test-Driven Development')
-      const principlesIndex = result.indexOf('## TDD Fundamentals')
+      const roleIndex = result.indexOf('## Your Role')
+      const rulesIndex = result.indexOf('## Rules')
       const fileRulesIndex = result.indexOf('## File Type Specific Rules')
-      const analysisIndex = result.indexOf('## Analyzing Edit Operations')
+      const operationIndex = result.indexOf('## Edit Operation')
       const changesIndex = result.indexOf('## Changes to Review')
       const responseIndex = result.indexOf('## Your Response')
 
-      expect(roleIndex).toBeLessThan(principlesIndex)
-      expect(principlesIndex).toBeLessThan(fileRulesIndex)
-      expect(fileRulesIndex).toBeLessThan(analysisIndex)
-      expect(analysisIndex).toBeLessThan(changesIndex)
+      expect(roleIndex).toBeLessThan(rulesIndex)
+      expect(rulesIndex).toBeLessThan(fileRulesIndex)
+      expect(fileRulesIndex).toBeLessThan(operationIndex)
+      expect(operationIndex).toBeLessThan(changesIndex)
       expect(changesIndex).toBeLessThan(responseIndex)
     })
   })
 
   describe('custom instructions', () => {
-    const createContext = (instructions?: string) => ({
-      modifications: JSON.stringify(testData.editOperation()),
-      instructions,
+    const customInstructions =
+      '## Custom TDD Rules\n1. Always test first\n2. Keep it simple'
+
+    describe('when custom instructions provided', () => {
+      let result: string
+
+      beforeEach(() => {
+        result = generateContextResult(testData.editOperation(), {
+          instructions: customInstructions,
+        })
+      })
+
+      test('should use custom instructions', () => {
+        expect(result).toContain(customInstructions)
+      })
+
+      test('should not include default rules', () => {
+        expect(result).not.toContain(RULES)
+      })
     })
 
-    test('should use custom instructions when provided', () => {
-      const customInstructions =
-        '## Custom TDD Rules\n1. Always test first\n2. Keep it simple'
-      const context = createContext(customInstructions)
+    describe('when custom instructions not provided', () => {
+      let result: string
 
-      const result = generateDynamicContext(context)
+      beforeEach(() => {
+        result = generateContextResult(testData.editOperation())
+      })
 
-      expect(result).toContain(customInstructions)
-      expect(result).not.toContain(TDD_CORE_PRINCIPLES)
-    })
-
-    test('should fall back to default TDD principles when instructions not provided', () => {
-      const context = createContext()
-
-      const result = generateDynamicContext(context)
-
-      expect(result).toContain(TDD_CORE_PRINCIPLES)
+      test('should use default TDD rules', () => {
+        expect(result).toContain(RULES)
+      })
     })
   })
 
-  describe('operation-specific analysis inclusion', () => {
-    test('should include only Edit analysis for Edit operations', () => {
-      const editOperation = testData.editOperation()
-      const context = {
-        modifications: JSON.stringify(editOperation),
-      }
+  describe('operation-specific context inclusion', () => {
+    describe('for Edit operations', () => {
+      let result: string
 
-      const result = generateDynamicContext(context)
+      beforeEach(() => {
+        const editOperation = testData.editOperation()
+        result = generateContextResult(editOperation)
+      })
 
-      expect(result).toContain(EDIT_ANALYSIS)
-      expect(result).not.toContain(MULTI_EDIT_ANALYSIS)
-      expect(result).not.toContain(WRITE_ANALYSIS)
+      test('should include Edit context', () => {
+        expect(result).toContain(EDIT)
+      })
+
+      test('should not include MultiEdit context', () => {
+        expect(result).not.toContain(MULTI_EDIT)
+      })
+
+      test('should not include Write context', () => {
+        expect(result).not.toContain(WRITE)
+      })
     })
 
-    test('should include only MultiEdit analysis for MultiEdit operations', () => {
-      const multiEditOperation = testData.multiEditOperation()
-      const context = {
-        modifications: JSON.stringify(multiEditOperation),
-      }
+    describe('for MultiEdit operations', () => {
+      let result: string
 
-      const result = generateDynamicContext(context)
+      beforeEach(() => {
+        const multiEditOperation = testData.multiEditOperation()
+        result = generateContextResult(multiEditOperation)
+      })
 
-      expect(result).toContain(MULTI_EDIT_ANALYSIS)
-      expect(result).not.toContain(EDIT_ANALYSIS)
-      expect(result).not.toContain(WRITE_ANALYSIS)
+      test('should include MultiEdit context', () => {
+        expect(result).toContain(MULTI_EDIT)
+      })
+
+      test('should not include Edit context', () => {
+        expect(result).not.toContain(EDIT)
+      })
+
+      test('should not include Write context', () => {
+        expect(result).not.toContain(WRITE)
+      })
     })
 
-    test('should include only Write analysis for Write operations', () => {
-      const writeOperation = testData.writeOperation()
-      const context = {
-        modifications: JSON.stringify(writeOperation),
-      }
+    describe('for Write operations', () => {
+      let result: string
 
-      const result = generateDynamicContext(context)
+      beforeEach(() => {
+        const writeOperation = testData.writeOperation()
+        result = generateContextResult(writeOperation)
+      })
 
-      expect(result).toContain(WRITE_ANALYSIS)
-      expect(result).not.toContain(EDIT_ANALYSIS)
-      expect(result).not.toContain(MULTI_EDIT_ANALYSIS)
+      test('should include Write context', () => {
+        expect(result).toContain(WRITE)
+      })
+
+      test('should not include Edit context', () => {
+        expect(result).not.toContain(EDIT)
+      })
+
+      test('should not include MultiEdit context', () => {
+        expect(result).not.toContain(MULTI_EDIT)
+      })
     })
   })
 })
+
+// Test helpers
+function generateContextResult(
+  operation: ToolOperation,
+  additionalContext?: { test?: string; todo?: string; instructions?: string }
+) {
+  const context = {
+    modifications: JSON.stringify(operation),
+    ...additionalContext,
+  }
+  return generateDynamicContext(context)
+}
+
+function expectCorePrompts(result: string) {
+  expect(result).toContain(ROLE)
+  expect(result).toContain(RULES)
+  expect(result).toContain(FILE_TYPES)
+  expect(result).toContain(RESPONSE)
+}

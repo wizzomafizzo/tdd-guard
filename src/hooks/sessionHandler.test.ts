@@ -94,7 +94,7 @@ describe('SessionHandler', () => {
           async (source) => {
             const instructions = await startAndGetInstructions(source)
 
-            expect(instructions).toContain('## TDD Fundamentals')
+            expect(instructions).toContain('## Rules')
           }
         )
       })
@@ -112,7 +112,7 @@ describe('SessionHandler', () => {
             const instructions = await startAndGetInstructions(source)
             
             expect(instructions).toBe(customInstructions)
-            expect(instructions).not.toContain('## TDD Fundamentals')
+            expect(instructions).not.toContain('## Rules')
           }
         )
       })
