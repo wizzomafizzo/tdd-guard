@@ -25,9 +25,9 @@ TDD Guard ensures Claude Code follows Test-Driven Development principles. When y
 - **Minimal Implementation** - Prevents code beyond current test requirements
 - **Lint Integration** - Enforces refactoring using your linting rules
 - **Multi-Language Support** - TypeScript, JavaScript, Python, PHP, Go, and Rust
-- **Session Control** - Toggle on and off mid-session
 - **Customizable Rules** - Adjust validation rules to match your TDD style
-- **Flexible Validation** - Use local Claude or Anthropic API
+- **Flexible Validation** - Use local Claude or faster Anthropic API
+- **Session Control** - Toggle on and off mid-session
 
 ## Requirements
 
@@ -247,7 +247,6 @@ See [Strengthening TDD Enforcement](docs/enforcement.md) to prevent agents from 
 
 - [ESLint integration](docs/linting.md) - Automated refactoring support
 - [AI Models](docs/ai-model.md) - Switch between Claude CLI and Anthropic API
-- [All Settings](docs/configuration.md) - Complete configuration reference
 
 **Note:** If TDD Guard can't find Claude, see [Claude Binary Setup](docs/claude-binary.md).
 
@@ -265,6 +264,8 @@ TDD Guard runs with your user permissions and has access to your file system. We
 
 - Add support for more testing frameworks (Mocha, unittest, etc.)
 - Add support for additional programming languages (Ruby, Java, C#, etc.)
+- Validate file modifications made through MCPs and shell commands
+- Add integration for OpenCode and other vendor-agnostic AI coding tools
 - Encourage meaningful refactoring opportunities when tests are green
 - Add support for multiple concurrent sessions per project
 
@@ -282,6 +283,12 @@ Contributions are welcome! Feel free to submit issues and pull requests.
 - Python/pytest support: [@Durafen](https://github.com/Durafen)
 - PHP/PHPUnit support: [@wazum](https://github.com/wazum)
 - Rust/cargo support: [@104hp6u](https://github.com/104hp6u)
+
+## Support
+
+- [Configuration](docs/configuration.md) - Complete settings documentation
+- [Discussions](https://github.com/nizos/tdd-guard/discussions) - Ask questions and share ideas
+- [Issues](https://github.com/nizos/tdd-guard/issues) - Report bugs and request features
 
 ## License
 
