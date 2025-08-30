@@ -193,6 +193,32 @@ describe('generateDynamicContext', () => {
     })
   })
 
+  describe('custom instructions', () => {
+    const createContext = (instructions?: string) => ({
+      modifications: JSON.stringify(testData.editOperation()),
+      instructions,
+    })
+
+    test('should use custom instructions when provided', () => {
+      const customInstructions =
+        '## Custom TDD Rules\n1. Always test first\n2. Keep it simple'
+      const context = createContext(customInstructions)
+
+      const result = generateDynamicContext(context)
+
+      expect(result).toContain(customInstructions)
+      expect(result).not.toContain(TDD_CORE_PRINCIPLES)
+    })
+
+    test('should fall back to default TDD principles when instructions not provided', () => {
+      const context = createContext()
+
+      const result = generateDynamicContext(context)
+
+      expect(result).toContain(TDD_CORE_PRINCIPLES)
+    })
+  })
+
   describe('operation-specific analysis inclusion', () => {
     test('should include only Edit analysis for Edit operations', () => {
       const editOperation = testData.editOperation()

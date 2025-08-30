@@ -31,7 +31,7 @@ export function generateDynamicContext(context: Context): string {
   const sections: string[] = [
     // 1. Core sections (always included)
     ROLE_AND_CONTEXT,
-    TDD_CORE_PRINCIPLES,
+    context.instructions ?? TDD_CORE_PRINCIPLES,
     FILE_TYPE_RULES,
 
     // 2. Operation-specific analysis (only for current operation)
