@@ -3,6 +3,7 @@ import { SessionHandler } from './sessionHandler'
 import { MemoryStorage } from '../storage/MemoryStorage'
 import { FileStorage } from '../storage/FileStorage'
 import { testData } from '@testUtils'
+import type { SessionStart } from '../contracts/schemas/toolSchemas'
 
 describe('SessionHandler', () => {
   let storage: MemoryStorage
@@ -26,11 +27,12 @@ describe('SessionHandler', () => {
   })
 
   describe('processSessionStart', () => {
-    beforeEach(async () => {
-      await populateAllStorageTypes()
-    })
+    describe('transient data clearing', () => {
+      beforeEach(async () => {
+        await populateAllStorageTypes()
+      })
 
-    describe('when SessionStart event is received', () => {
+      describe('when SessionStart event is received', () => {
       beforeEach(async () => {
         const sessionStartData = testData.sessionStart()
         await handler.processSessionStart(JSON.stringify(sessionStartData))
@@ -83,6 +85,38 @@ describe('SessionHandler', () => {
         expect(await storage.getConfig()).toBe('config data')
       })
     })
+    })
+
+    describe('custom instructions', () => {
+      describe('when no instructions exist', () => {
+        test.each(['startup', 'resume', 'clear'] as const)(
+          'creates default instructions on %s event',
+          async (source) => {
+            const instructions = await startAndGetInstructions(source)
+
+            expect(instructions).toContain('## TDD Fundamentals')
+          }
+        )
+      })
+
+      describe('when instructions already exist', () => {
+        const customInstructions = '## My Custom TDD Rules'
+        
+        beforeEach(async () => {
+          await storage.saveInstructions(customInstructions)
+        })
+
+        test.each(['startup', 'resume', 'clear'] as const)(
+          'preserves existing instructions on %s event',
+          async (source) => {
+            const instructions = await startAndGetInstructions(source)
+            
+            expect(instructions).toBe(customInstructions)
+            expect(instructions).not.toContain('## TDD Fundamentals')
+          }
+        )
+      })
+    })
   })
 
   // Test helpers
@@ -92,5 +126,11 @@ describe('SessionHandler', () => {
     await storage.saveModifications('modifications data')
     await storage.saveLint('lint data')
     await storage.saveConfig('config data')
+  }
+
+  async function startAndGetInstructions(source: SessionStart['source']): Promise<string | null> {
+    const sessionData = testData.sessionStart({ source })
+    await handler.processSessionStart(JSON.stringify(sessionData))
+    return storage.getInstructions()
   }
 })
