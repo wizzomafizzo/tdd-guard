@@ -52,6 +52,12 @@ describe('Config', () => {
       expect(config.configFilePath).toBe(`${projectDataDir}/config.json`)
     })
 
+    test('instructionsFilePath returns instructions.md path within dataDir', () => {
+      expect(config.instructionsFilePath).toBe(
+        `${projectDataDir}/instructions.md`
+      )
+    })
+
     describe('CLAUDE_PROJECT_DIR', () => {
       let originalCwd: typeof process.cwd
 
