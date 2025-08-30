@@ -6,7 +6,7 @@ TDD follows a strict Red-Green-Refactor cycle:
 - Write ONE test that describes desired behavior
 - The test must fail for the right reason (not syntax/import errors)
 - No prior test output required - writing the first test starts the cycle
-- Starting TDD for a new feature is always valid, even if test output shows unrelated work
+- Starting a new cycle is always valid, even with no test output, all tests passing, or test output showing unrelated work
 - **Rule**: Only one new test at a time, regardless of operation type (Edit, MultiEdit, or Write)
 
 ### Green Phase - Make the Test Pass
@@ -35,7 +35,7 @@ TDD follows a strict Red-Green-Refactor cycle:
 ### Absolute Violations
 These always result in blocking:
 
-1. **Multiple Test Addition**: Adding more than one NEW test (in single edit or across MultiEdit)
+1. **Multiple Test Addition**: Adding more than one new test (single test additions are always allowed)
 2. **Over-Implementation**: Code exceeding current test requirements
 3. **Premature Implementation**: Writing code without a failing test
 4. **Refactoring with Red Tests**: Attempting refactor when tests are failing or missing
