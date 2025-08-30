@@ -4,11 +4,12 @@ import { Context } from '../contracts/types/Context'
 import { processLintData } from '../processors/lintProcessor'
 
 export async function buildContext(storage: Storage): Promise<Context> {
-  const [modifications, rawTest, todo, lint] = await Promise.all([
+  const [modifications, rawTest, todo, lint, instructions] = await Promise.all([
     storage.getModifications(),
     storage.getTest(),
     storage.getTodo(),
     storage.getLint(),
+    storage.getInstructions(),
   ])
 
   let processedLintData
@@ -28,6 +29,7 @@ export async function buildContext(storage: Storage): Promise<Context> {
     test: rawTest ?? '',
     todo: todo ?? '',
     lint: processedLintData,
+    instructions: instructions ?? undefined,
   }
 }
 

@@ -12,4 +12,5 @@ export type Context = {
   todo?: string
   test?: string
   lint?: ProcessedLintData
+  instructions?: string
 }
