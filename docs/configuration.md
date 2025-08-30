@@ -103,7 +103,7 @@ Add to `.claude/settings.json`:
 }
 ```
 
-**Tip:** Also configure [quick commands](quick-commands.md) for `tdd-guard on/off` and [ESLint integration](linting.md) for automated refactoring support.
+**Tip:** Also configure [quick commands](quick-commands.md) for `tdd-guard on/off`, [ESLint integration](linting.md) for automated refactoring support, and [strengthening enforcement](enforcement.md) to prevent bypass.
 
 ## Test Reporter Configuration
 
@@ -112,11 +112,18 @@ Add to `.claude/settings.json`:
   - [Jest reporter configuration](../reporters/jest/README.md#configuration)
 - **Python**: See [Pytest reporter configuration](../reporters/pytest/README.md#configuration)
 - **PHP**: See [PHPUnit reporter configuration](../reporters/phpunit/README.md#configuration)
+- **Go**: See [Go reporter configuration](../reporters/go/README.md#configuration)
+- **Rust**: See [Rust reporter configuration](../reporters/rust/README.md#configuration)
+
+## Custom Validation Rules
+
+See [Custom Instructions](custom-instructions.md) to customize TDD validation rules to match your practices.
 
 ## Data Storage
 
 TDD Guard stores context data in `.claude/tdd-guard/data/`:
 
+- `instructions.md` - Your custom TDD validation rules (created automatically, never overwritten)
 - `test.json` - Latest test results from your test runner (Vitest or pytest)
 - `todos.json` - Current todo state
 - `modifications.json` - File modification history
@@ -211,14 +218,3 @@ Check your current version:
 npm list -g tdd-guard
 pip show tdd-guard-pytest
 ```
-
-## Advanced Configuration
-
-### Custom Validation Rules
-
-To modify TDD validation behavior, fork the repository and edit the prompt files in `src/validation/prompts/`. Key files:
-
-- `tdd-core-principles.ts` - Core TDD rules
-- `write-analysis.ts` - Rules for Write operations
-- `edit-analysis.ts` - Rules for Edit operations
-- `multi-edit-analysis.ts` - Rules for MultiEdit operations

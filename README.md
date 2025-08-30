@@ -26,7 +26,7 @@ TDD Guard ensures Claude Code follows Test-Driven Development principles. When y
 - **Lint Integration** - Enforces refactoring using your linting rules
 - **Multi-Language Support** - TypeScript, JavaScript, Python, PHP, Go, and Rust
 - **Session Control** - Toggle on and off mid-session
-- **Configurable Validation** - Configure which files to validate with ignore patterns
+- **Customizable Rules** - Adjust validation rules to match your TDD style
 - **Flexible Validation** - Use local Claude or Anthropic API
 
 ## Requirements
@@ -232,12 +232,15 @@ Use the `/hooks` command in Claude Code:
 4. Select `+ Add new hook...` and enter: `tdd-guard`
 5. Choose where to save (Project settings recommended)
 
+See [Strengthening TDD Enforcement](docs/enforcement.md) to prevent agents from bypassing validation.
+
 ## Configuration
 
 **Quick Setup:**
 
 - [Toggle commands](docs/quick-commands.md) - Enable/disable with `tdd-guard on/off`
 - [Session clearing](docs/session-clearing.md) - Automatic cleanup on new sessions
+- [Custom instructions](docs/custom-instructions.md) - Customize TDD validation rules
 - [Ignore patterns](docs/ignore-patterns.md) - Control which files are validated
 
 **Advanced:**
