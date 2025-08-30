@@ -23,6 +23,7 @@ import { RESPONSE_FORMAT } from '../prompts/response-format'
 import { EDIT_ANALYSIS } from '../prompts/edit-analysis'
 import { MULTI_EDIT_ANALYSIS } from '../prompts/multi-edit-analysis'
 import { WRITE_ANALYSIS } from '../prompts/write-analysis'
+import { TODO_ANALYSIS } from '../prompts/todo-analysis'
 
 export function generateDynamicContext(context: Context): string {
   const operation: ToolOperation = JSON.parse(context.modifications)
@@ -43,6 +44,7 @@ export function generateDynamicContext(context: Context): string {
 
     // 4. Additional context
     formatTestOutput(context.test ?? '', operation),
+    context.todo ? TODO_ANALYSIS : '',
     context.todo ? formatTodoList(context.todo) : '',
     context.lint ? formatLintOutput(context.lint) : '',
 

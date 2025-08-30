@@ -8,6 +8,7 @@ import { RESPONSE_FORMAT } from '../prompts/response-format'
 import { EDIT_ANALYSIS } from '../prompts/edit-analysis'
 import { MULTI_EDIT_ANALYSIS } from '../prompts/multi-edit-analysis'
 import { WRITE_ANALYSIS } from '../prompts/write-analysis'
+import { TODO_ANALYSIS } from '../prompts/todo-analysis'
 
 describe('generateDynamicContext', () => {
   describe('when Edit operation', () => {
@@ -165,6 +166,34 @@ describe('generateDynamicContext', () => {
       expect(result).toContain("This section shows the developer's task list")
       expect(result).toContain('What the developer is currently working on')
       expect(result).toContain('[pending] Implement feature (high)')
+    })
+
+    test('should include TODO_ANALYSIS instructions when todos are present', () => {
+      const editOperation = testData.editOperation()
+      const todoWriteOperation = testData.todoWriteOperation()
+      const todoJson = JSON.stringify(todoWriteOperation)
+      const context = {
+        modifications: JSON.stringify(editOperation),
+        todo: todoJson,
+      }
+
+      const result = generateDynamicContext(context)
+
+      expect(TODO_ANALYSIS.length).toBeGreaterThan(0)
+      expect(result).toContain(TODO_ANALYSIS)
+    })
+  })
+
+  describe('when todo is not provided', () => {
+    test('should not include TODO_ANALYSIS when todos are absent', () => {
+      const editOperation = testData.editOperation()
+      const context = {
+        modifications: JSON.stringify(editOperation),
+      }
+
+      const result = generateDynamicContext(context)
+
+      expect(result).not.toContain(TODO_ANALYSIS)
     })
   })
 
