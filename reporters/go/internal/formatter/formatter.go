@@ -49,12 +49,9 @@ func (f *Formatter) handleBuildOutput(event parser.TestEvent) string {
 
 func (f *Formatter) handleBuildFail(event parser.TestEvent) string {
 	if event.Package != "" {
-		return fmt.Sprintf("FAIL\t%s [build failed]", event.Package)
+		return fmt.Sprintf("BUILD FAILED\t%s", event.Package)
 	}
-	if event.ImportPath != "" {
-		return fmt.Sprintf("FAIL\t%s [build failed]", event.ImportPath)
-	}
-	return "FAIL\t[build failed]"
+	return "BUILD FAILED"
 }
 
 // handleOutput filters redundant output lines and preserves error messages.
