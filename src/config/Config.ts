@@ -6,6 +6,7 @@ const TODOS_FILENAME = 'todos.json'
 const MODIFICATIONS_FILENAME = 'modifications.json'
 const LINT_FILENAME = 'lint.json'
 const CONFIG_FILENAME = 'config.json'
+const INSTRUCTIONS_FILENAME = 'instructions.md'
 
 export class Config {
   static readonly DEFAULT_DATA_DIR = '.claude/tdd-guard/data' as const
@@ -81,6 +82,10 @@ export class Config {
 
   get configFilePath(): string {
     return path.join(this.dataDir, CONFIG_FILENAME)
+  }
+
+  get instructionsFilePath(): string {
+    return path.join(this.dataDir, INSTRUCTIONS_FILENAME)
   }
 
   private getLinterType(options?: ConfigOptions): string | undefined {

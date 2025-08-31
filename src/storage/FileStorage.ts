@@ -14,6 +14,7 @@ export class FileStorage implements Storage {
       modifications: this.config.modificationsFilePath,
       lint: this.config.lintFilePath,
       config: this.config.configFilePath,
+      instructions: this.config.instructionsFilePath,
     }
   }
 
@@ -54,6 +55,10 @@ export class FileStorage implements Storage {
     await this.save('config', content)
   }
 
+  async saveInstructions(content: string): Promise<void> {
+    await this.save('instructions', content)
+  }
+
   async getTest(): Promise<string | null> {
     return this.get('test')
   }
@@ -72,6 +77,10 @@ export class FileStorage implements Storage {
 
   async getConfig(): Promise<string | null> {
     return this.get('config')
+  }
+
+  async getInstructions(): Promise<string | null> {
+    return this.get('instructions')
   }
 
   async clearTransientData(): Promise<void> {

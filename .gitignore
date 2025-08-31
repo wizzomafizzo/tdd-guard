@@ -86,3 +86,8 @@ reporters/pytest/pytest.ini
 
 # Internal documentation
 docs/internal/
+
+# Rust build artifacts
+target/
+**/*.rs.bk
+*.pdb

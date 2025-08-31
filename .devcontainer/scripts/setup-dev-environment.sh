@@ -11,12 +11,13 @@
 # - PHPUnit reporter dependencies
 # - pytest reporter dependencies
 # - Go reporter dependencies
+# - Rust reporter dependencies
 # - RSpec reporter dependencies
 #
 # REQUIREMENTS:
 # - Must be run from the workspace root
 # - Requires sudo access for firewall setup
-# - Node.js, PHP, Python, Go, and Ruby must be pre-installed
+# - Node.js, PHP, Python, Go, Rust, and Ruby must be pre-installed
 #
 # EXIT CODES:
 # - 0: Success
@@ -63,6 +64,11 @@ go mod download -C reporters/go
 echo ""
 echo "💎 Installing RSpec reporter dependencies..."
 bundle install --gemfile=reporters/rspec/Gemfile
+
+# 8. Build Rust reporter
+echo ""
+echo "🦀 Building Rust reporter..."
+cargo build --release --manifest-path reporters/rust/Cargo.toml
 
 echo ""
 echo "✅ Development environment setup complete!"

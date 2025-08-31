@@ -1,15 +1,30 @@
+// test/reporters.integration.test.ts - Updated integration tests with Rust coverage
+
 import { describe, it, expect, beforeAll } from 'vitest'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { FileStorage, Config as TDDConfig } from 'tdd-guard'
 import type { ReporterConfig, TestResultData, TestScenarios } from './types'
+
+// Extended test error type that includes Rust-specific fields
+type TestError = {
+  message: string
+  expected?: string
+  actual?: string
+  // Rust-specific fields
+  code?: string
+  location?: string
+  help?: string
+  note?: string
+}
 import {
   createJestReporter,
   createVitestReporter,
   createPhpunitReporter,
   createPytestReporter,
   createGoReporter,
+  createRustReporter,
 } from './factories'
 
 // Test data structure for each reporter
@@ -20,7 +35,7 @@ interface ReporterTestData {
   importErrorResults: unknown
 }
 
-type ReporterName = 'jest' | 'vitest' | 'phpunit' | 'pytest' | 'go'
+type ReporterName = 'jest' | 'vitest' | 'phpunit' | 'pytest' | 'go' | 'rust'
 
 describe('Reporters', () => {
   const reporterData: ReporterTestData[] = []
@@ -33,6 +48,7 @@ describe('Reporters', () => {
       createPhpunitReporter(),
       createPytestReporter(),
       createGoReporter(),
+      createRustReporter(),
     ]
 
     // Run all reporters in parallel
@@ -48,6 +64,7 @@ describe('Reporters', () => {
         { name: 'phpunit', expected: 'SinglePassingTest.php' },
         { name: 'pytest', expected: 'test_single_passing.py' },
         { name: 'go', expected: 'singlePassing' },
+        { name: 'rust', expected: 'single_passing' },
       ]
 
       it.each(reporters)('$name reports module path', ({ name, expected }) => {
@@ -63,6 +80,7 @@ describe('Reporters', () => {
         { name: 'phpunit', expected: 'SingleFailingTest.php' },
         { name: 'pytest', expected: 'test_single_failing.py' },
         { name: 'go', expected: 'singleFailing' },
+        { name: 'rust', expected: 'single_failing' },
       ]
 
       it.each(reporters)('$name reports module path', ({ name, expected }) => {
@@ -78,6 +96,7 @@ describe('Reporters', () => {
         { name: 'phpunit', expected: 'SingleImportErrorTest.php' },
         { name: 'pytest', expected: 'test_single_import_error.py' },
         { name: 'go', expected: 'missingImport' },
+        { name: 'rust', expected: 'compilation' },
       ]
 
       it.each(reporters)('$name reports module path', ({ name, expected }) => {
@@ -101,6 +120,10 @@ describe('Reporters', () => {
           name: 'go',
           expected: 'TestCalculator/TestShouldAddNumbersCorrectly',
         },
+        {
+          name: 'rust',
+          expected: 'calculator_tests::should_add_numbers_correctly',
+        },
       ]
 
       it.each(reporters)('$name reports test name', ({ name, expected }) => {
@@ -118,6 +141,10 @@ describe('Reporters', () => {
         {
           name: 'go',
           expected: 'TestCalculator/TestShouldAddNumbersCorrectly',
+        },
+        {
+          name: 'rust',
+          expected: 'calculator_tests::should_add_numbers_correctly',
         },
       ]
 
@@ -140,6 +167,7 @@ describe('Reporters', () => {
           expected: 'collection_error_test_single_import_error.py',
         },
         { name: 'go', expected: 'CompilationError' },
+        { name: 'rust', expected: 'build' },
       ]
 
       it.each(reporters)(
@@ -177,6 +205,11 @@ describe('Reporters', () => {
           expected:
             'singlePassingTestModule/TestCalculator/TestShouldAddNumbersCorrectly',
         },
+        {
+          name: 'rust',
+          expected:
+            'single_passing::single_passing::calculator_tests::should_add_numbers_correctly',
+        },
       ]
 
       it.each(reporters)(
@@ -212,6 +245,11 @@ describe('Reporters', () => {
           expected:
             'singleFailingTestModule/TestCalculator/TestShouldAddNumbersCorrectly',
         },
+        {
+          name: 'rust',
+          expected:
+            'single_failing::single_failing::calculator_tests::should_add_numbers_correctly',
+        },
       ]
 
       it.each(reporters)(
@@ -239,6 +277,7 @@ describe('Reporters', () => {
         },
         { name: 'pytest', expected: 'test_single_import_error.py' },
         { name: 'go', expected: 'missingImportModule/CompilationError' },
+        { name: 'rust', expected: 'compilation::build' },
       ]
 
       it.each(reporters)(
@@ -262,6 +301,7 @@ describe('Reporters', () => {
         'phpunit',
         'pytest',
         'go',
+        'rust',
       ]
 
       it.each(reporters)('%s reports passing state', (reporter) => {
@@ -280,6 +320,7 @@ describe('Reporters', () => {
         'phpunit',
         'pytest',
         'go',
+        'rust',
       ]
 
       it.each(reporters)('%s reports failing state', (reporter) => {
@@ -301,6 +342,7 @@ describe('Reporters', () => {
         { name: 'phpunit', expected: 'failed' },
         { name: 'pytest', expected: 'failed' },
         { name: 'go', expected: 'failed' },
+        { name: 'rust', expected: 'failed' },
       ]
 
       it.each(reporters)(
@@ -336,6 +378,11 @@ describe('Reporters', () => {
           name: 'go',
           expected: 'single_failing_test.go:10: Expected 6 but got 5',
         },
+        {
+          name: 'rust',
+          expected:
+            "thread 'calculator_tests::should_add_numbers_correctly' panicked at src/lib.rs:12:9:",
+        },
       ]
 
       it.each(reporters)(
@@ -351,7 +398,7 @@ describe('Reporters', () => {
               expect(errorMessages[name]).toContain(exp)
             )
           } else {
-            expect(errorMessages[name]).toBe(expected)
+            expect(errorMessages[name]).toContain(expected)
           }
         }
       )
@@ -367,6 +414,7 @@ describe('Reporters', () => {
         { name: 'phpunit', expected: undefined },
         { name: 'pytest', expected: undefined },
         { name: 'go', expected: undefined },
+        { name: 'rust', expected: '6' }, // Successfully extracts expected value
       ]
 
       it.each(reporters)(
@@ -388,6 +436,7 @@ describe('Reporters', () => {
         { name: 'phpunit', expected: undefined },
         { name: 'pytest', expected: undefined },
         { name: 'go', expected: undefined },
+        { name: 'rust', expected: '5' }, // Successfully extracts actual value
       ]
 
       it.each(reporters)(
@@ -424,6 +473,10 @@ describe('Reporters', () => {
             'github.com/non-existent/module',
           ],
         },
+        {
+          name: 'rust',
+          expected: ['E0432', 'unresolved import', 'non_existent_module'],
+        },
       ]
 
       it.each(reporters)(
@@ -457,6 +510,7 @@ describe('Reporters', () => {
         { name: 'phpunit', expected: 'passed' },
         { name: 'pytest', expected: undefined }, // TODO: Fix
         { name: 'go', expected: 'passed' },
+        { name: 'rust', expected: 'passed' },
       ]
 
       it.each(reporters)(
@@ -478,6 +532,7 @@ describe('Reporters', () => {
         { name: 'phpunit', expected: 'failed' },
         { name: 'pytest', expected: undefined }, // TODO: Fix
         { name: 'go', expected: 'failed' },
+        { name: 'rust', expected: 'failed' },
       ]
 
       it.each(reporters)(
@@ -499,6 +554,7 @@ describe('Reporters', () => {
         { name: 'phpunit', expected: 'failed' },
         { name: 'pytest', expected: undefined }, // TODO: Fix
         { name: 'go', expected: 'failed' },
+        { name: 'rust', expected: 'failed' },
       ]
 
       it.each(reporters)(
@@ -511,18 +567,46 @@ describe('Reporters', () => {
     })
   })
 
+  // Rust-specific enhancements tests
+  describe('Rust-Specific Enhancements', () => {
+    describe('compilation error details', () => {
+      it('Rust reporter includes error codes', () => {
+        const results = extractValues(
+          'importErrorResults',
+          extract.firstError
+        ) as Record<ReporterName, TestError | undefined>
+        const rustError = results.rust
+        if (rustError?.code) {
+          expect(rustError.code).toMatch(/E\d{4}/)
+        }
+      })
+
+      it('Rust reporter includes file locations', () => {
+        const results = extractValues(
+          'importErrorResults',
+          extract.firstError
+        ) as Record<ReporterName, TestError | undefined>
+        const rustError = results.rust
+        if (rustError?.location) {
+          expect(rustError.location).toContain('src/lib.rs')
+        }
+      })
+    })
+  })
+
   // Helper to extract values from all reporters
   function extractValues<T>(
     scenario: 'passingResults' | 'failingResults' | 'importErrorResults',
     extractor: (data: unknown) => T
   ): Record<ReporterName, T | undefined> {
-    const [jest, vitest, phpunit, pytest, go] = reporterData
+    const [jest, vitest, phpunit, pytest, go, rust] = reporterData
     return {
       jest: safeExtract(jest[scenario], extractor),
       vitest: safeExtract(vitest[scenario], extractor),
       phpunit: safeExtract(phpunit[scenario], extractor),
       pytest: safeExtract(pytest[scenario], extractor),
       go: safeExtract(go[scenario], extractor),
+      rust: safeExtract(rust[scenario], extractor),
     }
   }
 

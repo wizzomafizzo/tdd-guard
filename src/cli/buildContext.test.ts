@@ -9,7 +9,7 @@ describe('buildContext', () => {
     storage = new MemoryStorage()
   })
 
-  it('should return a context with empty strings when storage is empty', async () => {
+  it('should return a context with default values when storage is empty', async () => {
     const context = await buildContext(storage)
 
     expect(context).toEqual({
@@ -24,6 +24,7 @@ describe('buildContext', () => {
         errorCount: 0,
         warningCount: 0,
       },
+      instructions: undefined,
     })
   })
 
@@ -186,5 +187,14 @@ describe('buildContext', () => {
       errorCount: 0,
       warningCount: 0,
     })
+  })
+
+  it('should include instructions when available in storage', async () => {
+    const customInstructions = '## Custom TDD Rules\n1. Write tests first'
+    await storage.saveInstructions(customInstructions)
+
+    const context = await buildContext(storage)
+
+    expect(context.instructions).toBe(customInstructions)
   })
 })

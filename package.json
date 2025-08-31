@@ -1,6 +1,6 @@
 {
   "name": "tdd-guard",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "description": "TDD Guard enforces Test-Driven Development principles using Claude Code hooks",
   "author": "Nizar Selander",
   "license": "MIT",
@@ -12,9 +12,12 @@
     "tdd",
     "test-driven-development",
     "claude",
-    "vitest",
-    "pytest",
-    "python"
+    "claude-code",
+    "hooks",
+    "testing",
+    "ai-tools",
+    "code-quality",
+    "linting"
   ],
   "workspaces": [
     "reporters/vitest",

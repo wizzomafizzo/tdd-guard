@@ -24,16 +24,16 @@ TDD Guard ensures Claude Code follows Test-Driven Development principles. When y
 - **Test-First Enforcement** - Blocks implementation without failing tests
 - **Minimal Implementation** - Prevents code beyond current test requirements
 - **Lint Integration** - Enforces refactoring using your linting rules
-- **Multi-Language Support** - TypeScript, JavaScript, Python, PHP, and Go
+- **Multi-Language Support** - TypeScript, JavaScript, Python, PHP, Go, and Rust
+- **Customizable Rules** - Adjust validation rules to match your TDD style
+- **Flexible Validation** - Use local Claude or faster Anthropic API
 - **Session Control** - Toggle on and off mid-session
-- **Configurable Validation** - Configure which files to validate with ignore patterns
-- **Flexible Validation** - Use local Claude or Anthropic API
 
 ## Requirements
 
 - Node.js 18+
 - Claude Code or Anthropic API key
-- Test framework (Jest, Vitest, pytest, PHPUnit, or Go 1.24+)
+- Test framework (Jest, Vitest, pytest, PHPUnit, Go 1.24+, or Rust with cargo/cargo-nextest)
 
 ## Quick Start
 
@@ -192,6 +192,36 @@ test:
 
 </details>
 
+<details>
+<summary><b>Rust</b></summary>
+
+Install the tdd-guard-rust reporter:
+
+```bash
+cargo install tdd-guard-rust
+```
+
+Use it to capture test results from `cargo test` or `cargo nextest`:
+
+```bash
+# With nextest (recommended)
+cargo nextest run 2>&1 | tdd-guard-rust --project-root /Users/username/projects/my-app --passthrough
+
+# With cargo test
+cargo test -- -Z unstable-options --format json 2>&1 | tdd-guard-rust --project-root /Users/username/projects/my-app --passthrough
+```
+
+For Makefile integration:
+
+```makefile
+test:
+	cargo nextest run 2>&1 | tdd-guard-rust --project-root $(PWD) --passthrough
+```
+
+**Note:** The reporter acts as a filter that passes test output through unchanged while capturing results for TDD Guard. See the [Rust reporter configuration](reporters/rust/README.md#configuration) for more details.
+
+</details>
+
 ### 3. Configure Claude Code Hook
 
 Use the `/hooks` command in Claude Code:
@@ -202,19 +232,21 @@ Use the `/hooks` command in Claude Code:
 4. Select `+ Add new hook...` and enter: `tdd-guard`
 5. Choose where to save (Project settings recommended)
 
+See [Strengthening TDD Enforcement](docs/enforcement.md) to prevent agents from bypassing validation.
+
 ## Configuration
 
 **Quick Setup:**
 
 - [Toggle commands](docs/quick-commands.md) - Enable/disable with `tdd-guard on/off`
 - [Session clearing](docs/session-clearing.md) - Automatic cleanup on new sessions
+- [Custom instructions](docs/custom-instructions.md) - Customize TDD validation rules
 - [Ignore patterns](docs/ignore-patterns.md) - Control which files are validated
 
 **Advanced:**
 
 - [ESLint integration](docs/linting.md) - Automated refactoring support
 - [AI Models](docs/ai-model.md) - Switch between Claude CLI and Anthropic API
-- [All Settings](docs/configuration.md) - Complete configuration reference
 
 **Note:** If TDD Guard can't find Claude, see [Claude Binary Setup](docs/claude-binary.md).
 
@@ -231,7 +263,9 @@ TDD Guard runs with your user permissions and has access to your file system. We
 ## Roadmap
 
 - Add support for more testing frameworks (Mocha, unittest, etc.)
-- Add support for additional programming languages (Ruby, Rust, Java, C#, etc.)
+- Add support for additional programming languages (Ruby, Java, C#, etc.)
+- Validate file modifications made through MCPs and shell commands
+- Add integration for OpenCode and other vendor-agnostic AI coding tools
 - Encourage meaningful refactoring opportunities when tests are green
 - Add support for multiple concurrent sessions per project
 
@@ -248,6 +282,13 @@ Contributions are welcome! Feel free to submit issues and pull requests.
 
 - Python/pytest support: [@Durafen](https://github.com/Durafen)
 - PHP/PHPUnit support: [@wazum](https://github.com/wazum)
+- Rust/cargo support: [@104hp6u](https://github.com/104hp6u)
+
+## Support
+
+- [Configuration](docs/configuration.md) - Complete settings documentation
+- [Discussions](https://github.com/nizos/tdd-guard/discussions) - Ask questions and share ideas
+- [Issues](https://github.com/nizos/tdd-guard/issues) - Report bugs and request features
 
 ## License
 

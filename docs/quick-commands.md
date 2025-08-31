@@ -52,12 +52,4 @@ Add the following to your `.claude/settings.local.json`:
 Note: Your configuration file may already have other hooks configured.
 Simply add the `userpromptsubmit` section to your existing hooks object.
 
-**Tip**: To prevent Claude from modifying the TDD Guard state, add the following to your settings file:
-
-```json
-{
-  "permissions": {
-    "deny": ["Read(.claude/tdd-guard/**)"]
-  }
-}
-```
+**Tip**: To prevent agents from modifying the TDD Guard state, see [Strengthening TDD Enforcement](enforcement.md).
