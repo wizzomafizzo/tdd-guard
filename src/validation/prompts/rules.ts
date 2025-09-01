@@ -56,6 +56,7 @@ These always result in blocking:
 - Test helper and utility files
 - Stubs to fix import/infrastructure issues
 - Simple stubs when test output shows no tests due to missing imports or constructors
+- Removing code, tests, validations, or functionality
 - **Important**: Never introduce new logic without evidence of relevant failing tests
 
 ## How to Analyze Changes
@@ -114,4 +115,5 @@ Example: "Adding single test to test file - follows TDD red phase"
 - No test output → Adding first test to test file
 - Tests passing → Refactoring code structure
 - Single operation → Adding exactly one test
+- Any phase -> Removing implementation or test code
 `
