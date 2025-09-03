@@ -23,7 +23,7 @@ import { EDIT } from '../prompts/operations/edit'
 import { MULTI_EDIT } from '../prompts/operations/multi-edit'
 import { WRITE } from '../prompts/operations/write'
 import { TODOS } from '../prompts/tools/todos'
-import { TEST_RESULTS } from '../prompts/tools/test-results'
+import { TEST_OUTPUT } from '../prompts/tools/test-output'
 import { LINT_RESULTS } from '../prompts/tools/lint-results'
 
 export function generateDynamicContext(context: Context): string {
@@ -111,7 +111,7 @@ function formatTestSection(testOutput?: string): string {
     ? new TestResultsProcessor().process(testOutput)
     : 'No test output available. Tests must be run before implementing.'
 
-  return TEST_RESULTS + codeBlock(output)
+  return TEST_OUTPUT + codeBlock(output)
 }
 
 function formatTodoSection(todoJson?: string): string {

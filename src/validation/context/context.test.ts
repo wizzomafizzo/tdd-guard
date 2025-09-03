@@ -10,7 +10,7 @@ import { EDIT } from '../prompts/operations/edit'
 import { MULTI_EDIT } from '../prompts/operations/multi-edit'
 import { WRITE } from '../prompts/operations/write'
 import { TODOS } from '../prompts/tools/todos'
-import { TEST_RESULTS } from '../prompts/tools/test-results'
+import { TEST_OUTPUT } from '../prompts/tools/test-output'
 
 describe('generateDynamicContext', () => {
   describe('when Edit operation', () => {
@@ -129,16 +129,12 @@ describe('generateDynamicContext', () => {
       })
     })
 
-    test('should include test results context', () => {
-      expect(TEST_RESULTS.length).toBeGreaterThan(0)
-      expect(result).toContain(TEST_RESULTS)
+    test('should include test output context', () => {
+      expect(TEST_OUTPUT.length).toBeGreaterThan(0)
+      expect(result).toContain(TEST_OUTPUT)
     })
 
-    test('should include test output description', () => {
-      expect(result).toContain('Results from the most recent test run')
-    })
-
-    test('should format test results using TestResultsProcessor', () => {
+    test('should format test output using TestResultsProcessor', () => {
       expect(result).toContain(' ❯ /src/example.test.ts (1 tests | 1 failed)')
       expect(result).toContain('   × Calculator > should calculate sum')
       expect(result).toContain('     → expected 5 to be 6')
@@ -173,11 +169,6 @@ describe('generateDynamicContext', () => {
       expect(result).toContain(TODOS)
     })
 
-    test('should include todo description and note', () => {
-      expect(result).toContain("Developer's task tracking")
-      expect(result).toContain('Todo items indicate intent')
-    })
-
     test('should format todo items', () => {
       expect(result).toContain('[pending] Implement feature (high)')
     })
@@ -202,11 +193,11 @@ describe('generateDynamicContext', () => {
       const result = generateContextResult(editOperation)
 
       // Verify order by checking indexOf
-      const roleIndex = result.indexOf('## Your Role')
-      const rulesIndex = result.indexOf('## Rules')
+      const roleIndex = result.indexOf('# TDD Validation Request')
+      const rulesIndex = result.indexOf('## TDD Fundamentals')
       const fileRulesIndex = result.indexOf('## File Type Specific Rules')
-      const operationIndex = result.indexOf('## Edit Operation')
-      const changesIndex = result.indexOf('## Changes to Review')
+      const operationIndex = result.indexOf('## Analyzing Edit Operations')
+      const changesIndex = result.indexOf('### File Path')
       const responseIndex = result.indexOf('## Your Response')
 
       expect(roleIndex).toBeLessThan(rulesIndex)
