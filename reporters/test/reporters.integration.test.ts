@@ -160,7 +160,7 @@ describe('Reporters', () => {
         expected: string | undefined
       }> = [
         { name: 'jest', expected: 'Module failed to load (Error)' },
-        { name: 'vitest', expected: undefined },
+        { name: 'vitest', expected: 'single-import-error.test.js' },
         { name: 'phpunit', expected: 'testShouldAddNumbersCorrectly' },
         {
           name: 'pytest',
@@ -270,7 +270,7 @@ describe('Reporters', () => {
         expected: string | undefined
       }> = [
         { name: 'jest', expected: 'Module failed to load (Error)' },
-        { name: 'vitest', expected: undefined },
+        { name: 'vitest', expected: 'single-import-error.test.js' },
         {
           name: 'phpunit',
           expected: 'SingleImportErrorTest::testShouldAddNumbersCorrectly',
@@ -287,7 +287,7 @@ describe('Reporters', () => {
             'importErrorResults',
             extract.firstTestFullName
           )
-          expect(fullNames[name]).toBe(expected)
+          expect(fullNames[name]).toContain(expected)
         }
       )
     })
@@ -335,10 +335,10 @@ describe('Reporters', () => {
     describe('when import errors occur', () => {
       const reporters: Array<{
         name: ReporterName
-        expected: string | undefined
+        expected: string
       }> = [
         { name: 'jest', expected: 'failed' },
-        { name: 'vitest', expected: undefined },
+        { name: 'vitest', expected: 'failed' },
         { name: 'phpunit', expected: 'failed' },
         { name: 'pytest', expected: 'failed' },
         { name: 'go', expected: 'failed' },
@@ -451,7 +451,7 @@ describe('Reporters', () => {
     describe('when import errors occur', () => {
       const reporters: Array<{
         name: ReporterName
-        expected: string[] | undefined
+        expected: string[]
       }> = [
         {
           name: 'jest',
@@ -459,7 +459,13 @@ describe('Reporters', () => {
             "Cannot find module './non-existent-module' from 'single-import-error.test.js'",
           ],
         },
-        { name: 'vitest', expected: undefined },
+        {
+          name: 'vitest',
+          expected: [
+            "Cannot find module './non-existent-module'",
+            'single-import-error.test.js',
+          ],
+        },
         { name: 'phpunit', expected: ['Class', 'not found'] },
         {
           name: 'pytest',
@@ -487,13 +493,7 @@ describe('Reporters', () => {
             extract.firstErrorMessage
           )
 
-          if (expected === undefined) {
-            expect(errorMessages[name]).toBeUndefined()
-          } else {
-            expected.forEach((exp) =>
-              expect(errorMessages[name]).toContain(exp)
-            )
-          }
+          expected.forEach((exp) => expect(errorMessages[name]).toContain(exp))
         }
       )
     })

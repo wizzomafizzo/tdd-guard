@@ -1,23 +1,32 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import type { TestModule, TestCase } from 'vitest/node'
 import { VitestReporter } from './VitestReporter'
-import { MemoryStorage, FileStorage, Storage, Config } from 'tdd-guard'
+import {
+  MemoryStorage,
+  FileStorage,
+  Storage,
+  Config,
+  isFailingTest,
+  isPassingTest,
+  TestResult,
+  Test,
+} from 'tdd-guard'
 import {
   testModule,
-  passedTestCase,
   failedTestCase,
+  createTestCase,
   createUnhandledError,
+  createTestResult,
 } from './VitestReporter.test-data'
-import { isFailingTest, isPassingTest, TestResult, Test } from 'tdd-guard'
+import type { FormattedError } from './types'
 import { rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import path from 'node:path'
 
 describe('VitestReporter', () => {
   let sut: Awaited<ReturnType<typeof setupVitestReporter>>
   const module = testModule()
-  const passedTest = passedTestCase()
+  const passedTest = createTestCase()
   const failedTest = failedTestCase()
 
   beforeEach(() => {
@@ -40,7 +49,7 @@ describe('VitestReporter', () => {
 
     const result = await localSut.collectAndGetSaved([
       testModule(),
-      passedTestCase(),
+      createTestCase(),
     ])
 
     expect(result).toBeTruthy()
@@ -62,7 +71,7 @@ describe('VitestReporter', () => {
     // Verify the storage is configured with the correct path
     const fileStorage = reporter['storage'] as FileStorage
     const config = fileStorage['config'] as Config
-    const expectedDataDir = path.join(
+    const expectedDataDir = join(
       rootPath,
       ...Config.DEFAULT_DATA_DIR.split('/')
     )
@@ -114,6 +123,54 @@ describe('VitestReporter', () => {
     })
   })
 
+  describe('test state mapping', () => {
+    it.each([
+      ['passed', 'passed'],
+      ['failed', 'failed'],
+      ['skipped', 'skipped'],
+      ['pending', 'skipped'], // pending gets mapped to skipped
+    ] as const)('maps %s to %s', async (vitestState, expected) => {
+      // Given a test with the specified state
+      const testCase = createTestCase({
+        result: () => createTestResult(vitestState),
+      })
+
+      // When we process the test
+      sut.reporter.onTestModuleCollected(module)
+      sut.reporter.onTestCaseResult(testCase)
+      await sut.reporter.onTestRunEnd()
+
+      // Then it should be mapped correctly
+      const tests = await sut.getTests()
+      expect(tests[0]?.state).toBe(expected)
+    })
+  })
+
+  describe('error expected and actual values', () => {
+    let error: FormattedError | undefined
+
+    beforeEach(async () => {
+      // Given a test with an assertion error
+      sut.reporter.onTestModuleCollected(module)
+      sut.reporter.onTestCaseResult(failedTest)
+      await sut.reporter.onTestRunEnd()
+
+      // When we get the failed test errors
+      const failedTests = await sut.getFailedTests()
+      error = failedTests[0]?.errors?.[0]
+    })
+
+    it('includes expected value in error when available', () => {
+      expect(error).toHaveProperty('expected')
+      expect(error?.expected).toBe('3')
+    })
+
+    it('includes actual value in error when available', () => {
+      expect(error).toHaveProperty('actual')
+      expect(error?.actual).toBe('2')
+    })
+  })
+
   it('handles empty test runs', async () => {
     // When no tests are collected
     await sut.reporter.onTestRunEnd()
@@ -129,7 +186,7 @@ describe('VitestReporter', () => {
     it('saves test output to storage', async () => {
       const result = await sut.collectAndGetSaved([
         testModule(),
-        passedTestCase(),
+        createTestCase(),
       ])
 
       expect(result).toBeTruthy()
@@ -156,14 +213,12 @@ describe('VitestReporter', () => {
       // Given a module that was collected but has no tests due to import error
       const moduleWithImportError = testModule({
         moduleId: '/src/example.test.ts',
+        errors: () => [createUnhandledError()],
       })
 
-      // And an error indicating import failure
-      const importError = createUnhandledError()
-
-      // When the test run ends with errors
+      // When the test run ends
       sut.reporter.onTestModuleCollected(moduleWithImportError)
-      await sut.reporter.onTestRunEnd([], [importError])
+      await sut.reporter.onTestRunEnd()
 
       parsed = await sut.getParsedData()
     })
@@ -172,26 +227,57 @@ describe('VitestReporter', () => {
       expect(parsed?.testModules).toHaveLength(1)
     })
 
-    it('shows module with no tests', () => {
-      expect(parsed?.testModules[0].tests).toHaveLength(0)
+    it('shows module with one synthetic failed test', () => {
+      expect(parsed?.testModules[0].tests).toHaveLength(1)
+      expect(parsed?.testModules[0].tests[0].state).toBe('failed')
     })
 
-    it('includes error in unhandled errors', () => {
-      expect(parsed?.unhandledErrors).toHaveLength(1)
+    it('uses module filename as test name', () => {
+      const syntheticTest = parsed?.testModules[0].tests[0]
+      expect(syntheticTest?.name).toBe('example.test.ts')
+      expect(syntheticTest?.fullName).toBe('/src/example.test.ts')
     })
 
-    it('preserves error message', () => {
-      expect(parsed?.unhandledErrors?.[0].message).toBe(
+    it('includes import error details in synthetic test', () => {
+      const syntheticTest = parsed?.testModules[0].tests[0]
+      expect(syntheticTest?.errors).toHaveLength(1)
+      expect(syntheticTest?.errors?.[0].message).toBe(
         'Cannot find module "./helpers"'
       )
     })
 
-    it('preserves error name', () => {
-      expect(parsed?.unhandledErrors?.[0].name).toBe('Error')
+    it('includes empty unhandled errors', () => {
+      expect(parsed?.unhandledErrors).toHaveLength(0)
     })
 
-    it('preserves error stack trace', () => {
-      expect(parsed?.unhandledErrors?.[0].stack).toContain('imported from')
+    it('preserves error message in synthetic test', () => {
+      const error = parsed?.testModules[0].tests[0].errors?.[0]
+      expect(error?.message).toBe('Cannot find module "./helpers"')
+    })
+
+    it('preserves error stack trace in synthetic test', () => {
+      expect(parsed?.testModules[0].tests[0].errors?.[0].stack).toContain(
+        'imported from'
+      )
+    })
+  })
+
+  describe('handles module errors from testModule.errors()', () => {
+    it('creates synthetic test when module has errors', async () => {
+      // Given a module with its own errors (like import errors)
+      const moduleWithErrors = testModule({
+        moduleId: '/src/import-error.test.ts',
+        errors: () => [createUnhandledError()],
+      })
+
+      // When the test run ends
+      sut.reporter.onTestModuleCollected(moduleWithErrors)
+      await sut.reporter.onTestRunEnd([], [], 'failed')
+
+      // Then a synthetic failed test should be created
+      const parsed = await sut.getParsedData()
+      expect(parsed?.testModules[0].tests).toHaveLength(1)
+      expect(parsed?.testModules[0].tests[0].state).toBe('failed')
     })
   })
 
@@ -207,7 +293,24 @@ describe('VitestReporter', () => {
       const parsed = await sut.getParsedData()
 
       expect(parsed?.reason).toBe('failed')
+      // When no errors are provided, module should have no tests
       expect(parsed?.testModules[0].tests).toHaveLength(0)
+    })
+
+    it('creates synthetic test when module fails with errors', async () => {
+      const moduleWithImportError = testModule({
+        moduleId: '/src/failing.test.ts',
+        errors: () => [createUnhandledError()],
+      })
+
+      sut.reporter.onTestModuleCollected(moduleWithImportError)
+      await sut.reporter.onTestRunEnd([], [], 'failed')
+
+      const parsed = await sut.getParsedData()
+
+      expect(parsed?.reason).toBe('failed')
+      expect(parsed?.testModules[0].tests).toHaveLength(1)
+      expect(parsed?.testModules[0].tests[0].state).toBe('failed')
     })
 
     it('captures "interrupted" reason in output', async () => {
@@ -228,56 +331,25 @@ describe('VitestReporter', () => {
   })
 })
 
-// Type guards
-function isTestModule(item: TestModule | TestCase): item is TestModule {
-  return 'moduleId' in item && !('module' in item)
-}
-
-function isTestCase(item: TestModule | TestCase): item is TestCase {
-  return 'result' in item
-}
-
 function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
-  // Test directory setup for FileStorage tests
-  let projectRoot: string | undefined
-
-  // Create storage based on options
-  let storage: Storage
-  if (options?.type === 'file') {
-    projectRoot = mkdtempSync(join(tmpdir(), 'vitest-reporter-test-'))
-    const config = new Config({ projectRoot })
-    storage = new FileStorage(config)
-  } else {
-    storage = new MemoryStorage()
-  }
-
+  const { storage, cleanup } = createTestStorage(options?.type)
   const reporter = new VitestReporter(storage)
 
-  // Helper to collect test data and get saved content
   const collectAndGetSaved = async (
     items: Array<TestModule | TestCase>
   ): Promise<string | null> => {
-    for (const item of items) {
-      if (isTestModule(item)) {
-        reporter.onTestModuleCollected(item)
-      } else if (isTestCase(item)) {
-        reporter.onTestCaseResult(item)
-      }
-    }
-
+    collectTestData(reporter, items)
     await reporter.onTestRunEnd()
     return storage.getTest()
   }
 
-  // Test data access helpers
   const getParsedData = async (): Promise<TestResult | null> => {
     const content = await storage.getTest()
     return content ? JSON.parse(content) : null
   }
 
   const getTests = async (): Promise<Test[]> => {
-    const parsed = await getParsedData()
-    return parsed?.testModules[0]?.tests ?? []
+    return getTestsFromStorage(storage)
   }
 
   const getPassedTests = async (): Promise<(Test & { state: 'passed' })[]> => {
@@ -290,13 +362,6 @@ function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
     return tests.filter(isFailingTest)
   }
 
-  // Cleanup function
-  const cleanup = (): void => {
-    if (projectRoot) {
-      rmSync(projectRoot, { recursive: true, force: true })
-    }
-  }
-
   return {
     reporter,
     storage,
@@ -307,4 +372,39 @@ function setupVitestReporter(options?: { type: 'file' | 'memory' }) {
     getFailedTests,
     cleanup,
   }
+}
+
+function createTestStorage(type: 'file' | 'memory' = 'memory'): {
+  storage: Storage
+  cleanup: () => void
+} {
+  if (type === 'file') {
+    const projectRoot = mkdtempSync(join(tmpdir(), 'vitest-reporter-test-'))
+    const config = new Config({ projectRoot })
+    const storage = new FileStorage(config)
+    const cleanup = () => rmSync(projectRoot, { recursive: true, force: true })
+    return { storage, cleanup }
+  }
+
+  return { storage: new MemoryStorage(), cleanup: () => {} }
+}
+
+function collectTestData(
+  reporter: VitestReporter,
+  items: Array<TestModule | TestCase>
+): void {
+  for (const item of items) {
+    if ('moduleId' in item && !('module' in item)) {
+      reporter.onTestModuleCollected(item as TestModule)
+    } else {
+      reporter.onTestCaseResult(item as TestCase)
+    }
+  }
+}
+
+async function getTestsFromStorage(storage: Storage): Promise<Test[]> {
+  const content = await storage.getTest()
+  if (!content) return []
+  const parsed: TestResult = JSON.parse(content)
+  return parsed.testModules[0]?.tests ?? []
 }
