@@ -1,9 +1,11 @@
 import type { TestModule, TestCase, TestResult } from 'vitest/node'
+import type { SerializedError } from '@vitest/utils'
 
-// Minimal module - only moduleId is used by VitestReporter
-const defaultModule: TestModule = {
+// Minimal module - VitestReporter only uses moduleId and errors()
+const defaultModule: Partial<TestModule> = {
   moduleId: '/test/example.test.ts',
-} as TestModule
+  errors: () => [] as SerializedError[],
+}
 
 // Minimal test case base
 const defaultTestCase: TestCase = {

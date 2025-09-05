@@ -1,8 +1,20 @@
-import type { TestState, TestRunEndReason } from 'vitest/node'
+import type {
+  TestState,
+  TestRunEndReason,
+  TestModule,
+  TestCase,
+} from 'vitest/node'
 import type { SerializedError } from '@vitest/utils'
 
+export type ModuleDataMap = Map<string, CollectedModuleData>
+
+export type CollectedModuleData = {
+  module: TestModule
+  tests: TestCase[]
+}
+
 export type FormattedError = {
-  message: string | undefined
+  message: string
   stack?: string
   expected?: unknown
   actual?: unknown
@@ -22,8 +34,6 @@ export type ModuleResult = {
 
 export type TestRunOutput = {
   testModules: ModuleResult[]
-  unhandledErrors: never[]
+  unhandledErrors: readonly SerializedError[]
   reason?: TestRunEndReason
 }
-
-export type { SerializedError }

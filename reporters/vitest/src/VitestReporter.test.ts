@@ -281,6 +281,44 @@ describe('VitestReporter', () => {
     })
   })
 
+  describe('handles testModules parameter', () => {
+    it('receives test modules in onTestRunEnd', async () => {
+      const module1 = testModule({ moduleId: '/test1.ts' })
+      const module2 = testModule({ moduleId: '/test2.ts' })
+
+      await sut.reporter.onTestRunEnd([module1, module2])
+
+      const parsed = await sut.getParsedData()
+      expect(parsed?.testModules).toEqual([]) // Empty because we didn't collect them
+    })
+  })
+
+  describe('handles unhandled errors', () => {
+    it('includes unhandled errors in output when provided', async () => {
+      const unhandledError = createUnhandledError({
+        message: 'Connection failed',
+        name: 'NetworkError',
+      })
+
+      await sut.reporter.onTestRunEnd([], [unhandledError])
+
+      const parsed = await sut.getParsedData()
+      expect(parsed?.unhandledErrors).toEqual([
+        expect.objectContaining({
+          message: 'Connection failed',
+          name: 'NetworkError',
+        }),
+      ])
+    })
+
+    it('returns empty array when no errors provided', async () => {
+      await sut.reporter.onTestRunEnd()
+
+      const parsed = await sut.getParsedData()
+      expect(parsed?.unhandledErrors).toEqual([])
+    })
+  })
+
   describe('when test run ends with reason', () => {
     it('captures "failed" reason in output', async () => {
       const moduleWithImportError = testModule({

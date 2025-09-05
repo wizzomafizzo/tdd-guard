@@ -1,5 +1,5 @@
 import type { TestModule, TestCase, TestResult } from 'vitest/node'
-import type { SerializedError } from './types'
+import type { SerializedError } from '@vitest/utils'
 
 const DEFAULT_MODULE_ID = '/test/example.test.ts'
 const DEFAULT_TEST_NAME = 'should pass'

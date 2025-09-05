@@ -3,21 +3,17 @@ import type { SerializedError } from '@vitest/utils'
 import { Storage, FileStorage, Config } from 'tdd-guard'
 import { basename } from 'node:path'
 import type {
+  CollectedModuleData,
   FormattedError,
   FormattedTest,
+  ModuleDataMap,
   ModuleResult,
   TestRunOutput,
 } from './types'
 
 export class VitestReporter implements Reporter {
   private readonly storage: Storage
-  private readonly collectedData = new Map<
-    string,
-    {
-      module: TestModule
-      tests: TestCase[]
-    }
-  >()
+  private readonly collectedData: ModuleDataMap = new Map()
 
   constructor(storageOrRoot?: Storage | string) {
     this.storage =
@@ -41,72 +37,59 @@ export class VitestReporter implements Reporter {
   }
 
   async onTestRunEnd(
-    _testModules?: unknown,
-    _errors?: unknown,
+    _testModules?: ReadonlyArray<TestModule>,
+    unhandledErrors?: ReadonlyArray<SerializedError>,
     reason?: TestRunEndReason
   ): Promise<void> {
-    const testModules = formatAllModuleResults(this.collectedData)
-    const output = createTestRunOutput(testModules, reason)
+    // _testModules contains only module metadata, we use collected data from callbacks
+    const formattedModules = formatAllModuleResults(this.collectedData)
+    const output = createTestRunOutput(
+      formattedModules,
+      unhandledErrors,
+      reason
+    )
     await this.storage.saveTest(JSON.stringify(output, null, 2))
   }
 }
 
 function createTestRunOutput(
   testModules: ModuleResult[],
+  unhandledErrors?: ReadonlyArray<SerializedError>,
   reason?: TestRunEndReason
 ): TestRunOutput {
   return {
     testModules,
-    unhandledErrors: [],
+    unhandledErrors: unhandledErrors ?? [],
     ...(reason && { reason }),
   }
 }
 
-function formatAllModuleResults(
-  collectedData: Map<string, { module: TestModule; tests: TestCase[] }>
-): ModuleResult[] {
-  return Array.from(collectedData, ([moduleId, data]) => ({
-    moduleId,
-    tests: getFormattedTests(moduleId, data.module, data.tests),
+function formatAllModuleResults(collectedData: ModuleDataMap): ModuleResult[] {
+  return Array.from(collectedData.values()).map((data) => ({
+    moduleId: data.module.moduleId,
+    tests: moduleFailedToLoad(data)
+      ? createTestForFailedModule(data)
+      : formatNormalTests(data),
   }))
 }
 
-function getFormattedTests(
-  moduleId: string,
-  testModule: TestModule,
-  tests: TestCase[]
-): FormattedTest[] {
-  if (moduleFailedToLoad(testModule, tests)) {
-    return createTestForFailedModule(moduleId, testModule)
-  }
-
-  return formatNormalTests(tests)
+function moduleFailedToLoad(data: CollectedModuleData): boolean {
+  return data.module.errors().length > 0 && data.tests.length === 0
 }
 
-function moduleFailedToLoad(
-  testModule: TestModule,
-  tests: TestCase[]
-): boolean {
-  // Module has import/syntax errors and couldn't run any tests
-  return testModule.errors().length > 0 && tests.length === 0
-}
-
-function createTestForFailedModule(
-  moduleId: string,
-  testModule: TestModule
-): FormattedTest[] {
+function createTestForFailedModule(data: CollectedModuleData): FormattedTest[] {
   return [
     {
-      name: basename(moduleId),
-      fullName: moduleId,
+      name: basename(data.module.moduleId),
+      fullName: data.module.moduleId,
       state: 'failed',
-      errors: testModule.errors().map(formatError),
+      errors: data.module.errors().map(formatError),
     },
   ]
 }
 
-function formatNormalTests(tests: TestCase[]): FormattedTest[] {
-  return tests.map((test) => {
+function formatNormalTests(data: CollectedModuleData): FormattedTest[] {
+  return data.tests.map((test) => {
     const result = test.result()
     return {
       name: test.name,
