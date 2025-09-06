@@ -13,6 +13,12 @@ export const DEFAULT_MODEL_VERSION = 'claude-sonnet-4-0'
 export const DEFAULT_CLIENT: ClientType = 'cli'
 export const DEFAULT_DATA_DIR = path.join('.claude', 'tdd-guard', 'data')
 
+const VALID_CLIENTS = new Set<string>(['api', 'cli', 'sdk'])
+const MODEL_TYPE_TO_CLIENT: Record<string, ClientType> = {
+  anthropic_api: 'api',
+  claude_cli: 'cli',
+}
+
 export class Config {
   readonly dataDir: string
   readonly useSystemClaude: boolean
@@ -112,32 +118,9 @@ export class Config {
   }
 
   private getValidationClient(options?: ConfigOptions): ClientType {
-    // Direct configuration
-    const directValue =
-      options?.validationClient ?? process.env.VALIDATION_CLIENT
-    if (this.isValidClient(directValue)) {
-      return directValue
-    }
-
-    // Backward compatibility
-    const modelType = options?.modelType ?? process.env.MODEL_TYPE
-    return this.mapModelTypeToClient(modelType) ?? DEFAULT_CLIENT
-  }
-
-  private isValidClient(value?: string): value is ClientType {
-    return value === 'api' || value === 'cli' || value === 'sdk'
-  }
-
-  private mapModelTypeToClient(modelType?: string): ClientType | undefined {
-    switch (modelType) {
-      case 'anthropic_api':
-        return 'api'
-      case 'claude_cli':
-        return 'cli'
-      case undefined:
-      default:
-        return undefined
-    }
+    return (
+      getClientType(options) ?? getLegacyClientType(options) ?? DEFAULT_CLIENT
+    )
   }
 
   private getValidatedClaudeProjectDir(): string | null {
@@ -166,4 +149,24 @@ export class Config {
 
     return projectDir
   }
+}
+
+function getClientType(options?: ConfigOptions): ClientType | undefined {
+  const directValue = options?.validationClient ?? process.env.VALIDATION_CLIENT
+  const normalizedValue = directValue?.toLowerCase()
+  return isValidClient(normalizedValue) ? normalizedValue : undefined
+}
+
+function getLegacyClientType(options?: ConfigOptions): ClientType | undefined {
+  const modelType = options?.modelType ?? process.env.MODEL_TYPE
+  return mapModelTypeToClient(modelType)
+}
+
+function isValidClient(value?: string): value is ClientType {
+  return VALID_CLIENTS.has(value ?? '')
+}
+
+function mapModelTypeToClient(modelType?: string): ClientType | undefined {
+  const normalizedType = modelType?.toLowerCase()
+  return normalizedType ? MODEL_TYPE_TO_CLIENT[normalizedType] : undefined
 }

@@ -312,6 +312,79 @@ describe('Config', () => {
       )
     })
 
+    describe('case normalization', () => {
+      describe('VALIDATION_CLIENT', () => {
+        const testCases = [
+          ['API', 'api'],
+          ['Api', 'api'],
+          ['api', 'api'],
+          ['CLI', 'cli'],
+          ['Cli', 'cli'],
+          ['cli', 'cli'],
+          ['SDK', 'sdk'],
+          ['Sdk', 'sdk'],
+          ['sdk', 'sdk'],
+        ]
+
+        test.each(testCases)(
+          'normalizes env var %s to %s',
+          (input, expected) => {
+            process.env.VALIDATION_CLIENT = input
+
+            const config = new Config()
+
+            expect(config.validationClient).toBe(expected)
+          }
+        )
+
+        test.each(testCases)(
+          'normalizes option %s to %s',
+          (input, expected) => {
+            const config = new Config({
+              validationClient: input as ClientType,
+            })
+
+            expect(config.validationClient).toBe(expected)
+          }
+        )
+      })
+
+      describe('MODEL_TYPE (legacy)', () => {
+        const modelTypeCases = [
+          ['ANTHROPIC_API', 'api'],
+          ['Anthropic_Api', 'api'],
+          ['anthropic_api', 'api'],
+          ['CLAUDE_CLI', 'cli'],
+          ['Claude_Cli', 'cli'],
+          ['claude_cli', 'cli'],
+        ]
+
+        test.each(modelTypeCases)(
+          'normalizes env var %s to %s when VALIDATION_CLIENT not set',
+          (modelType, expectedClient) => {
+            delete process.env.VALIDATION_CLIENT
+            process.env.MODEL_TYPE = modelType
+
+            const config = new Config()
+
+            expect(config.validationClient).toBe(expectedClient)
+          }
+        )
+
+        test.each(modelTypeCases)(
+          'normalizes option %s to %s when validationClient not set',
+          (modelType, expectedClient) => {
+            delete process.env.VALIDATION_CLIENT
+            delete process.env.MODEL_TYPE
+
+            const config = new Config({ modelType })
+
+            expect(config.validationClient).toBe(expectedClient)
+          }
+        )
+      })
+    })
+
     test.each([
       ['anthropic_api', 'api'],
       ['claude_cli', 'cli'],
