@@ -8,6 +8,8 @@ const LINT_FILENAME = 'lint.json'
 const CONFIG_FILENAME = 'config.json'
 const INSTRUCTIONS_FILENAME = 'instructions.md'
 
+export const DEFAULT_MODEL_VERSION = 'claude-sonnet-4-0'
+
 export class Config {
   static readonly DEFAULT_DATA_DIR = path.join('.claude', 'tdd-guard', 'data')
 
@@ -16,6 +18,7 @@ export class Config {
   readonly anthropicApiKey: string | undefined
   readonly modelType: string
   readonly linterType: string | undefined
+  readonly modelVersion: string
 
   constructor(options?: ConfigOptions) {
     const mode = options?.mode ?? 'production'
@@ -25,6 +28,7 @@ export class Config {
     this.anthropicApiKey = this.getAnthropicApiKey(options)
     this.modelType = this.getModelType(options, mode)
     this.linterType = this.getLinterType(options)
+    this.modelVersion = this.getModelVersion(options)
   }
 
   private getDataDir(options?: ConfigOptions): string {
@@ -94,6 +98,14 @@ export class Config {
     }
     const envValue = process.env.LINTER_TYPE?.toLowerCase()
     return envValue && envValue.trim() !== '' ? envValue : undefined
+  }
+
+  private getModelVersion(options?: ConfigOptions): string {
+    return (
+      options?.modelVersion ??
+      process.env.TDD_GUARD_MODEL_VERSION ??
+      DEFAULT_MODEL_VERSION
+    )
   }
 
   private getValidatedClaudeProjectDir(): string | null {

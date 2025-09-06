@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest'
-import { Config } from './Config'
+import { Config, DEFAULT_MODEL_VERSION } from './Config'
 import path from 'path'
 
 describe('Config', () => {
@@ -271,6 +271,37 @@ describe('Config', () => {
       const config = new Config()
 
       expect(config.modelType).toBe('claude_cli')
+    })
+  })
+
+  describe('modelVersion', () => {
+    test('returns default model version when no configuration provided', () => {
+      const config = new Config()
+
+      expect(config.modelVersion).toBeDefined()
+      expect(config.modelVersion).toBe(DEFAULT_MODEL_VERSION)
+    })
+
+    test('can be set via options', () => {
+      const config = new Config({ modelVersion: 'claude-opus-4-1' })
+
+      expect(config.modelVersion).toBe('claude-opus-4-1')
+    })
+
+    test('options take precedence over env var', () => {
+      process.env.TDD_GUARD_MODEL_VERSION = 'claude-haiku-3-0'
+
+      const config = new Config({ modelVersion: 'claude-opus-4-1' })
+
+      expect(config.modelVersion).toBe('claude-opus-4-1')
+    })
+
+    test('falls back to env var when not in options', () => {
+      process.env.TDD_GUARD_MODEL_VERSION = 'claude-haiku-3-0'
+
+      const config = new Config()
+
+      expect(config.modelVersion).toBe('claude-haiku-3-0')
     })
   })
 
