@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest'
-import { Config, DEFAULT_MODEL_VERSION } from './Config'
+import { Config, DEFAULT_MODEL_VERSION, DEFAULT_CLIENT } from './Config'
+import { ClientType } from '../contracts/types/ClientType'
 import path from 'path'
 
 describe('Config', () => {
@@ -271,6 +272,81 @@ describe('Config', () => {
       const config = new Config()
 
       expect(config.modelType).toBe('claude_cli')
+    })
+  })
+
+  describe('validationClient', () => {
+    test.each<ClientType>(['sdk', 'cli', 'api'])(
+      'returns %s when VALIDATION_CLIENT env var is set to %s',
+      (value) => {
+        process.env.VALIDATION_CLIENT = value
+
+        const config = new Config()
+
+        expect(config.validationClient).toBe(value)
+      }
+    )
+
+    describe('options.validationClient precedence', () => {
+      test.each([
+        { env: 'VALIDATION_CLIENT', envValue: 'cli', optionValue: 'api' },
+        { env: 'VALIDATION_CLIENT', envValue: 'sdk', optionValue: 'cli' },
+        { env: 'MODEL_TYPE', envValue: 'anthropic_api', optionValue: 'sdk' },
+        { env: 'MODEL_TYPE', envValue: 'claude_cli', optionValue: 'api' },
+      ])(
+        'takes precedence over $env=$envValue (returns $optionValue)',
+        ({ env, envValue, optionValue }) => {
+          process.env[env] = envValue
+
+          const config = new Config({
+            validationClient: optionValue as 'api' | 'cli' | 'sdk',
+          })
+
+          expect(config.validationClient).toBe(optionValue)
+        }
+      )
+    })
+
+    test.each([
+      ['anthropic_api', 'api'],
+      ['claude_cli', 'cli'],
+    ] as const)(
+      'uses %s from MODEL_TYPE=%s when VALIDATION_CLIENT not set',
+      (modelType, expectedClient) => {
+        delete process.env.VALIDATION_CLIENT
+        process.env.MODEL_TYPE = modelType
+
+        const config = new Config()
+
+        expect(config.validationClient).toBe(expectedClient)
+      }
+    )
+
+    test('uses api from options.modelType=anthropic_api when validationClient not set', () => {
+      delete process.env.VALIDATION_CLIENT
+      delete process.env.MODEL_TYPE
+
+      const config = new Config({ modelType: 'anthropic_api' })
+
+      expect(config.validationClient).toBe('api')
+    })
+
+    test('uses cli from options.modelType=claude_cli when validationClient not set', () => {
+      delete process.env.VALIDATION_CLIENT
+      delete process.env.MODEL_TYPE
+
+      const config = new Config({ modelType: 'claude_cli' })
+
+      expect(config.validationClient).toBe('cli')
+    })
+
+    test('uses DEFAULT_CLIENT when nothing is set', () => {
+      delete process.env.VALIDATION_CLIENT
+      delete process.env.MODEL_TYPE
+
+      const config = new Config()
+
+      expect(config.validationClient).toBe(DEFAULT_CLIENT)
     })
   })
 

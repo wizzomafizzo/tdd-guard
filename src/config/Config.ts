@@ -1,5 +1,6 @@
 import path from 'path'
 import { ConfigOptions } from '../contracts/types/ConfigOptions'
+import { ClientType } from '../contracts/types/ClientType'
 
 const TEST_RESULTS_FILENAME = 'test.json'
 const TODOS_FILENAME = 'todos.json'
@@ -9,6 +10,7 @@ const CONFIG_FILENAME = 'config.json'
 const INSTRUCTIONS_FILENAME = 'instructions.md'
 
 export const DEFAULT_MODEL_VERSION = 'claude-sonnet-4-0'
+export const DEFAULT_CLIENT: ClientType = 'cli'
 
 export class Config {
   static readonly DEFAULT_DATA_DIR = path.join('.claude', 'tdd-guard', 'data')
@@ -19,6 +21,7 @@ export class Config {
   readonly modelType: string
   readonly linterType: string | undefined
   readonly modelVersion: string
+  readonly validationClient: ClientType
 
   constructor(options?: ConfigOptions) {
     const mode = options?.mode ?? 'production'
@@ -29,6 +32,7 @@ export class Config {
     this.modelType = this.getModelType(options, mode)
     this.linterType = this.getLinterType(options)
     this.modelVersion = this.getModelVersion(options)
+    this.validationClient = this.getValidationClient(options)
   }
 
   private getDataDir(options?: ConfigOptions): string {
@@ -106,6 +110,35 @@ export class Config {
       process.env.TDD_GUARD_MODEL_VERSION ??
       DEFAULT_MODEL_VERSION
     )
+  }
+
+  private getValidationClient(options?: ConfigOptions): ClientType {
+    // Direct configuration
+    const directValue =
+      options?.validationClient ?? process.env.VALIDATION_CLIENT
+    if (this.isValidClient(directValue)) {
+      return directValue
+    }
+
+    // Backward compatibility
+    const modelType = options?.modelType ?? process.env.MODEL_TYPE
+    return this.mapModelTypeToClient(modelType) ?? DEFAULT_CLIENT
+  }
+
+  private isValidClient(value?: string): value is ClientType {
+    return value === 'api' || value === 'cli' || value === 'sdk'
+  }
+
+  private mapModelTypeToClient(modelType?: string): ClientType | undefined {
+    switch (modelType) {
+      case 'anthropic_api':
+        return 'api'
+      case 'claude_cli':
+        return 'cli'
+      case undefined:
+      default:
+        return undefined
+    }
   }
 
   private getValidatedClaudeProjectDir(): string | null {

@@ -1,3 +1,5 @@
+import { ClientType } from './ClientType'
+
 export type ConfigOptions = {
   mode?: 'production' | 'test'
   projectRoot?: string
@@ -6,4 +8,5 @@ export type ConfigOptions = {
   modelType?: string
   modelVersion?: string
   linterType?: string
+  validationClient?: ClientType
 }
