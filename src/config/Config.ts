@@ -11,10 +11,9 @@ const INSTRUCTIONS_FILENAME = 'instructions.md'
 
 export const DEFAULT_MODEL_VERSION = 'claude-sonnet-4-0'
 export const DEFAULT_CLIENT: ClientType = 'cli'
+export const DEFAULT_DATA_DIR = path.join('.claude', 'tdd-guard', 'data')
 
 export class Config {
-  static readonly DEFAULT_DATA_DIR = path.join('.claude', 'tdd-guard', 'data')
-
   readonly dataDir: string
   readonly useSystemClaude: boolean
   readonly anthropicApiKey: string | undefined
@@ -41,11 +40,11 @@ export class Config {
 
     // If we have a base directory, construct the full path
     if (baseDir) {
-      return path.join(baseDir, Config.DEFAULT_DATA_DIR)
+      return path.join(baseDir, DEFAULT_DATA_DIR)
     }
 
     // Default to relative path
-    return Config.DEFAULT_DATA_DIR
+    return DEFAULT_DATA_DIR
   }
 
   private getUseSystemClaude(options?: ConfigOptions): boolean {

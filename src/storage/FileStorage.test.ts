@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { FileStorage } from './FileStorage'
-import { Config } from '../config/Config'
+import { Config, DEFAULT_DATA_DIR } from '../config/Config'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
@@ -39,7 +39,7 @@ describe('FileStorage', () => {
     const newProjectRoot = path.join(projectRoot, 'new-project')
     const nonExistentPath = path.join(
       newProjectRoot,
-      ...Config.DEFAULT_DATA_DIR.split('/')
+      ...DEFAULT_DATA_DIR.split('/')
     )
     const customConfig = new Config({ projectRoot: newProjectRoot })
     const customStorage = new FileStorage(customConfig)

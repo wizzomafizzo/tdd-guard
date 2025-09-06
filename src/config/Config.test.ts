@@ -1,5 +1,10 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest'
-import { Config, DEFAULT_MODEL_VERSION, DEFAULT_CLIENT } from './Config'
+import {
+  Config,
+  DEFAULT_MODEL_VERSION,
+  DEFAULT_CLIENT,
+  DEFAULT_DATA_DIR,
+} from './Config'
 import { ClientType } from '../contracts/types/ClientType'
 import path from 'path'
 
@@ -16,7 +21,7 @@ describe('Config', () => {
 
   describe('dataDir', () => {
     const projectRoot = '/test/project'
-    const projectDataDir = path.join(projectRoot, Config.DEFAULT_DATA_DIR)
+    const projectDataDir = path.join(projectRoot, DEFAULT_DATA_DIR)
     let config: Config
 
     beforeEach(() => {
@@ -25,7 +30,7 @@ describe('Config', () => {
 
     test('defaults to relative path when no projectRoot provided', () => {
       const defaultConfig = new Config()
-      expect(defaultConfig.dataDir).toBe(Config.DEFAULT_DATA_DIR)
+      expect(defaultConfig.dataDir).toBe(DEFAULT_DATA_DIR)
     })
 
     test('uses projectRoot to construct absolute dataDir', () => {
@@ -84,7 +89,7 @@ describe('Config', () => {
         const configWithClaudeDir = new Config()
 
         expect(configWithClaudeDir.dataDir).toBe(
-          path.join(claudeProjectDir, Config.DEFAULT_DATA_DIR)
+          path.join(claudeProjectDir, DEFAULT_DATA_DIR)
         )
       })
 
@@ -96,7 +101,7 @@ describe('Config', () => {
         const configWithBoth = new Config({ projectRoot: explicitProjectRoot })
 
         expect(configWithBoth.dataDir).toBe(
-          path.join(explicitProjectRoot, Config.DEFAULT_DATA_DIR)
+          path.join(explicitProjectRoot, DEFAULT_DATA_DIR)
         )
       })
 
