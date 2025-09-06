@@ -3,10 +3,18 @@ import { ModelClientProvider } from './ModelClientProvider'
 import { Config } from '../config/Config'
 import { ClaudeCli } from '../validation/models/ClaudeCli'
 import { AnthropicApi } from '../validation/models/AnthropicApi'
+import { ClaudeCodeSdk } from '../validation/models/ClaudeCodeSdk'
 
 describe('ModelClientProvider', () => {
-  test('returns ClaudeCli when config modelType is claude_cli', () => {
-    const config = new Config({ modelType: 'claude_cli' })
+  test('uses default config when no config is provided', () => {
+    const provider = new ModelClientProvider()
+    const client = provider.getModelClient()
+
+    expect(client['config']).toBeDefined()
+  })
+
+  test('returns ClaudeCli when config validationClient is cli', () => {
+    const config = new Config({ validationClient: 'cli' })
 
     const provider = new ModelClientProvider()
     const client = provider.getModelClient(config)
@@ -14,8 +22,8 @@ describe('ModelClientProvider', () => {
     expect(client).toBeInstanceOf(ClaudeCli)
   })
 
-  test('returns AnthropicApi when config modelType is anthropic_api', () => {
-    const config = new Config({ modelType: 'anthropic_api' })
+  test('returns AnthropicApi when config validationClient is api', () => {
+    const config = new Config({ validationClient: 'api' })
 
     const provider = new ModelClientProvider()
     const client = provider.getModelClient(config)
@@ -23,16 +31,18 @@ describe('ModelClientProvider', () => {
     expect(client).toBeInstanceOf(AnthropicApi)
   })
 
-  test('uses default config when no config is provided', () => {
-    const provider = new ModelClientProvider()
-    const client = provider.getModelClient()
+  test('returns ClaudeCodeSdk when config validationClient is sdk', () => {
+    const config = new Config({ validationClient: 'sdk' })
 
-    expect(client).toBeInstanceOf(ClaudeCli) // Default modelType is 'claude_cli'
+    const provider = new ModelClientProvider()
+    const client = provider.getModelClient(config)
+
+    expect(client).toBeInstanceOf(ClaudeCodeSdk)
   })
 
   test('passes config with API key to AnthropicApi client', () => {
     const config = new Config({
-      modelType: 'anthropic_api',
+      validationClient: 'api',
       anthropicApiKey: 'test-api-key-123',
     })
 
@@ -40,14 +50,12 @@ describe('ModelClientProvider', () => {
     const client = provider.getModelClient(config)
 
     expect(client).toBeInstanceOf(AnthropicApi)
-    expect((client as AnthropicApi).config.anthropicApiKey).toBe(
-      'test-api-key-123'
-    )
+    expect(client['config'].anthropicApiKey).toBe('test-api-key-123')
   })
 
   test('passes config with useSystemClaude to ClaudeCli client', () => {
     const config = new Config({
-      modelType: 'claude_cli',
+      validationClient: 'cli',
       useSystemClaude: true,
     })
 
@@ -55,6 +63,6 @@ describe('ModelClientProvider', () => {
     const client = provider.getModelClient(config)
 
     expect(client).toBeInstanceOf(ClaudeCli)
-    expect((client as ClaudeCli).config.useSystemClaude).toBe(true)
+    expect(client['config'].useSystemClaude).toBe(true)
   })
 })
